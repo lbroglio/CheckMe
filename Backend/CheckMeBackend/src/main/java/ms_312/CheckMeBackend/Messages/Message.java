@@ -1,6 +1,7 @@
-package group312.CheckMeDemo;
+package ms_312.CheckMeBackend.Messages;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Object that represents a single Message or email retrieved from a platform
@@ -22,10 +23,16 @@ public class Message {
      * The time that this message was sent as reported by the platform it was retrieved from
      */
     private final LocalDateTime sendTime;
+
     /**
      * The messaging platform or service (Gmail Teams etc.) that this message was retrieved from
      */
     private final String platform;
+
+    /**
+     * The ID of this message. The ID is created from the Hash of the sender, contents, send time, and platform
+     */
+    private final int ID;
 
     /**
      * Create a new message with the specified parameters.
@@ -42,17 +49,7 @@ public class Message {
         this.subject = subject;
         this.sendTime = sendTime;
         this.platform = platform;
-    }
-
-    @Override
-    public String toString() {
-        return "Message{" +
-                "sender='" + sender + '\'' +
-                ", contents='" + contents + '\'' +
-                ", subject='" + subject + '\'' +
-                ", sendTime=" + sendTime +
-                ", platform='" + platform + '\'' +
-                '}';
+        this.ID = this.hashCode();
     }
 
     /**
@@ -70,8 +67,8 @@ public class Message {
         this.subject = null;
         this.sendTime = sendTime;
         this.platform = platform;
+        this.ID = this.hashCode();
     }
-
     /**
      * Retrieve the name or identifier associated with who sent this message as a string
      */
@@ -107,4 +104,35 @@ public class Message {
     public String getPlatform() {
         return platform;
     }
+
+    /**
+     * Retrieve the ID for this message. A unique identifier created from the Has of its sender, contents, sendTime, and platform
+     */
+    public int getID(){return ID;}
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Message message = (Message) o;
+        return Objects.equals(sender, message.sender) && Objects.equals(contents, message.contents) && Objects.equals(sendTime, message.sendTime) && Objects.equals(platform, message.platform);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sender, contents, sendTime, platform);
+    }
+
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "sender='" + sender + '\'' +
+                ", contents='" + contents + '\'' +
+                ", subject='" + subject + '\'' +
+                ", sendTime=" + sendTime +
+                ", platform='" + platform + '\'' +
+                '}';
+    }
+
 }
