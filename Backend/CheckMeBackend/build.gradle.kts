@@ -17,6 +17,9 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.json:json:20230618")
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
