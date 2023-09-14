@@ -1,14 +1,17 @@
 package ms_312.CheckMeBackend.Users;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import ms_312.CheckMeBackend.Messages.MessageRetriever;
-import org.json.JSONObject;
 
 import java.util.HashMap;
 
+@Entity
 public class User {
     /**
      * The username for this user.
      */
+    @Id
     private String username;
     /**
      * A cryptographic hash of this account's password.
@@ -17,12 +20,12 @@ public class User {
     /**
      * JSON which represents any previously configured settings set by this user related to their account.
      */
-    private JSONObject profileSettings;
+    private String profileSettings;
     /**
      * Map storing all the of {@link MessageRetriever} objects that get the messages for the services this user
      * has configured. The Retrievers are stored associated their platform's name stored as a String.
      */
-    private HashMap<String, MessageRetriever> messageRetrievers;
+    //private HashMap<String, MessageRetriever> messageRetrievers;
 
     /**
      * Construct a new empty user with the given username and password hash.
@@ -52,7 +55,17 @@ public class User {
     /**
      * @return Any configured preferences/settings this user has set stored as a JSON  String.
      */
-    public JSONObject getProfileSettings() {
+    public String getProfileSettings() {
         return profileSettings;
     }
+
+    /**
+     * Update the saved profile settings of a user to a new JSON String
+     *
+     * @param profileSettings The JSON String to save as the new profile settings.
+     */
+    public void setProfileSettings(String profileSettings) {
+        this.profileSettings = profileSettings;
+    }
+
 }

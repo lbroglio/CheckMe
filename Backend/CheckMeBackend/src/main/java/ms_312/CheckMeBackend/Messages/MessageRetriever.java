@@ -1,5 +1,7 @@
 package ms_312.CheckMeBackend.Messages;
 
+import jakarta.persistence.Entity;
+
 /**
  * Abstract class that contains the API used by platform specific classes for retrieving messages
  * from different sources.
