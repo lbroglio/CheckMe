@@ -1,17 +1,21 @@
 package ms_312.CheckMeBackend.Users;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import ms_312.CheckMeBackend.Messages.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.MessageRetriever;
+import ms_312.CheckMeBackend.Messages.PlatformName;
 
 import java.util.HashMap;
 
 @Entity
+//@Table(name="USERS")
 public class User {
+
     /**
      * The username for this user.
      */
     @Id
+    //@Column(name="USERNAME")
     private String username;
     /**
      * A cryptographic hash of this account's password.
@@ -23,9 +27,11 @@ public class User {
     private String profileSettings;
     /**
      * Map storing all the of {@link MessageRetriever} objects that get the messages for the services this user
-     * has configured. The Retrievers are stored associated their platform's name stored as a String.
+     * has configured. The Retrievers are stored associated with their platform's name stored as a String.
      */
-    //private HashMap<String, MessageRetriever> messageRetrievers;
+    // TODO -- Refactor to allow for multiple accounts on one platform
+    @OneToMany
+    private HashMap<String, MessageRetriever> messageRetrievers;
 
     /**
      * Construct a new empty user with the given username and password hash.
@@ -37,6 +43,11 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
     }
+
+    /**
+     * Default constructor used by the persistence API
+     */
+    private User(){}
 
     /**
      * @return The username for this account.
@@ -67,5 +78,17 @@ public class User {
     public void setProfileSettings(String profileSettings) {
         this.profileSettings = profileSettings;
     }
+
+    /**
+     * Adds a new {@link MessageRetriever} to get messages for this User.
+     *
+     * @param platformName Which platform (Gmail, Discord, ETC) the new retriever gets messages from
+     * @param APIEndpoint Complete URL to the API endpoint to request for messages
+     */
+    public void newMessageSource(PlatformName platformName, String APIEndpoint){
+        MessageRetriever temp = new DemoRetriever(APIEndpoint);
+        messageRetrievers.put(platformName.toString(), temp);
+    }
+
 
 }
