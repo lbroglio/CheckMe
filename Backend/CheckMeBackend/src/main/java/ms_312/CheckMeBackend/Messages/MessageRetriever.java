@@ -3,7 +3,6 @@ package ms_312.CheckMeBackend.Messages;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Users.User;
-import org.springframework.data.annotation.Id;
 
 /**
  * Abstract class that contains the API used by platform specific classes for retrieving messages
@@ -29,6 +28,11 @@ public abstract class MessageRetriever {
     public MessageRetriever(String source) {
         this.source = source;
     }
+
+    /**
+     * Default constructor for Persistence API
+     */
+    protected MessageRetriever() {}
 
     /**
      * The user which for which this retriever gets messages for
