@@ -24,15 +24,18 @@ public abstract class MessageRetriever {
 
     /**
      * @param source A complete URL pointing to the API location this Retriever should get Messages from
+     * @param owner The {@link User} that this reriever should get messages for
      */
-    public MessageRetriever(String source) {
+    public MessageRetriever(String source, User owner) {
         this.source = source;
+        this.user = owner;
     }
 
     /**
      * Default constructor for Persistence API
      */
     protected MessageRetriever() {}
+
 
     /**
      * The user which for which this retriever gets messages for
@@ -48,6 +51,36 @@ public abstract class MessageRetriever {
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
     public abstract Message[] getAll();
+
+    /**
+     * @return The {@link User} this retriever gets messages  for
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * Set the User this retriever gets messages for
+     * @param user User object to set this retriever to
+     */
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    /**
+     * @return The numerical ID assigned to this Retriever by the persistence API
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @return The string holding the URL to the API endpoint this retriever gets messages from
+     */
+    public String getSource() {
+        return source;
+    }
+
 
 
 }

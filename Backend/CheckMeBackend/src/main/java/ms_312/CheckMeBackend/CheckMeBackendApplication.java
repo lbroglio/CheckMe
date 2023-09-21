@@ -34,9 +34,10 @@ public class CheckMeBackendApplication {
 	}
 
 	@GetMapping("/user")
-	public User seeUser(){
-
-		return userRepository.findByUsername("Bob123");
+	public List<MessageRetriever> seeUser(){
+		User temp = userRepository.findByUsername("Bob123");
+		System.out.println(temp.getMessageRetrievers());
+		return temp.getMessageRetrievers();
 	}
 
 

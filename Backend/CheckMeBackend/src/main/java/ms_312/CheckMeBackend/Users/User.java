@@ -32,7 +32,8 @@ public class User {
      * Map storing all the of {@link MessageRetriever} objects that get the messages for the services this user
      * has configured. The Retrievers are stored associated with their platform's name stored as a String.
      */
-    @OneToMany//(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL)
+    //TODO - Integrate with "actual" (not my quick test) message serving objects
     private List<MessageRetriever> messageRetrievers;
 
     /**
@@ -91,7 +92,7 @@ public class User {
      */
     //@param platformName Which platform (Gmail, Discord, ETC) the new retriever gets messages from
     public void newMessageSource(String APIEndpoint){
-        MessageRetriever temp = new DemoRetriever(APIEndpoint);
+        MessageRetriever temp = new DemoRetriever(APIEndpoint, this);
         messageRetrievers.add(temp);
     }
 
