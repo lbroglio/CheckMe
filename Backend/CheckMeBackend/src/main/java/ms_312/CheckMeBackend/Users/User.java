@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Users;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.MessageRetriever;
@@ -21,11 +22,13 @@ public class User {
     /**
      * A cryptographic hash of this account's password.
      */
+    @JsonIgnore
     private byte[] passwordHash;
 
     /**
      * Randomly generated salt applied to this user's password.
      */
+    @JsonIgnore
     private byte[] salt;
 
     /**

@@ -77,7 +77,6 @@ public class CheckMeBackendApplication {
 	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
 	 */
-	//TODO -- Implement exception handling for the password and username fields not existing
 	@PostMapping("/user")
 	// Unchecked casts are from interacting with the JSON API
 	@SuppressWarnings("unchecked")
@@ -99,6 +98,11 @@ public class CheckMeBackendApplication {
 		// Get the Username given in the request
 		String username = (String) userJSON.get("username");
 
+		//  Return 400 if the username wasn't included
+		if(username == null){
+			return new ResponseEntity<>("Could not find username in request body", HttpStatus.BAD_REQUEST);
+		}
+
 		//Confirm that the username is unqiue
 		User existingUser = userRepository.findByUsername(username);
 
@@ -110,11 +114,15 @@ public class CheckMeBackendApplication {
 		// This will only be reached if the username is allowed
 
 		//Hash the given password
-
 		//Get the user's password in plaintext
 		String password = (String) userJSON.get("password");
 
-		// Generate an 8 byte(Character) salt
+		// Return 400 if the password was not included
+		if(password == null){
+			return new ResponseEntity<>("Could not find password in request body", HttpStatus.BAD_REQUEST);
+		}
+
+		// Generate an 8 byte salt
 		SecureRandom secRan = new SecureRandom();
 
 		byte[] salt = new byte[8];
@@ -130,8 +138,7 @@ public class CheckMeBackendApplication {
 		// Hash the password
 		byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));
 
-		//Store the hash with the salt as a String
-
+		//Store the hash and the salt
 		// Create the new User
 		User createdUser = new User(username, hashedPassword, salt);
 
