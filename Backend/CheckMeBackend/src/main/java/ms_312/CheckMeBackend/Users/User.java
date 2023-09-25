@@ -3,10 +3,8 @@ package ms_312.CheckMeBackend.Users;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.MessageRetriever;
-import ms_312.CheckMeBackend.Messages.PlatformName;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Entity
@@ -19,10 +17,17 @@ public class User {
     @Id
     //@Column(name="username")
     private String username;
+
     /**
      * A cryptographic hash of this account's password.
      */
-    private String passwordHash;
+    private byte[] passwordHash;
+
+    /**
+     * Randomly generated salt applied to this user's password.
+     */
+    private byte[] salt;
+
     /**
      * JSON which represents any previously configured settings set by this user related to their account.
      */
@@ -39,12 +44,14 @@ public class User {
     /**
      * Construct a new empty user with the given username and password hash.
      *
-     * @param username A string storing the username to identify this account by.
+     * @param username     A string storing the username to identify this account by.
      * @param passwordHash A cryptographic hash of this account's password.
+     * @param salt The salt used to hash this user's password
      */
-    public User(String username, String passwordHash) {
+    public User(String username, byte[] passwordHash, byte[] salt) {
         this.username = username;
         this.passwordHash = passwordHash;
+        this.salt = salt;
         messageRetrievers = new ArrayList<>();
     }
 
@@ -65,7 +72,7 @@ public class User {
     /**
      * @return A cryptographic hash of this account's password
      */
-    public String getPasswordHash() {
+    public byte[] getPasswordHash() {
         return passwordHash;
     }
 
@@ -109,5 +116,13 @@ public class User {
     public List<MessageRetriever> getMessageRetrievers() {
         return messageRetrievers;
     }
+
+    /**
+     * @return The salt used for this user's password hash
+     */
+    public byte[] getSalt() {
+        return salt;
+    }
+
 
 }
