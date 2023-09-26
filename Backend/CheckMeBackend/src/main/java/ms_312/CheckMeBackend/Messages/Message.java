@@ -14,6 +14,9 @@ public class Message {
     /**
      * The text or the body of this message.
      */
+
+    private final String recipient;
+
     private final String contents;
     /**
      * Any subject or title associated with this message by the platform
@@ -38,6 +41,7 @@ public class Message {
      * Create a new message with the specified parameters.
      *
      * @param sender The name or identifier associated with this message
+     * @param recipient The name
      * @param contents The contents or body of this message
      * @param subject The subject of this message.
      * @param sendTime The time this message was sent according to the platform it was retrieved from.
