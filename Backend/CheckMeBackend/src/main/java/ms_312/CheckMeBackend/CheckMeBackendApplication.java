@@ -9,6 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -138,13 +139,21 @@ public class CheckMeBackendApplication {
 		// Hash the password
 		byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));
 
+		// Read the email from the HTTP Request
+		String email = (String) userJSON.get("email_address");
+
+		//Return 400 if the email address wasn't included
+		if(email == null){
+			return new ResponseEntity<>("Could not find email_address in request body", HttpStatus.BAD_REQUEST);
+		}
+
 		//Store the hash and the salt
 		// Create the new User
-		User createdUser = new User(username, hashedPassword, salt);
+		User createdUser = new User(username, email, hashedPassword, salt);
 
 		userRepository.save(createdUser);
 
-		return new ResponseEntity<>("Created new user: " + username,HttpStatus.OK );
+		return new ResponseEntity<>("Created new user: " + username,HttpStatus.CREATED );
 	}
 
 	/** THIS IS A DESIGNED IN USE IN DEVELOPMENT AND WILL / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO
@@ -183,7 +192,6 @@ public class CheckMeBackendApplication {
 		// Return 400 if a password wasn't given
 		if(password == null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing authorization header");
-
 		}
 
 		//Check if the given password was correct
@@ -198,6 +206,112 @@ public class CheckMeBackendApplication {
 		return requested;
 
 	}
+
+	/**
+	 * API endpoint to update the profile settings of a user. Allows for the caching of whatever information needed to
+	 * by the frontend.
+	 *
+	 * @param username The username of the user to update the account settings for -- passed as a path variable
+	 * in the HTTP request.
+	 * @param password The password used to authenticate as the User
+	 * @param profileSettings A string containing  whatever information should be saved for this user's profile
+	 *
+	 * @return
+	 * 200 If the update was successful
+	 * 404 If no user exists with the given username
+	 * 400 If no password was sent in the header
+	 * 401 If the password was incorrect
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@PutMapping("/user/{username}/account_settings")
+	public ResponseEntity<String> updateUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password, @RequestBody String profileSettings) throws NoSuchAlgorithmException {
+		// Get the User to update the account settings for
+		User toUpdate = userRepository.findByUsername(username);
+
+		// Return 404 if the no User exists with the given Username
+		if(toUpdate == null){
+			return new ResponseEntity<>("No user  with the username " + username +" exists.",HttpStatus.NOT_FOUND);
+		}
+
+		// Return 400 if a password wasn't given
+		if(password == null){
+			return new ResponseEntity<>("Missing Authentication Header",HttpStatus.BAD_REQUEST);
+		}
+
+		//Check if the given password was correct
+		Boolean passwordMatch = checkPassword(toUpdate, password);
+
+		// If the wrong password was given return 401
+		if(!passwordMatch){
+			return new ResponseEntity<>("Incorrect Password",HttpStatus.UNAUTHORIZED);
+		}
+
+		//Update the User in the database
+		toUpdate.setProfileSettings(profileSettings);
+		userRepository.save(toUpdate);
+
+		//Return 200
+		return new ResponseEntity<>("Updated User: " + username,HttpStatus.OK);
+
+	}
+
+	/**
+	 * API endpoint to update the profile settings of a user. Allows for the caching of whatever information needed to
+	 * by the frontend.
+	 *
+	 * @param username The username of the user to update the account settings for -- passed as a path variable
+	 * in the HTTP request.
+	 * @param password The password used to authenticate as the User
+	 * @param profileSettings A string containing  whatever information should be saved for this user's profile
+	 *
+	 * @return
+	 * If the GET was successful (Existing user and correct password were given)
+	 * 	Return the String of cached user profile data and status code 200
+	 * If the GET was unsuccessful throw an exception and return the following status codes
+	 * 	404 If no user exists with the given username
+	 * 	400 If no password was sent in the header
+	 * 	401 If the password was incorrect
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@PutMapping("/user/{username}/account_settings")
+	public String getUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+		// Get the User to update the account settings for
+		User toUpdate = userRepository.findByUsername(username);
+
+		// Return 404 if the no User exists with the given Username
+		if(toUpdate == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No user  with the username "  + username + "  exists.");
+		}
+
+		// Return 400 if a password wasn't given
+		if(password == null){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing Authentication Header");
+		}
+
+		//Check if the given password was correct
+		Boolean passwordMatch = checkPassword(toUpdate, password);
+
+		// If the wrong password was given return 401
+		if(!passwordMatch){
+			return new ResponseEntity<>("Incorrect Password",HttpStatus.UNAUTHORIZED);
+		}
+
+		//Update the User in the database
+		toUpdate.setProfileSettings(profileSettings);
+		userRepository.save(toUpdate);
+
+		//Return 200
+		return new ResponseEntity<>("Updated User: " + username,HttpStatus.OK);
+
+	}
+
+
+
+
 
 
 
