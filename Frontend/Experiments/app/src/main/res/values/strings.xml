@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">EmailAggregatorApp2</string>
+    <string name="title">Welcome To Email Aggregator</string>
+    <string name="login">Log In</string>
+    <string name="signup">Sign Up</string>
+    <string name="signupemail">Email</string>
+    <string name="signupusername">Create Username</string>
+    <string name="signupcreatepassword">Create Password</string>
+    <string name="signupconfirmpassword">Confirm Password</string>
+    <string name="empty"></string>
+    <string name="signuptitle">User Sign Up</string>
+    <string name="logintitle">User Log In</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="profiletitle">Profile Settings</string>
+    <string name="usernamecolon">Username:</string>
+    <string name="emailcolon">Email:</string>
+
+
+</resources>
