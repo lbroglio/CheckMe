@@ -1,11 +1,16 @@
 package ms_312.CheckMeBackend.Messages;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+import jakarta.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
  * Object that represents a single Message or email retrieved from a platform
  */
+@Entity
 public class Message {
     /**
      * The name or identifier associated with who sent this message
@@ -14,7 +19,6 @@ public class Message {
     /**
      * The text or the body of this message.
      */
-
     private final String recipient;
 
     private final String contents;
@@ -22,6 +26,7 @@ public class Message {
      * Any subject or title associated with this message by the platform
      */
     private final String subject;
+
     /**
      * The time that this message was sent as reported by the platform it was retrieved from
      */
@@ -35,6 +40,8 @@ public class Message {
     /**
      * The ID of this message. The ID is created from the Hash of the sender, contents, send time, and platform
      */
+    @ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private final int ID;
 
     /**
@@ -47,8 +54,9 @@ public class Message {
      * @param sendTime The time this message was sent according to the platform it was retrieved from.
      * @param platform String with the name of the platform this message was retrieved from
      */
-    public Message(String sender, String contents, String subject, LocalDateTime sendTime, String platform) {
+    public Message(String sender, String recipient, String contents, String subject, LocalDateTime sendTime, String platform) {
         this.sender = sender;
+        this.recipient = recipient;
         this.contents = contents;
         this.subject = subject;
         this.sendTime = sendTime;
@@ -65,17 +73,70 @@ public class Message {
      * @param sendTime The time this message was sent according to the platform it was retrieved from.
      * @param platform String with the name of the platform this message was retrieved from
      */
-    public Message(String sender, String contents, LocalDateTime sendTime, String platform) {
+    public Message(String sender, String recipient, String contents, LocalDateTime sendTime, String platform) {
         this.sender = sender;
+        this.recipient = recipient;
         this.contents = contents;
         this.subject = null;
         this.sendTime = sendTime;
         this.platform = platform;
         this.ID = this.hashCode();
     }
+
+    public Message() {
+
+    }
+
+    //Setters for each field
+
     /**
      * Retrieve the name or identifier associated with who sent this message as a string
      */
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    /**
+     * Retrieve the text or the body of this message as a string.
+     */
+    public void setContents(String contents) {
+        this.contents = contents;
+    }
+
+    /**
+     * Retrieve any subject or title associated with this message by the platform as String.
+     * Can be null if no subject exist
+     *
+     */
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+    /**
+     * Retrieve the time that this message was sent as reported by the platform it was retrieved from
+     * as a Java {@link LocalDateTime} object.
+     */
+    public void setSendTime(LocalDateTime sendTime) {
+        this.sendTime = sendTime;
+    }
+    /**
+     * Retrieve the messaging platform or service (Gmail Teams etc.) that this message was retrieved from as a String
+     */
+    public void setPlatform(String platform) {
+        this.platform = platform;
+    }
+
+    /**
+     * Retrieve the ID for this message. A unique identifier created from the Has of its sender, contents, sendTime, and platform
+     */
+    public void setID(int ID){this.ID = ID;}
+
+    //Getters for each field
+
+
+    /**
+     * Retrieve the name or identifier associated with who sent this message as a string
+     */
+
     public String getSender() {
         return sender;
     }
@@ -132,6 +193,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "sender='" + sender + '\'' +
+                ", recipient='" + recipient + '\'' +
                 ", contents='" + contents + '\'' +
                 ", subject='" + subject + '\'' +
                 ", sendTime=" + sendTime +
