@@ -12,6 +12,9 @@
     <string name="logintitle">User Log In</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
+    <string name="profiletitle">Profile Settings</string>
+    <string name="usernamecolon">Username:</string>
+    <string name="emailcolon">Email:</string>
 
 
 </resources>
