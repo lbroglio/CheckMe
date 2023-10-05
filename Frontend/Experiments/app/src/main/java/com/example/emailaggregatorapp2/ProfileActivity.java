@@ -45,7 +45,7 @@ import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView responseTextView;
-    private static final String URL_JSON_OBJECT = "https://jsonplaceholder.typicode.com/users/1";
+    private static final String URL_JSON_OBJECT = "http://coms-309-047.class.las.iastate.edu:8080/user/BaseballBob";
             // http://data.jsontest.com/";
     //private RequestQueue requestQueue;
 
@@ -99,7 +99,7 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                //headers.put("Authorization", "CubsGo123");
+                headers.put("Authorization", "CubsGo123");
 //                headers.put("Content-Type", "application/json");
                 return headers;
             }
