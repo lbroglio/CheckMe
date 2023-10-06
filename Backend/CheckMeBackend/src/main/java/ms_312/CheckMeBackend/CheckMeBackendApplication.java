@@ -166,13 +166,21 @@ public class CheckMeBackendApplication {
 		// Hash the password
 		byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));
 
+		// Read the email from the HTTP Request
+		String email = (String) userJSON.get("email_address");
+
+		//Return 400 if the email address wasn't included
+		if(email == null){
+			return new ResponseEntity<>("Could not find email_address in request body", HttpStatus.BAD_REQUEST);
+		}
+
 		//Store the hash and the salt
 		// Create the new User
-		User createdUser = new User(username, hashedPassword, salt);
+		User createdUser = new User(username, email, hashedPassword, salt);
 
 		userRepository.save(createdUser);
 
-		return new ResponseEntity<>("Created new user: " + username,HttpStatus.OK );
+		return new ResponseEntity<>("Created new user: " + username,HttpStatus.CREATED );
 	}
 
 
@@ -190,7 +198,6 @@ public class CheckMeBackendApplication {
 		// Return 400 if a password wasn't given
 		if(password == null){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing authorization header");
-
 		}
 
 		//Check if the given password was correct
@@ -248,6 +255,176 @@ public class CheckMeBackendApplication {
 		return toReturn;
 	}
 
+
+	/**
+	 * API endpoint to update the profile settings of a user. Allows for the caching of whatever information needed to
+	 * by the frontend.
+	 *
+	 * @param username The username of the user to update the account settings for -- passed as a path variable
+	 * in the HTTP request.
+	 * @param password The password used to authenticate as the User
+	 * @param profileSettings A string containing  whatever information should be saved for this user's profile
+	 *
+	 * @return
+	 * 200 If the update was successful
+	 * 404 If no user exists with the given username
+	 * 400 If no password was sent in the header
+	 * 401 If the password was incorrect
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@PutMapping("/user/{username}/account_settings")
+	public ResponseEntity<String> updateUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password, @RequestBody String profileSettings) throws NoSuchAlgorithmException {
+		// Get the User to update the account settings for
+		User toUpdate = userRepository.findByUsername(username);
+
+		// Return 404 if the no User exists with the given Username
+		if(toUpdate == null){
+			return new ResponseEntity<>("No user  with the username " + username +" exists.",HttpStatus.NOT_FOUND);
+		}
+
+		// Return 400 if a password wasn't given
+		if(password == null){
+			return new ResponseEntity<>("Missing Authentication Header",HttpStatus.BAD_REQUEST);
+		}
+
+		//Check if the given password was correct
+		Boolean passwordMatch = checkPassword(toUpdate, password);
+
+		// If the wrong password was given return 401
+		if(!passwordMatch){
+			return new ResponseEntity<>("Incorrect Password",HttpStatus.UNAUTHORIZED);
+		}
+
+		//Update the User in the database
+		toUpdate.setProfileSettings(profileSettings);
+		userRepository.save(toUpdate);
+
+		//Return 200
+		return new ResponseEntity<>("Updated User: " + username,HttpStatus.OK);
+
+	}
+
+	/**
+	 * API endpoint to retrieve the profile settings of a user.
+	 *
+	 * @param username The username of the user to update the account settings for -- passed as a path variable
+	 * in the HTTP request.
+	 * @param password The password used to authenticate as the User
+	 *
+	 * @return
+	 * If the GET was successful (Existing user and correct password were given)
+	 * 	Return the String of cached user profile data and status code 200
+	 * If the GET was unsuccessful throw an exception and return the following status codes
+	 * 	404 If no user exists with the given username
+	 * 	400 If no password was sent in the header
+	 * 	401 If the password was incorrect
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@GetMapping("/user/{username}/account_settings")
+	public String getUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+		// Get the User to update the account settings for
+		User toReturn = userRepository.findByUsername(username);
+
+		// Return 404 if the no User exists with the given Username
+		if(toReturn == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No user  with the username "  + username + "  exists.");
+		}
+
+		// Return 400 if a password wasn't given
+		if(password == null){
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing Authentication Header");
+		}
+
+		//Check if the given password was correct
+		Boolean passwordMatch = checkPassword(toReturn, password);
+
+		// If the wrong password was given return 401
+		if(!passwordMatch){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Incorrect Password");
+		}
+
+
+		//Return the requested settings
+		return toReturn.getProfileSettings();
+
+	}
+
+	/**
+	 * Takes in login information in the request body and returns true if a user login was successful
+	 * and false if it was not.
+	 *
+	 * @param body JSON Request Body with a username and password field.
+	 *
+	 * @return
+	 * If the login was successful returns true with status code 200
+	 * If the username or password is missing returns false with code 400
+	 * If no user with the given username exists return false with code 404
+	 * If the password is incorrect return false with code 401
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 *{@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@PostMapping("/user/login")
+	// Unchecked casts are from interacting with the JSON API
+	@SuppressWarnings("unchecked")
+	public ResponseEntity<Boolean> login(@RequestBody String body) throws NoSuchAlgorithmException {
+		// Parses the JSON body of the post request
+		JSONParser parseBody = new JSONParser(body);
+
+		LinkedHashMap<Object, Object> userJSON;
+
+		// Catch the exception if the JSON can not be parsed and return a bad request response
+		try{
+			// Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
+			userJSON = (LinkedHashMap<Object, Object>) parseBody.parse();
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
+		}
+
+		// Get the Username given in the request
+		String username = (String) userJSON.get("username");
+
+		//  Return 400 if the username wasn't included
+		if(username == null){
+			return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
+		}
+
+		//Get the User
+		User user = userRepository.findByUsername(username);
+
+		// Return 404 if the user doesn't exist
+		if(user == null){
+			return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+		}
+
+		//Get the given password
+		String password = (String) userJSON.get("password");
+
+		// Return 400 if the password was not included
+		if(password == null){
+			return new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
+		}
+
+		//Confirm that the password is correct
+		Boolean correctPass = checkPassword(user,password);
+
+		//If the password is correct
+		if(correctPass){
+			//Return a successful login
+			return new ResponseEntity<>(true, HttpStatus.OK);
+		}
+		// If the password  was incorrect
+		else {
+			return new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
+
+		}
+
+	}
 
 
 

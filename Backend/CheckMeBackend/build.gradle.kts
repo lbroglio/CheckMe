@@ -21,9 +21,18 @@ dependencies {
 	implementation("org.json:json:20230618")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("com.h2database:h2")
+<<<<<<< HEAD
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+=======
+	implementation("mysql:mysql-connector-java:8.0.33")
+
+
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+
+>>>>>>> main
 }
 
 tasks.withType<Test> {
