@@ -1,6 +1,6 @@
 package ms_312.CheckMeBackend.Messages;
 
 public interface MessageRetrieverRepository {
-    MessageRetriever findById(int id);
+    MessageRetriever findById(int ID);
 
 }
