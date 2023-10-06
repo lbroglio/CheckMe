@@ -1,5 +1,7 @@
 package ms_312.CheckMeBackend;
 
+import ms_312.CheckMeBackend.Messages.Message;
+import ms_312.CheckMeBackend.Messages.MessageRepository;
 import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.apache.tomcat.util.json.JSONParser;
@@ -17,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 
@@ -26,6 +29,9 @@ import java.util.LinkedHashMap;
 public class CheckMeBackendApplication {
 	@Autowired
 	UserRepository userRepository;
+
+	@Autowired
+	MessageRepository messageRepository;
 
 	/**
 	 * Hashes a string and compares it to the saved hash belonging to a given {@link User}
@@ -63,6 +69,27 @@ public class CheckMeBackendApplication {
 		SpringApplication.run(CheckMeBackendApplication.class, args);
 	}
 
+	/** THIS IS A DESIGNED IN USE IN DEVELOPMENT AND WILL / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO
+	 * Get the information for a given username
+	 *
+	 * @param username The username of a user in the database
+	 *
+	 * @return The {@link User} object for the requested User
+	 *
+	 * @throws ResponseStatusException Will be thrown if no user exists with the passed username
+	 */
+	@GetMapping("/dev/user/{username}")
+	public User seeUserDev(@PathVariable String username){
+		User toReturn = userRepository.findByUsername(username);
+
+		// Throw an exception if the user doesn't exist
+		if(toReturn == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is no user with the given username");
+		}
+
+		return toReturn;
+	}
+
 	/**
 	 * Creates a new {@link User} in the database with the given username and password.
 	 * Returns a 201 status code if the username is created.
@@ -70,7 +97,7 @@ public class CheckMeBackendApplication {
 	 * Returns a 409 status code if the username is taken.
 	 *
 	 * @param userInfo JSON body included in the POST request with the username and password of the user to be created.
-	 * 
+	 *
 	 * @return A {@link ResponseEntity} with a 201 status code indicating the user was created, a
 	 * 409 status code indicating the username was taken, or a 400 code if the request body's JSON is malformed or
 	 * is missing a field.
@@ -148,27 +175,6 @@ public class CheckMeBackendApplication {
 		return new ResponseEntity<>("Created new user: " + username,HttpStatus.OK );
 	}
 
-	/** THIS IS A DESIGNED IN USE IN DEVELOPMENT AND WILL / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO
-	 * Get the information for a given username
-	 *
-	 * @param username The username of a user in the database
-	 *
-	 * @return The {@link User} object for the requested User
-	 *
-	 * @throws ResponseStatusException Will be thrown if no user exists with the passed username
-	 */
-	@GetMapping("/dev/user/{username}")
-	public User seeUserDev(@PathVariable String username){
-		User toReturn = userRepository.findByUsername(username);
-
-		// Throw an exception if the user doesn't exist
-		if(toReturn == null){
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is no user with the given username");
-		}
-
-		return toReturn;
-	}
-
 
 	@GetMapping("/user/{username}")
 	public User seeUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
@@ -199,6 +205,38 @@ public class CheckMeBackendApplication {
 		return requested;
 
 	}
+
+	@PostMapping
+	public ResponseEntity<String> createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
+		// Parse the JSON body of the post request
+		JSONParser parseBody = new JSONParser(messageInfo);
+
+		LinkedHashMap<Object, Object> messageJSON;
+
+		// Catch the exception if the JSON can not be parsed and return a bad request response
+		try{
+			// Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
+			messageJSON = (LinkedHashMap<Object, Object>) parseBody.parse();
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>("JSON in request body could not be parsed.", HttpStatus.BAD_REQUEST);
+		}
+
+		String sender = (String) messageJSON.get("sender");
+		String recipient = (String) messageJSON.get("recipient");
+		String contents = (String) messageJSON.get("contents");
+		String subject = (String) messageJSON.get("subject");
+		String platform = (String) messageJSON.get("platform");
+		LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
+
+
+		Message createdMessage = new Message(sender, recipient, contents, subject, sendTime, platform);
+		messageRepository.save(createdMessage);
+
+		return new ResponseEntity<>("Saved message",HttpStatus.OK );
+	}
+
+
 
 
 

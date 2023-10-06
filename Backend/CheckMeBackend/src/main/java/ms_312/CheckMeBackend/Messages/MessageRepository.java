@@ -5,8 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    Message findById(int id);
+    Message findByID(int ID);
 
     @Transactional
-    void deleteById(int id);
+    void deleteByID(int ID);
 }

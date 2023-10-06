@@ -13,6 +13,7 @@ import java.util.Objects;
  * Object that represents a single Message or email retrieved from a platform
  */
 @Entity
+@Table(name="MESSAGES")
 public class Message {
 
     /**
