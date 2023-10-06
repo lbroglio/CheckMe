@@ -214,6 +214,7 @@ public class CheckMeBackendApplication {
 		LinkedHashMap<Object, Object> messageJSON;
 
 		// Catch the exception if the JSON can not be parsed and return a bad request response
+		//FOR MESSAGES
 		try{
 			// Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
 			messageJSON = (LinkedHashMap<Object, Object>) parseBody.parse();
