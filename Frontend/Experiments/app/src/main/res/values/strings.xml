@@ -15,6 +15,7 @@
     <string name="profiletitle">Profile Settings</string>
     <string name="usernamecolon">Username:</string>
     <string name="emailcolon">Email:</string>
+    <string name="Back">Back</string>
 
 
 </resources>

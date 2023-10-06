@@ -24,6 +24,7 @@ public class LoginActivity extends AppCompatActivity {
     private static final String API_URL = "http://data.jsontest.com/";
     private TextView responseTextView;
     private Button loginbutton;
+    private Button backbutton;
     private EditText usernameEditText;
     private EditText passwordEditText;
     public static String username;
@@ -36,6 +37,8 @@ public class LoginActivity extends AppCompatActivity {
 
         //responseTextView = (TextView) findViewById(R.id.jsonresponse);
         loginbutton = (Button) findViewById(R.id.loginbut2);
+        backbutton = (Button) findViewById(R.id.backbutton);
+
         usernameEditText = (EditText) findViewById(R.id.loginusernameedittext);
         passwordEditText = (EditText) findViewById(R.id.loginpasswordedittext);
 
@@ -48,6 +51,14 @@ public class LoginActivity extends AppCompatActivity {
                 startActivity(intent);
 
 
+            }
+        });
+
+        backbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
             }
         });
     }

@@ -26,6 +26,8 @@ public class SignupActivity extends AppCompatActivity {
     private EditText passwordInput;
     private EditText passwordConfirm;
 
+    private Button backbutton;
+
 
 
     @Override
@@ -34,6 +36,7 @@ public class SignupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signup);
 
         signUpButton = (Button) findViewById(R.id.loginbut2);
+        backbutton = (Button) findViewById(R.id.backbutton2);
 
         emailInput = (EditText) findViewById(R.id.editTextText7);
         usernameInput = (EditText) findViewById(R.id.editTextText2);
@@ -51,7 +54,15 @@ public class SignupActivity extends AppCompatActivity {
 
                 makeJSONObjectRequest(username, email, password);
 
-                Intent intent = new Intent(SignupActivity.this, ProfileActivity.class);
+                Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        backbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(SignupActivity.this, MainActivity.class);
                 startActivity(intent);
             }
         });
