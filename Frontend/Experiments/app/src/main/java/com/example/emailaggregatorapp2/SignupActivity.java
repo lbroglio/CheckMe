@@ -4,8 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -19,6 +21,11 @@ public class SignupActivity extends AppCompatActivity {
     private static final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/user";
 
     private Button signUpButton;
+    private EditText emailInput;
+    private EditText usernameInput;
+    private EditText passwordInput;
+    private EditText passwordConfirm;
+
 
 
     @Override
@@ -28,10 +35,21 @@ public class SignupActivity extends AppCompatActivity {
 
         signUpButton = (Button) findViewById(R.id.loginbut2);
 
+        emailInput = (EditText) findViewById(R.id.editTextText7);
+        usernameInput = (EditText) findViewById(R.id.editTextText2);
+        passwordInput = (EditText) findViewById(R.id.editTextTextPassword2);
+        passwordConfirm = (EditText) findViewById(R.id.editTextTextPassword);
+
+
+
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                makeJSONObjectRequest(null, null, null);
+                String email = emailInput.getText().toString();
+                String username = usernameInput.getText().toString();
+                String password = passwordInput.getText().toString();
+
+                makeJSONObjectRequest(username, email, password);
 
                 Intent intent = new Intent(SignupActivity.this, ProfileActivity.class);
                 startActivity(intent);
@@ -42,9 +60,9 @@ public class SignupActivity extends AppCompatActivity {
     private void makeJSONObjectRequest(String username, String email, String password){
         JSONObject body = new JSONObject();
         try {
-            body.put("username","HockeySteve");
-            body.put("email_address","knightssteve@gmail.com");
-            body.put("password","GoldenKnightsGo123");
+            body.put("username",username);
+            body.put("email_address",email);
+            body.put("password",password);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
