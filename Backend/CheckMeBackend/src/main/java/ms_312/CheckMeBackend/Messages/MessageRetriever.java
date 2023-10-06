@@ -2,7 +2,7 @@ package ms_312.CheckMeBackend.Messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import ms_312.CheckMeBackend.Users.User;
+import ms_312.CheckMeBackend.Users.RetrieverOwner;
 
 /**
  * Abstract class that contains the API used by platform specific classes for retrieving messages
@@ -24,11 +24,11 @@ public abstract class MessageRetriever {
 
     /**
      * @param source A complete URL pointing to the API location this Retriever should get Messages from
-     * @param owner The {@link User} that this reriever should get messages for
+     * @param owner The {@link RetrieverOwner} that this reriever should get messages for
      */
-    public MessageRetriever(String source, User owner) {
+    public MessageRetriever(String source, RetrieverOwner owner) {
         this.source = source;
-        this.user = owner;
+        this.owner = owner;
     }
 
     /**
@@ -43,7 +43,7 @@ public abstract class MessageRetriever {
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonIgnore
-    private User user;
+    private RetrieverOwner owner;
 
     /**
      * Get all the Messages provided by the {@link MessageRetriever#source} for this Retriever
@@ -53,18 +53,18 @@ public abstract class MessageRetriever {
     public abstract Message[] getAll();
 
     /**
-     * @return The {@link User} this retriever gets messages  for
+     * @return The {@link RetrieverOwner} this retriever gets messages  for
      */
-    public User getUser() {
-        return user;
+    public RetrieverOwner getOwner() {
+        return owner;
     }
 
     /**
      * Set the User this retriever gets messages for
-     * @param user User object to set this retriever to
+     * @param owner User object to set this retriever to
      */
-    public void setUser(User user) {
-        this.user = user;
+    public void setOwner(RetrieverOwner owner) {
+        this.owner = owner;
     }
 
     /**
@@ -80,6 +80,8 @@ public abstract class MessageRetriever {
     public String getSource() {
         return source;
     }
+
+
 
 
 

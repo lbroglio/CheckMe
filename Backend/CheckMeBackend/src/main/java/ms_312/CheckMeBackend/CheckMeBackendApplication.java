@@ -1,5 +1,7 @@
 package ms_312.CheckMeBackend;
 
+import ms_312.CheckMeBackend.Users.Group;
+import ms_312.CheckMeBackend.Users.GroupRepository;
 import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.apache.tomcat.util.json.JSONParser;
@@ -25,6 +27,9 @@ import java.util.LinkedHashMap;
 public class CheckMeBackendApplication {
 	@Autowired
 	UserRepository userRepository;
+
+	@Autowired
+	GroupRepository groupRepository;
 
 	/**
 	 * Hashes a string and compares it to the saved hash belonging to a given {@link User}
@@ -104,7 +109,7 @@ public class CheckMeBackendApplication {
 		}
 
 		//Confirm that the username is unqiue
-		User existingUser = userRepository.findByUsername(username);
+		User existingUser = userRepository.findByName(username);
 
 		// If the search found a user
 		if(existingUser != null){
@@ -166,7 +171,7 @@ public class CheckMeBackendApplication {
 	 */
 	@GetMapping("/dev/user/{username}")
 	public User seeUserDev(@PathVariable String username){
-		User toReturn = userRepository.findByUsername(username);
+		User toReturn = userRepository.findByName(username);
 
 		// Throw an exception if the user doesn't exist
 		if(toReturn == null){
@@ -180,7 +185,7 @@ public class CheckMeBackendApplication {
 	@GetMapping("/user/{username}")
 	public User seeUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
 		// Get the user object for the given username
-		User requested = userRepository.findByUsername(username);
+		User requested = userRepository.findByName(username);
 
 		// Return 404 if the requested user doesn't exist
 		if(requested == null){
@@ -227,7 +232,7 @@ public class CheckMeBackendApplication {
 	@PutMapping("/user/{username}/account_settings")
 	public ResponseEntity<String> updateUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password, @RequestBody String profileSettings) throws NoSuchAlgorithmException {
 		// Get the User to update the account settings for
-		User toUpdate = userRepository.findByUsername(username);
+		User toUpdate = userRepository.findByName(username);
 
 		// Return 404 if the no User exists with the given Username
 		if(toUpdate == null){
@@ -277,7 +282,7 @@ public class CheckMeBackendApplication {
 	@GetMapping("/user/{username}/account_settings")
 	public String getUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
 		// Get the User to update the account settings for
-		User toReturn = userRepository.findByUsername(username);
+		User toReturn = userRepository.findByName(username);
 
 		// Return 404 if the no User exists with the given Username
 		if(toReturn == null){
@@ -345,7 +350,7 @@ public class CheckMeBackendApplication {
 		}
 
 		//Get the User
-		User user = userRepository.findByUsername(username);
+		User user = userRepository.findByName(username);
 
 		// Return 404 if the user doesn't exist
 		if(user == null){
@@ -374,6 +379,25 @@ public class CheckMeBackendApplication {
 
 		}
 
+	}
+
+	@PostMapping("/group")
+	public void createGroup(){
+		User groupBob = new User("Bob","gbob@yahoo.com","12345".getBytes(),"54321".getBytes());
+		userRepository.save(groupBob);
+
+		Group bobsGroup = new Group("BobsHomies",groupBob);
+
+		groupRepository.save(bobsGroup);
+	}
+
+	@GetMapping("/group")
+	public Group getGroup(){
+		return groupRepository.findByName("BobsHomies");
+	}
+	@GetMapping("/group/user")
+	public User getGroupUser(){
+		return userRepository.findByName("Bob");
 	}
 
 
