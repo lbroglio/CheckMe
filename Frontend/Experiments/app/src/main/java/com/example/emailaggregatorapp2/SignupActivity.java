@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -27,8 +28,6 @@ public class SignupActivity extends AppCompatActivity {
     private EditText passwordConfirm;
 
     private Button backbutton;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

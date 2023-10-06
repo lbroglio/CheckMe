@@ -16,6 +16,14 @@
     <string name="usernamecolon">Username:</string>
     <string name="emailcolon">Email:</string>
     <string name="Back">Back</string>
+    <string name="message">Messages</string>
+    <string name="MessageSender">From:</string>
+    <string name="MessageRecipient">To:</string>
+    <string name="MessageSubject">Subject:</string>
+    <string name="MessageContents">Contents:</string>
+    <string name="IdPrompt">Message ID:</string>
+    <string name="SendButton">Send</string>
+    <string name="RecipientPrompt">Message Recipient</string>
 
 
 </resources>
