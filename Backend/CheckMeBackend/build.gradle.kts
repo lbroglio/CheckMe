@@ -22,8 +22,12 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+	implementation("mysql:mysql-connector-java:8.0.33")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+
 }
 
 tasks.withType<Test> {
