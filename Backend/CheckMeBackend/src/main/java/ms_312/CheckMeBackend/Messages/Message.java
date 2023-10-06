@@ -26,29 +26,15 @@ public class Message {
     private String recipient;
     private String contents;
     private String subject;
-    private LocalDateTime sendTime;
-    private String platform;
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    /**
-     * Create a new message with the specified parameters.
-     *
-     * @param sender The name or identifier associated with this message
-     * @param recipient The name
-     * @param contents The contents or body of this message
-     * @param subject The subject of this message.
-     * @param sendTime The time this message was sent according to the platform it was retrieved from.
-     * @param platform String with the name of the platform this message was retrieved from
-     */
-    public Message(String sender, String recipient, String contents, String subject, LocalDateTime sendTime, String platform) {
+    public Message(String sender, String recipient, String contents, String subject) {
         this.sender = sender;
         this.recipient = recipient;
         this.contents = contents;
         this.subject = subject;
-        this.sendTime = sendTime;
-        this.platform = platform;
         this.ID = this.hashCode();
     }
 
@@ -58,16 +44,12 @@ public class Message {
      *
      * @param sender The name or identifier associated with this message
      * @param contents The contents or body of this message
-     * @param sendTime The time this message was sent according to the platform it was retrieved from.
-     * @param platform String with the name of the platform this message was retrieved from
      */
-    public Message(String sender, String recipient, String contents, LocalDateTime sendTime, String platform) {
+    public Message(String sender, String recipient, String contents) {
         this.sender = sender;
         this.recipient = recipient;
         this.contents = contents;
         this.subject = null;
-        this.sendTime = sendTime;
-        this.platform = platform;
         this.ID = this.hashCode();
     }
 
@@ -93,19 +75,6 @@ public class Message {
      */
     public void setSubject(String subject) {
         this.subject = subject;
-    }
-    /**
-     * Retrieve the time that this message was sent as reported by the platform it was retrieved from
-     * as a Java {@link LocalDateTime} object.
-     */
-    public void setSendTime(LocalDateTime sendTime) {
-        this.sendTime = sendTime;
-    }
-    /**
-     * Retrieve the messaging platform or service (Gmail Teams etc.) that this message was retrieved from as a String
-     */
-    public void setPlatform(String platform) {
-        this.platform = platform;
     }
 
     /**
@@ -139,19 +108,6 @@ public class Message {
     public String getSubject() {
         return subject;
     }
-    /**
-     * Retrieve the time that this message was sent as reported by the platform it was retrieved from
-     * as a Java {@link LocalDateTime} object.
-     */
-    public LocalDateTime getSendTime() {
-        return sendTime;
-    }
-    /**
-     * Retrieve the messaging platform or service (Gmail Teams etc.) that this message was retrieved from as a String
-     */
-    public String getPlatform() {
-        return platform;
-    }
 
     /**
      * Retrieve the ID for this message. A unique identifier created from the Has of its sender, contents, sendTime, and platform
@@ -163,12 +119,12 @@ public class Message {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Message message = (Message) o;
-        return Objects.equals(sender, message.sender) && Objects.equals(contents, message.contents) && Objects.equals(sendTime, message.sendTime) && Objects.equals(platform, message.platform);
+        return Objects.equals(sender, message.sender) && Objects.equals(recipient, message.recipient) && Objects.equals(contents, message.contents);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sender, contents, sendTime, platform);
+        return Objects.hash(sender, contents);
     }
 
 
@@ -179,8 +135,6 @@ public class Message {
                 ", recipient='" + recipient + '\'' +
                 ", contents='" + contents + '\'' +
                 ", subject='" + subject + '\'' +
-                ", sendTime=" + sendTime +
-                ", platform='" + platform + '\'' +
                 '}';
     }
 

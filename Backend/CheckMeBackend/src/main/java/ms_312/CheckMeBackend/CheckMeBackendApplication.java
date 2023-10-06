@@ -230,7 +230,7 @@ public class CheckMeBackendApplication {
 		LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
 
 
-		Message createdMessage = new Message(sender, recipient, contents, subject, sendTime, platform);
+		Message createdMessage = new Message(sender, recipient, contents, subject);
 		messageRepository.save(createdMessage);
 
 		return new ResponseEntity<>("Saved message",HttpStatus.OK );
