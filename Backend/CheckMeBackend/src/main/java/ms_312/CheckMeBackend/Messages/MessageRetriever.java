@@ -50,9 +50,7 @@ public abstract class MessageRetriever {
      *
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
-    public Message[] getAll(){
-        return null;
-    };
+    public abstract Message[] getAll();
 
     /**
      * @return The {@link User} this retriever gets messages  for

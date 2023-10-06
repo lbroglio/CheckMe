@@ -389,7 +389,7 @@ public class CheckMeBackendApplication {
 
 
 
-	@PostMapping
+	@PostMapping("/message")
 	public ResponseEntity<String> createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
 		// Parse the JSON body of the post request
 		JSONParser parseBody = new JSONParser(messageInfo);
@@ -416,9 +416,36 @@ public class CheckMeBackendApplication {
 		Message createdMessage = new Message(sender, recipient, contents, subject);
 		messageRepository.save(createdMessage);
 
-		return new ResponseEntity<>("Saved message",HttpStatus.OK );
+		return new ResponseEntity<>("Saved message: " + createdMessage.getID(),HttpStatus.OK );
 	}
 
+	@GetMapping("/message/id/{id}")
+	public String seeMessage(@PathVariable int id){
+		Message requested = messageRepository.findByID(id);
+
+		// Return 404 if the requested user doesn't exist
+		if(requested == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is no message with the given ID");
+
+		}
+
+		return requested.toString();
+
+	}
+
+	@GetMapping("/message/user/{user}")
+	public String userMessages(@PathVariable String user){
+		Message requested = messageRepository.findByRecipient(user);
+
+		// Return 404 if the requested user doesn't exist
+		if(requested == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is no message with the given ID");
+
+		}
+
+		return requested.toString();
+
+	}
 
 
 

@@ -7,6 +7,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
 
     Message findByID(int ID);
 
+    Message findByRecipient(String recipient);
+
     @Transactional
     void deleteByID(int ID);
 }
