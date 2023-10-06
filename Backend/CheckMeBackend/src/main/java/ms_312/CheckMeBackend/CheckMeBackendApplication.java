@@ -206,7 +206,7 @@ public class CheckMeBackendApplication {
 
 	}
 
-	@PostMapping
+	@PostMapping("/message")
 	public ResponseEntity<String> createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
 		// Parse the JSON body of the post request
 		JSONParser parseBody = new JSONParser(messageInfo);
@@ -233,9 +233,19 @@ public class CheckMeBackendApplication {
 		Message createdMessage = new Message(sender, recipient, contents, subject);
 		messageRepository.save(createdMessage);
 
-		return new ResponseEntity<>("Saved message",HttpStatus.OK );
+		return new ResponseEntity<>("Saved message: "+createdMessage.getID(),HttpStatus.OK );
 	}
 
+	@GetMapping("/message/{id}")
+	public Message getMessage(@PathVariable int id){
+		Message toReturn = messageRepository.findByID(id);
+
+		if(toReturn == null){
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Could not find message");
+		}
+
+		return toReturn;
+	}
 
 
 
