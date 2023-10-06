@@ -20,6 +20,11 @@ public class User {
     private String username;
 
     /**
+     * The email address associated with the user's account
+     */
+    private String email;
+
+    /**
      * A cryptographic hash of this account's password.
      */
     @JsonIgnore
@@ -48,11 +53,13 @@ public class User {
      * Construct a new empty user with the given username and password hash.
      *
      * @param username     A string storing the username to identify this account by.
+     * @param email The email address to be associated with this User's account
      * @param passwordHash A cryptographic hash of this account's password.
-     * @param salt The salt used to hash this user's password
+     * @param salt         The salt used to hash this user's password
      */
-    public User(String username, byte[] passwordHash, byte[] salt) {
+    public User(String username, String email, byte[] passwordHash, byte[] salt) {
         this.username = username;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
         messageRetrievers = new ArrayList<>();
@@ -125,6 +132,13 @@ public class User {
      */
     public byte[] getSalt() {
         return salt;
+    }
+
+    /**
+     * @return The email address associated with this account
+     */
+    public String getEmail() {
+        return email;
     }
 
 
