@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import ms_312.CheckMeBackend.Users.User;
+
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -12,37 +14,22 @@ import java.util.Objects;
  */
 @Entity
 public class Message {
-    /**
-     * The name or identifier associated with who sent this message
-     */
-    private final String sender;
-    /**
-     * The text or the body of this message.
-     */
-    private final String recipient;
-
-    private final String contents;
-    /**
-     * Any subject or title associated with this message by the platform
-     */
-    private final String subject;
-
-    /**
-     * The time that this message was sent as reported by the platform it was retrieved from
-     */
-    private final LocalDateTime sendTime;
-
-    /**
-     * The messaging platform or service (Gmail Teams etc.) that this message was retrieved from
-     */
-    private final String platform;
 
     /**
      * The ID of this message. The ID is created from the Hash of the sender, contents, send time, and platform
      */
-    @ID
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private final int ID;
+    private int ID;
+    private String sender;
+    private String recipient;
+    private String contents;
+    private String subject;
+    private LocalDateTime sendTime;
+    private String platform;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     /**
      * Create a new message with the specified parameters.
@@ -83,11 +70,7 @@ public class Message {
         this.ID = this.hashCode();
     }
 
-    public Message() {
-
-    }
-
-    //Setters for each field
+    public Message() {}
 
     /**
      * Retrieve the name or identifier associated with who sent this message as a string
@@ -106,7 +89,6 @@ public class Message {
     /**
      * Retrieve any subject or title associated with this message by the platform as String.
      * Can be null if no subject exist
-     *
      */
     public void setSubject(String subject) {
         this.subject = subject;

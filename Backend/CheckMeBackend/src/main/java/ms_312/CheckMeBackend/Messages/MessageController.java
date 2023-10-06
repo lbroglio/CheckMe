@@ -29,6 +29,4 @@ public class MessageController {
     messageRepository.save(message);
     return  success;
     }
-
-
 }
