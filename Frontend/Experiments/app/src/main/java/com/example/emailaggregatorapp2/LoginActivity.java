@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,6 +24,10 @@ public class LoginActivity extends AppCompatActivity {
     private static final String API_URL = "http://data.jsontest.com/";
     private TextView responseTextView;
     private Button loginbutton;
+    private EditText usernameEditText;
+    private EditText passwordEditText;
+    public static String username;
+    public static String password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,12 +36,18 @@ public class LoginActivity extends AppCompatActivity {
 
         //responseTextView = (TextView) findViewById(R.id.jsonresponse);
         loginbutton = (Button) findViewById(R.id.loginbut2);
+        usernameEditText = (EditText) findViewById(R.id.loginusernameedittext);
+        passwordEditText = (EditText) findViewById(R.id.loginpasswordedittext);
 
         loginbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                username = usernameEditText.getText().toString();
+                password = passwordEditText.getText().toString();
                 Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
                 startActivity(intent);
+
+
             }
         });
     }

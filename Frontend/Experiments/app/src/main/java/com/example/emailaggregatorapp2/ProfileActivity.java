@@ -12,6 +12,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import java.lang.String;
 
 import android.content.Context;
 import android.widget.Button;
@@ -45,7 +46,14 @@ import java.util.Map;
 
 public class ProfileActivity extends AppCompatActivity {
     private TextView responseTextView;
-    private static final String URL_JSON_OBJECT = "http://coms-309-047.class.las.iastate.edu:8080/user/BaseballBob";
+    private TextView profileviewemailtextview;
+    private TextView profileviewusernametextview;
+
+    String passwordstring = LoginActivity.password;
+    String usernamestring = LoginActivity.username;
+
+    private static final String URL_JSON_OBJECT = "http://coms-309-047.class.las.iastate.edu:8080/user/";
+    private String URL_STRING = URL_JSON_OBJECT + usernamestring;
             // http://data.jsontest.com/";
     //private RequestQueue requestQueue;
 
@@ -54,7 +62,11 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
-        responseTextView = (TextView) findViewById(R.id.jsonresponse);
+        profileviewusernametextview = (TextView) findViewById(R.id.profileviewusernametextview);
+        profileviewemailtextview = (TextView) findViewById(R.id.profileviewemailtextview);
+
+
+
 
 
         makeJsonObjReq();
@@ -66,7 +78,7 @@ public class ProfileActivity extends AppCompatActivity {
     private void makeJsonObjReq() {
         JsonObjectRequest jsonObjReq = new JsonObjectRequest(
                 Request.Method.GET,
-                URL_JSON_OBJECT,
+                URL_STRING,
                 null, // Pass null as the request body since it's a GET request
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -75,13 +87,13 @@ public class ProfileActivity extends AppCompatActivity {
                         Log.d("Volley Response", response.toString());
                         try {
                             // Parse JSON object data
-                            //String username = response.getString("username");
+                            String username = response.getString("username");
                             String email = response.getString("email");
                             //String phone = response.getString("phone");
 
                             // Populate text views with the parsed data
-                            //responseTextView.setText(username);
-                            responseTextView.setText(email);
+                            profileviewusernametextview.setText(username);
+                            profileviewemailtextview.setText(email);
                             //tvPhone.setText(phone);
 
                         } catch (JSONException e) {
@@ -99,7 +111,8 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 HashMap<String, String> headers = new HashMap<String, String>();
-                headers.put("Authorization", "CubsGo123");
+
+                headers.put("Authorization", passwordstring);
 //                headers.put("Content-Type", "application/json");
                 return headers;
             }
