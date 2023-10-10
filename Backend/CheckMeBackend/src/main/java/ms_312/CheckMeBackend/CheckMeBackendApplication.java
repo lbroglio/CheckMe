@@ -1,5 +1,8 @@
 package ms_312.CheckMeBackend;
 
+import jakarta.annotation.PostConstruct;
+import ms_312.CheckMeBackend.Messages.DemoRetriever;
+import ms_312.CheckMeBackend.Messages.MessageRetriever;
 import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.GroupRepository;
 import ms_312.CheckMeBackend.Users.User;
@@ -15,12 +18,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.swing.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 @SpringBootApplication
 @RestController
@@ -30,6 +36,16 @@ public class CheckMeBackendApplication {
 
 	@Autowired
 	GroupRepository groupRepository;
+
+	@PostConstruct
+	private void rebuildStatics(){
+		List<Group> allGroups = groupRepository.findAll();
+
+		for (Group allGroup : allGroups) {
+			allGroup.fillCodeList();
+		}
+
+	}
 
 	/**
 	 * Hashes a string and compares it to the saved hash belonging to a given {@link User}
@@ -74,7 +90,7 @@ public class CheckMeBackendApplication {
 	 * Returns a 409 status code if the username is taken.
 	 *
 	 * @param userInfo JSON body included in the POST request with the username and password of the user to be created.
-	 * 
+	 *
 	 * @return A {@link ResponseEntity} with a 201 status code indicating the user was created, a
 	 * 409 status code indicating the username was taken, or a 400 code if the request body's JSON is malformed or
 	 * is missing a field.
@@ -383,29 +399,39 @@ public class CheckMeBackendApplication {
 
 	@PostMapping("/group")
 	public void createGroup(){
+
 		User groupBob = new User("Bob","gbob@yahoo.com","12345".getBytes(),"54321".getBytes());
-		userRepository.save(groupBob);
+
 
 		Group bobsGroup = new Group("BobsHomies",groupBob);
+		Group bobsGroup2 = new Group("BobsEnemies",groupBob);
 
+		MessageRetriever demo = new DemoRetriever("https://test.com/fake",groupBob);
+		MessageRetriever demo2 = new DemoRetriever("https://test.com/fake",bobsGroup);
+
+
+		groupBob.newMessageSource("https://test.com/fake");
+		bobsGroup.newMessageSource("https://test.com/fake");
+
+		userRepository.save(groupBob);
 		groupRepository.save(bobsGroup);
+		groupRepository.save(bobsGroup2);
 	}
 
 	@GetMapping("/group")
 	public Group getGroup(){
+		ArrayList<String> codes = Group.getCodesInUse();
+
+		for (int i =0; i < codes.size(); i++){
+			System.out.println(codes.get(i));
+		}
+
 		return groupRepository.findByName("BobsHomies");
 	}
 	@GetMapping("/group/user")
 	public User getGroupUser(){
 		return userRepository.findByName("Bob");
 	}
-
-
-
-
-
-
-
 
 
 }

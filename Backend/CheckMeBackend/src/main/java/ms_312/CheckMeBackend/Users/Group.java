@@ -1,6 +1,7 @@
 package ms_312.CheckMeBackend.Users;
 
 
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.MessageRetriever;
@@ -10,11 +11,19 @@ import java.util.List;
 import java.util.Random;
 
 @Entity
+//@Table(name="GROUPS")
 public class Group extends RetrieverOwner{
     /**
      * Holds all the codes currently in use by groups to prevent two groups being assigned the same code.
      */
     private static final ArrayList<String> codesInUse = new ArrayList<>();
+
+    /**
+     * @return An ArrayList with all the join codes currently used by groups
+     */
+    public static ArrayList<String> getCodesInUse(){
+        return codesInUse;
+    }
 
 
     /**
@@ -22,16 +31,14 @@ public class Group extends RetrieverOwner{
      * User's with  admin powers are still included in this list
      */
     @ManyToMany
-    @JoinColumn(name = "user_id")
-    private ArrayList<User> members;
+    //@JoinColumn(name = "user_id")
+    private List<User> members;
 
     /**
-     * A list of this Group's members  who have Admin privileges over the Group --  This list is in
-     * addition to the member's list. All admins will also be listed as members as well
+     * A list of the String username's of th is Group's members who have Admin privileges over the Group --
+     * This list is in addition to the member's list. All admins will also be listed as members as well
      */
-    //@ManyToMany
-    //@JoinColumn(name = "user_id")
-    //private ArrayList<User> admins;
+    private List<String> admins;
 
     /**
      * An 8 character code used to join this group
@@ -90,7 +97,6 @@ public class Group extends RetrieverOwner{
     /**
      * This ensures that the static {@link #codesInUse} is rebuilt when Groups are loaded by the JPA
      */
-    @PostLoad
     public void fillCodeList(){
         codesInUse.add(this.joinCode);
     }
@@ -106,7 +112,7 @@ public class Group extends RetrieverOwner{
     /**
      * @return An ArrayList of the {@link User} objects for the members of this group
      */
-    public ArrayList<User> getMembers() {
+    public List<User> getMembers() {
         return members;
     }
 
@@ -116,6 +122,15 @@ public class Group extends RetrieverOwner{
      */
     public void addMember(User newMember) {
         this.members.add(newMember);
+    }
+
+    /**
+     * Method to set the list of Members used by the JPA
+     *
+     * @param members ArrayList to set members to
+     */
+    private void setMembers(List<User> members){
+        this.members = members;
     }
 
     /**

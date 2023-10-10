@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name="USERS")
+//@Table(name="USERS")
 public class User extends RetrieverOwner{
     /**
      * The email address associated with the user's account
@@ -33,8 +33,9 @@ public class User extends RetrieverOwner{
      */
     private String profileSettings;
 
-    @ManyToMany
-    private ArrayList<Group> groups;
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Group> groups;
 
     /**
      * Construct a new empty user with the given username and password hash.
@@ -46,6 +47,7 @@ public class User extends RetrieverOwner{
      */
     public User(String username, String email, byte[] passwordHash, byte[] salt) {
         super(username);
+        this.groups = new ArrayList<>();
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
@@ -95,6 +97,31 @@ public class User extends RetrieverOwner{
      */
     public String getEmail() {
         return email;
+    }
+
+    /**
+     * @return An ArrayList containing all the {@link Group} objects for the groups this User is a member of.
+     */
+    public List<Group> getGroups(){
+        return groups;
+    }
+
+    /**
+     * Function to update the List of {@link Group}s used by the persistence API
+     *
+     * @param groups The {@link ArrayList} of {@link Group] objects represneitng groups this User is a member of
+     */
+    private void setGroups(List<Group> groups) {
+        this.groups = groups;
+    }
+
+    /**
+     * Add a new Group that this User is a member of to the stored list of this User's groups
+     *
+     * @param group The {@link Group} object for the Group this User is joining
+     */
+    public void joinGroup(Group group){
+        groups.add(group);
     }
 
 
