@@ -1,8 +1,6 @@
 package ms_312.CheckMeBackend;
 
 import jakarta.annotation.PostConstruct;
-import ms_312.CheckMeBackend.Messages.DemoRetriever;
-import ms_312.CheckMeBackend.Messages.MessageRetriever;
 import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.GroupRepository;
 import ms_312.CheckMeBackend.Users.User;
@@ -18,15 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.swing.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 
 @SpringBootApplication
 @RestController
@@ -78,6 +72,55 @@ public class CheckMeBackendApplication {
 		return Arrays.equals(savedHash, givenPassHash);
 
 	}
+
+	/**
+	 * Take in a string passed in the header of a request using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentification</a>
+	 * and separate the base64 encoding from the Basic keyword
+	 * @param authHeader The string passed in an HTTP request's authorization header containing Basic Auth to be parsed
+	 *
+	 * @return A string containing only the Base64 from the header not the Basic Keyword
+	 */
+	private static String parseBasicAuthHeader(String authHeader){
+		String[] splitHeader = authHeader.split(" ");
+		return splitHeader[1];
+	}
+
+	/**
+	 * Verifies if a login passed via a Base64 String (HTTP Basic Authentication) is correct.
+	 * Handles decoding the given String verifying if the USer exists and if the password is correct.
+	 *
+	 * @param encodedAuth A Base64 encoded string in the form of <br/>{username}:{password} --
+	 * <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">For more Information</a>
+	 *
+	 * @return
+	 * true if the User was correctly logged in  -- User exists and  the correct password was given
+	 * false if the login  failed for any reason
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	private boolean checkBasicAuth(String encodedAuth) throws NoSuchAlgorithmException{
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(encodedAuth);
+		String auth = new String(authBytes);
+
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+		String password = auth.substring(authSplit +1);
+
+		//Find the User with the given Username
+		User authUser = userRepository.findByName(username);
+
+		//Return false if no such User exists
+		if(authUser == null){
+			return false;
+		}
+
+		// Return true if the given password is correct and false if it isn't
+		return checkPassword(authUser, password);
+	}
+
 
 	public static void main(String[] args) {
 		SpringApplication.run(CheckMeBackendApplication.class, args);
@@ -397,40 +440,198 @@ public class CheckMeBackendApplication {
 
 	}
 
+	/**
+	 * API endpoint to create a new Group. Will add a new {@link Group} object to the database corresponding to the
+	 * created Group. The User making this request will be added to the Group as an admin.
+	 *
+	 * @param groupInfo Request body in JSON form -- should include a field "name" with the name to give the newly
+	 * created group.
+	 * @param userAuth The requesting User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+	 * Info should be sent in the form of Basic: {username}:{password}
+	 *
+	 * @return
+	 * 201 Status If the group was succesfully created
+	 * 400 Status If the request's body is invalid JSON or if the JSOn does not contain a "name" field
+	 * 401 Status If the User making the request could not be properly authenticated
+	 * 407 Status If a Group with the given name already exists
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	// Unchecked casts are from interacting with the JSON API
+	@SuppressWarnings("unchecked")
 	@PostMapping("/group")
-	public void createGroup(){
+	public ResponseEntity<String> createGroup(@RequestBody String groupInfo, @RequestHeader(HttpHeaders.AUTHORIZATION) String userAuth) throws NoSuchAlgorithmException{
+		//Authorize that the request to create this group comes from a valid user and they are authenticated
+		String authString = parseBasicAuthHeader(userAuth);
+		boolean authenticated = checkBasicAuth(authString);
 
-		User groupBob = new User("Bob","gbob@yahoo.com","12345".getBytes(),"54321".getBytes());
-
-
-		Group bobsGroup = new Group("BobsHomies",groupBob);
-		Group bobsGroup2 = new Group("BobsEnemies",groupBob);
-
-		MessageRetriever demo = new DemoRetriever("https://test.com/fake",groupBob);
-		MessageRetriever demo2 = new DemoRetriever("https://test.com/fake",bobsGroup);
-
-
-		groupBob.newMessageSource("https://test.com/fake");
-		bobsGroup.newMessageSource("https://test.com/fake");
-
-		userRepository.save(groupBob);
-		groupRepository.save(bobsGroup);
-		groupRepository.save(bobsGroup2);
-	}
-
-	@GetMapping("/group")
-	public Group getGroup(){
-		ArrayList<String> codes = Group.getCodesInUse();
-
-		for (int i =0; i < codes.size(); i++){
-			System.out.println(codes.get(i));
+		//Return 401  if the User could not be  authenticated
+		if(!authenticated){
+			return new ResponseEntity<>("Username or Password was incorrect.",HttpStatus.UNAUTHORIZED);
 		}
 
-		return groupRepository.findByName("BobsHomies");
+		//Get the User making the request
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(authString);
+		String auth = new String(authBytes);
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+		User requestUser = userRepository.findByName(username);
+
+		//Read the name of the  Group from the request body
+		JSONParser parser = new JSONParser(groupInfo);
+		LinkedHashMap<Object, Object> requestBody;
+
+		//Attempt to Parse body returning 400 if Invalid JSON was given
+		try{
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>("Could not parse JSON included in request body",HttpStatus.BAD_REQUEST);
+		}
+
+		String name = (String) requestBody.get("name");
+
+		if(name == null){
+			return new ResponseEntity<>("No Group name included in request body",HttpStatus.BAD_REQUEST);
+		}
+
+		//Confirm no group with the  given name exists
+		if(groupRepository.findByName(name) != null){
+			return new ResponseEntity<>("Group name " + name + " is taken." ,HttpStatus.CONFLICT);
+		}
+
+		//Create the group
+		Group createdGroup = new Group(name, requestUser);
+		//Add the group to the creator
+		requestUser.joinGroup(createdGroup);
+
+		//Save
+		userRepository.save(requestUser);
+		groupRepository.save(createdGroup);
+
+		//Return success indicator
+		return new ResponseEntity<>("Created Group: "+name,HttpStatus.CREATED);
+
 	}
-	@GetMapping("/group/user")
-	public User getGroupUser(){
-		return userRepository.findByName("Bob");
+
+
+	/**
+	 * API Endpoint for retrieving a {@link Group} object using the randomly generated name of the group.
+	 *
+	 * @param name A string holding the assigned name of this group
+	 * @param authorization The requesting User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+	 * Info should be sent in the form of Basic: {username}:{password}
+	 *
+	 * @return The {@link  Group} object requested
+	 *
+	 * @throws ResponseStatusException
+	 * 401 If a User's account could not be signed in to with the given Authentication info.
+	 * 403 If the requesting User is not a member of the requested Group
+	 * 404 If no group with the given name exists
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+
+	@GetMapping("/group/name/{name}")
+	public Group getGroupByName(@PathVariable String name, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws NoSuchAlgorithmException, ResponseStatusException {
+		//Separate the Base64 string from the rest of the authentication header
+		authorization = parseBasicAuthHeader(authorization);
+
+		//Check if the User's authentication is correct
+		boolean checkAuth = checkBasicAuth(authorization);
+
+		if(!checkAuth){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
+		}
+
+		//Get a group with the requested name
+		Group requested = groupRepository.findByName(name);
+
+		// Return 404 if the requested group doesn't exist
+		if(requested == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no group with the given name");
+
+		}
+
+		//Get the user making the request
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(authorization);
+		String auth = new String(authBytes);
+
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+
+		User requestUser = userRepository.findByName(username);
+
+		//Check if the User is a member of the group and return 403 if they are not
+		if(!requested.getMembers().contains(requestUser)){
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have access to this group");
+		}
+
+		return requested;
+	}
+
+	/**
+	 * API Endpoint for retrieving a {@link Group} object using the randomly generated Join code of the group.
+	 *
+	 * @param joinCode The 8 character randomly generated String used for joining this Group.
+	 * @param authorization The requesting User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+	 * Info should be sent in the form of Basic: {username}:{password}
+	 *
+	 * @return The {@link  Group} object requested
+	 *
+	 * @throws ResponseStatusException
+	 * 401 If a User's account could not be signed in to with the given Authentication info.
+	 * 403 If the requesting User is not a member of the requested Group
+	 * 404 If no group with the Given join code exists
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	@GetMapping("/group/code/{joinCode}")
+	public Group getGroupByJoinCode(@PathVariable String joinCode, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws NoSuchAlgorithmException, ResponseStatusException {
+		//Separate the Base64 string from the rest of the authentication header
+		authorization = parseBasicAuthHeader(authorization);
+
+		//Check if the User's authentication is correct
+		boolean checkAuth = checkBasicAuth(authorization);
+
+		if(!checkAuth){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
+		}
+
+		//Get a group with the requested join code
+		Group requested = groupRepository.findByJoinCode(joinCode);
+
+		// Return 404 if the requested group doesn't exist
+		if(requested == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "There is no group with the given join code");
+
+		}
+
+		//Get the user making the request
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(authorization);
+		String auth = new String(authBytes);
+
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+
+		User requestUser = userRepository.findByName(username);
+
+		//Check if the User is a member of the group and return 403 if they are not
+		if(!requested.getMembers().contains(requestUser)){
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have access to this group");
+		}
+
+		return requested;
 	}
 
 

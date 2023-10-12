@@ -50,11 +50,11 @@ public class Group extends RetrieverOwner{
 
         //Instantiate member ArrayLists
         members = new ArrayList<>();
-        //admins  = new ArrayList<>();
+        admins  = new ArrayList<>();
 
         //Set the add the creator to members and admins
         members.add(creator);
-        //admins.add(creator);
+        admins.add(creator.getName());
 
         //Generate a Join code
         StringBuilder codeBuild = null;
@@ -134,12 +134,12 @@ public class Group extends RetrieverOwner{
     }
 
     /**
-     * @return An ArrayList of the {@link User} objects for the members of this group with admin powers
+     * @return A list of the usernames of this Group's admins
      */
-    /*public ArrayList<User> getAdmins() {
+    public List<String> getAdmins() {
         return admins;
     }
-    */
+
 
     /**
      * Promote of member of this group to have Admin powers
@@ -147,7 +147,6 @@ public class Group extends RetrieverOwner{
      *
      * @throws IllegalArgumentException If the User to make an admin isn't a member of the group
      */
-   /*
     public void addAdmin(User newAdmin) {
         //Check if the User to give admin powers is in the group
         if(members.contains(newAdmin)){
@@ -155,8 +154,8 @@ public class Group extends RetrieverOwner{
             throw new IllegalArgumentException("New admins must be member's of the group");
         }
 
-        this.admins.add(newAdmin);
+        this.admins.add(newAdmin.getName());
     }
-    */
+
 
 }
