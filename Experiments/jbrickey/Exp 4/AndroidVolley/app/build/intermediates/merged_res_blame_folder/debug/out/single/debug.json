@@ -1,0 +1,82 @@
+[
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/layout_string_request.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/layout/string_request.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/drawable-v24_ico_loading.GIF.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/drawable-v24/ico_loading.GIF"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/layout_activity_main.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/layout_json_request.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/layout/json_request.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/layout_image_request.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/layout/image_request.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/drawable-anydpi-v24_ic_launcher_foreground.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-pngs-4:/drawable-anydpi-v24/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/drawable-v24_ico_error.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/drawable-v24/ico_error.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.example.sumon.androidvolley.app-merged_res-8:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.example.sumon.androidvolley.app-main-10:/mipmap-xhdpi/ic_launcher.png"
+    }
+]
