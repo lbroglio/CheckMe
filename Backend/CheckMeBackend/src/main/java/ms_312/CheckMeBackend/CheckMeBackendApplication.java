@@ -44,6 +44,7 @@ public class CheckMeBackendApplication {
 	@Autowired
 	GroupRepository groupRepository;
 
+	@Autowired
 	MessageRepository messageRepository;
 
 	@PostConstruct
@@ -154,7 +155,7 @@ public class CheckMeBackendApplication {
 	 */
 	@GetMapping("/dev/user/{username}")
 	public User seeUserDev(@PathVariable String username){
-		User toReturn = userRepository.findByUsername(username);
+		User toReturn = userRepository.findByName(username);
 
 		// Throw an exception if the user doesn't exist
 		if(toReturn == null){
@@ -256,32 +257,6 @@ public class CheckMeBackendApplication {
 
 		return new ResponseEntity<>("Created new user: " + username,HttpStatus.CREATED );
 	}
-
-<<<<<<< Backend/CheckMeBackend/src/main/java/ms_312/CheckMeBackend/CheckMeBackendApplication.java
-	/** THIS IS A DESIGNED IN USE IN DEVELOPMENT AND WILL / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO
-	 * Get the information for a given username
-	 *
-	 * @param username The username of a user in the database
-	 *
-	 * @return The {@link User} object for the requested User
-	 *
-	 * @throws ResponseStatusException Will be thrown if no user exists with the passed username
-	 */
-	@GetMapping("/dev/user/{username}")
-	public User seeUserDev(@PathVariable String username){
-		User toReturn = userRepository.findByName(username);
-
-		// Throw an exception if the user doesn't exist
-		if(toReturn == null){
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"There is no user with the given username");
-		}
-
-		return toReturn;
-	}
-
-=======
->>>>>>> Backend/CheckMeBackend/src/main/java/ms_312/CheckMeBackend/CheckMeBackendApplication.java
-
 	@GetMapping("/user/{username}")
 	public User seeUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
 		// Get the user object for the given username
