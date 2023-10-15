@@ -7,6 +7,7 @@ import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -633,6 +634,275 @@ public class CheckMeBackendApplication {
 
 		return requested;
 	}
+
+	/**
+	 * Adds a member to a Group
+	 *
+	 * @param joinCode The join code of the Group to join
+	 * @param body JSON body containing the login of the User to add to the Group
+
+	 * @return
+	 * 200 Status If the Group joins the member
+	 * 400 Status If the request's body is invalid JSON
+	 * 401 Status If the User making the request could not be properly authenticated
+	 * 404 Status If either the member making the request does not exist or there is no Group with the given join code
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	// Unchecked casts are from interacting with the JSON API
+	@SuppressWarnings("unchecked")
+	@PutMapping("/group/join/{joinCode}")
+	public ResponseEntity<String> joinGroup(@PathVariable String joinCode, @RequestBody String body) throws NoSuchAlgorithmException {
+		// Get the group to join
+		Group toJoin = groupRepository.findByJoinCode(joinCode);
+
+		//Return 404 if the Group doesn't exist
+		if(toJoin == null){
+			return new ResponseEntity<>("There is no Group with the given join code", HttpStatus.NOT_FOUND);
+		}
+
+
+		// Create object to parse the body of the request
+		JSONParser parser = new JSONParser(body);
+
+		//Attempt to parse the JSON -- Return 400 if it cannot be parsed
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			//Parse the JSON
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>("Could not parse JSON included in request body", HttpStatus.BAD_REQUEST);
+		}
+
+		//Get the username and password from the request body
+		String username = (String) requestBody.get("username");
+		String password = (String) requestBody.get("password");
+
+		//Retrieve the User object for the given Username
+		User toPut = userRepository.findByName(username);
+
+		//Return 404 if the given User does not exist
+		if(toPut == null){
+			return new ResponseEntity<>("There is no User with the given username", HttpStatus.NOT_FOUND);
+		}
+
+		//Verify that the User's login (password) is correct
+		boolean loggedIn = checkPassword(toPut, password);
+
+		// Return 401 if the login is incorrect
+		if(!loggedIn){
+			return new ResponseEntity<>("Incorrect Password", HttpStatus.UNAUTHORIZED);
+
+		}
+
+		//Add the User to the group and vice versa
+		toPut.joinGroup(toJoin);
+		toJoin.addMember(toPut);
+
+		userRepository.save(toPut);
+		groupRepository.save(toJoin);
+
+		//Return 200
+		return new ResponseEntity<>("Group Joined", HttpStatus.OK);
+
+	}
+
+	/**
+	 * Promotes a member of a Group to have admin powers
+	 *
+	 * @param groupName The name of the Group to operate on
+	 * @param body JSON body containing the Username of the User to promote
+
+	 * @return
+	 * 200 Status If the member was successfully promoted
+	 * 400 Status If the request's body is invalid JSON or the member to promote is not a member of the group
+	 * 401 Status If the User making the request could not be properly authenticated
+	 * 403 Status If the User making the request is not an admin of the Group the being operated on
+	 * 404 Status If the member to promote or the group to operate on
+	 * do not exist
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	// Unchecked casts are from interacting with the JSON API
+	@SuppressWarnings("unchecked")
+	@PutMapping("/group/promote/{groupName}")
+	public ResponseEntity<String> promoteMember(@PathVariable String groupName,  @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @RequestBody String body) throws NoSuchAlgorithmException {
+		// Get the group to join
+		Group group = groupRepository.findByName(groupName);
+
+		//Return 404 if the Group doesn't exist
+		if(group == null){
+			return new ResponseEntity<>("There is no Group with the given join code", HttpStatus.NOT_FOUND);
+		}
+
+		//Separate the Base64 string from the rest of the authentication header
+		authorization = parseBasicAuthHeader(authorization);
+
+		//Check if the User's authentication is correct
+		boolean checkAuth = checkBasicAuth(authorization);
+
+		if(!checkAuth){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
+		}
+
+		//Get the User making the request
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(authorization);
+		String auth = new String(authBytes);
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+
+		//Check that the requesting User is an admin
+		if(!group.getAdmins().contains(username)){
+			return new ResponseEntity<>("User does not have permission to perform this action", HttpStatus.FORBIDDEN);
+		}
+
+		// Create object to parse the body of the request
+		JSONParser parser = new JSONParser(body);
+
+		//Attempt to parse the JSON -- Return 400 if it cannot be parsed
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			//Parse the JSON
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>("Could not parse JSON included in request body", HttpStatus.BAD_REQUEST);
+		}
+
+
+
+		// Get the Username of the member to promote
+		String toPromoteName = (String) requestBody.get("toPromote");
+		User toPromote = userRepository.findByName(toPromoteName);
+
+		//Return 404 if the user to promote does not exist
+		if(toPromote == null){
+			return new ResponseEntity<>("User to promote does not exist", HttpStatus.NOT_FOUND);
+
+		}
+
+		//Return 400 if the User to promote is not a member of thr group
+		if(!group.getMembers().contains(toPromote)){
+			return new ResponseEntity<>("User " + toPromote.getName() + " is not a member of group " + group.getName(), HttpStatus.BAD_REQUEST);
+
+		}
+
+		// Add the member to the group
+		group.addAdmin(toPromote);
+
+		groupRepository.save(group);
+
+		return new ResponseEntity<>("User " + toPromote.getName() + " added to admins of group " + group.getName(), HttpStatus.OK);
+
+	}
+
+	/**
+	 * Remove a member from a Grpup
+	 *
+	 * @param groupName The name of the Group to operate on
+	 * @param body JSON body containing the username of the User to remove
+
+	 * @return
+	 * 200 Status If the member was successfully removed
+	 * 400 Status If the request's body is invalid JSON or the member to promote is not a member of the group
+	 * 401 Status If the User making the request could not be properly authenticated
+	 * 403 Status If the User making the request is not an admin of the Group the being operated on
+	 * 404 Status If the member to promote or the group to operate on
+	 * do not exist
+	 *
+	 * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+	 */
+	// Unchecked casts are from interacting with the JSON API
+	@SuppressWarnings("unchecked")
+	@DeleteMapping("/group/remove/{groupName}")
+	public ResponseEntity<String> removeMember(@PathVariable String groupName,  @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @RequestBody String body) throws NoSuchAlgorithmException {
+		// Get the group to join
+		Group group = groupRepository.findByName(groupName);
+
+		//Return 404 if the Group doesn't exist
+		if(group == null){
+			return new ResponseEntity<>("There is no Group with the given join code", HttpStatus.NOT_FOUND);
+		}
+
+		//Separate the Base64 string from the rest of the authentication header
+		authorization = parseBasicAuthHeader(authorization);
+
+		//Check if the User's authentication is correct
+		boolean checkAuth = checkBasicAuth(authorization);
+
+		if(!checkAuth){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
+		}
+
+		//Get the User making the request
+		//Decode the authorization header
+		byte[] authBytes = Base64.getDecoder().decode(authorization);
+		String auth = new String(authBytes);
+		//Separate the Username and password
+		int authSplit = auth.lastIndexOf(':');
+		String username = auth.substring(0, authSplit);
+
+		//Check that the requesting User is an admin
+		if(!group.getAdmins().contains(username)){
+			return new ResponseEntity<>("User does not have permission to perform this action", HttpStatus.FORBIDDEN);
+		}
+
+		// Create object to parse the body of the request
+		JSONParser parser = new JSONParser(body);
+
+		//Attempt to parse the JSON -- Return 400 if it cannot be parsed
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			//Parse the JSON
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		}
+		catch(ParseException e){
+			return new ResponseEntity<>("Could not parse JSON included in request body", HttpStatus.BAD_REQUEST);
+		}
+
+
+
+		// Get the Username of the member to promote
+		String toRemoveName = (String) requestBody.get("toRemove");
+		User toRemove = userRepository.findByName(toRemoveName);
+
+		//Return 404 if the user to promote does not exist
+		if(toRemove == null){
+			return new ResponseEntity<>("User to promote does not exist", HttpStatus.NOT_FOUND);
+
+		}
+
+		//Return 400 if the User to remove is not a member of the group
+		if(!group.getMembers().contains(toRemove)){
+			return new ResponseEntity<>("User " + toRemove.getName() + " is not a member of group " + group.getName(), HttpStatus.BAD_REQUEST);
+		}
+
+		//Return 403 if the member to remove is an admin
+		if(group.getAdmins().contains((toRemoveName))){
+			return new ResponseEntity<>("User " + toRemove.getName() + " is a group admin and cannot be removed.", HttpStatus.FORBIDDEN);
+
+		}
+
+		// Remove the member from the Group
+		group.removeMember(toRemove);
+
+		//Remove the group from the User
+		toRemove.removeGroup(group);
+
+		userRepository.save(toRemove);
+		groupRepository.save(group);
+
+		return new ResponseEntity<>("User " + toRemove.getName() + " removed from the group " + group.getName(), HttpStatus.OK);
+
+	}
+
+
 
 
 }

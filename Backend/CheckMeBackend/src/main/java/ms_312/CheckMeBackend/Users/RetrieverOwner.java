@@ -7,6 +7,7 @@ import ms_312.CheckMeBackend.Messages.Message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * An Abstract class for an object that owns {@link MessageRetriever}s that provide it with {@link Message}s
@@ -78,4 +79,16 @@ public abstract class RetrieverOwner {
     }
 
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof RetrieverOwner that)) return false;
+
+        return Objects.equals(name, that.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
+    }
 }

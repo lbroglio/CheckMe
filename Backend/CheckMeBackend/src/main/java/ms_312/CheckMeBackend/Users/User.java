@@ -124,5 +124,14 @@ public class User extends RetrieverOwner{
         groups.add(group);
     }
 
+    /**
+     * Remove a Group that this User is a member of from the stored list of this User's groups
+     *
+     * @param group The {@link Group} object for the Group this User is leaving
+     */
+    public void removeGroup(Group group){
+        groups.remove(group);
+    }
+
 
 }

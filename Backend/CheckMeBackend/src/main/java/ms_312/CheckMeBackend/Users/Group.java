@@ -149,12 +149,44 @@ public class Group extends RetrieverOwner{
      */
     public void addAdmin(User newAdmin) {
         //Check if the User to give admin powers is in the group
-        if(members.contains(newAdmin)){
+        if(!members.contains(newAdmin)){
             // If the new Admin isn't a member throw an exception
             throw new IllegalArgumentException("New admins must be member's of the group");
         }
 
         this.admins.add(newAdmin.getName());
+    }
+
+    /**
+     * Remove a member of this group from the Group
+     * @param toRemove {@link User} object for the user to remove from the group
+     *
+     * @throws IllegalArgumentException If the User to remove isn't a member of the group
+     */
+    public void removeMember(User toRemove) {
+        //Check if the User to give admin powers is in the group
+        if(!members.contains(toRemove)){
+            // If the new Admin isn't a member throw an exception
+            throw new IllegalArgumentException("The User to remove must be a member of the Group");
+        }
+
+        this.members.remove(toRemove);
+    }
+
+    /**
+     * Remove a member of this group from the Group's list of admins
+     * @param toRemove {@link User} object for the user to remove from the group's admins
+     *
+     * @throws IllegalArgumentException If the User to remove isn't a member of the group
+     */
+    public void removeAdmin(User toRemove) {
+        //Check if the User to give admin powers is in the group
+        if(!members.contains(toRemove)){
+            // If the new Admin isn't a member throw an exception
+            throw new IllegalArgumentException("The User to remove must be a member of the Group");
+        }
+
+        this.admins.remove(toRemove.getName());
     }
 
 
