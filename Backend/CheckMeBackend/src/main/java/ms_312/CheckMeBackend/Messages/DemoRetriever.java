@@ -2,6 +2,7 @@ package ms_312.CheckMeBackend.Messages;
 
 
 import jakarta.persistence.Entity;
+import ms_312.CheckMeBackend.Users.RetrieverOwner;
 import ms_312.CheckMeBackend.Users.User;
 
 /**
@@ -12,9 +13,9 @@ import ms_312.CheckMeBackend.Users.User;
 public class DemoRetriever extends MessageRetriever {
     /**
      * @param source A complete URL pointing to the API location this Retriever should get Messages from
-     * @param owner The {@link User} that this reriever should get messages for
+     * @param owner The {@link RetrieverOwner} that this retriever should get messages for
      */
-    public DemoRetriever(String source, User owner) {
+    public DemoRetriever(String source, RetrieverOwner owner) {
         super(source,owner);
     }
 
