@@ -21,7 +21,7 @@ public class TokenBasedProvider extends MessageProvider{
      * The ID of a TokenBasedProvider is hardcoded to be 101
      */
     public TokenBasedProvider() {
-        super(101);
+        super(0x4368616F730AL);
         tokenMapping = new Bimap<>();
     }
 

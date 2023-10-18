@@ -79,7 +79,7 @@ public abstract class MessageProvider {
      *
      * @param id The long link to use when persisting this Provider in the JPA
      */
-    protected MessageProvider(int id){
+    protected MessageProvider(long id){
         this.id = id;
         messagesByUser = new HashMap<>();
     }
