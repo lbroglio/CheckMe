@@ -4,12 +4,15 @@ import group.ms_312.Proxy.Resources.Bimap;
 import group.ms_312.Proxy.Resources.Sorting;
 import org.junit.jupiter.api.Test;
 
+
 import java.util.Comparator;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 public class ResourceTests {
+
     static class intComp implements Comparator<Integer>{
 
         @Override
@@ -93,5 +96,4 @@ public class ResourceTests {
         assertEquals("two", testOn.getKey(2));
         assertEquals("three", testOn.getKey(3));
     }
-
 }

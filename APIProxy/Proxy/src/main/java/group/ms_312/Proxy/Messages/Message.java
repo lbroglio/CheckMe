@@ -1,8 +1,9 @@
 package group.ms_312.Proxy.Messages;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.json.JSONException;
 
+import java.lang.annotation.Annotation;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Objects;
@@ -26,6 +27,9 @@ public class Message {
 
     private LocalDateTime sendTime;
 
+    @ManyToOne
+    @JsonIgnore
+    private MessageBucket containedIn;
 
 
     public Message(String sender, String recipient, String contents, String subject, LocalDateTime sendTime) {
@@ -58,7 +62,7 @@ public class Message {
         this.recipient =  (String) jsonObj.get("recipient");
         this.contents =  (String) jsonObj.get("contents");
         this.subject =  (String) jsonObj.get("subject");
-        this.sendTime =  (LocalDateTime) jsonObj.get("sendTime");
+        this.sendTime =  LocalDateTime.parse((String) jsonObj.get("sendTime")) ;
         this.ID = this.hashCode();
     }
 

@@ -1,7 +1,5 @@
 package group.ms_312.Proxy.Resources;
 
-import jakarta.persistence.Entity;
-
 import java.util.*;
 
 /**
@@ -12,7 +10,7 @@ import java.util.*;
  * @param <k> The type of the key for the map
  * @param <v> The type of the value for the map
  */
-public class Bimap<k, v> implements Map<k, v> {
+public class Bimap<k, v> implements Map<k,v>{
 
     /**
      * The Hashmap which stores the key -> value mapping for this Bimap
@@ -27,7 +25,7 @@ public class Bimap<k, v> implements Map<k, v> {
     /**
      * Default constructor for creating an empty bimap
      */
-    public Bimap (){
+    public Bimap(){
         forwardsMapping = new HashMap<>();
         backwardsMapping = new HashMap<>();
     }
@@ -113,4 +111,7 @@ public class Bimap<k, v> implements Map<k, v> {
     public Set<Entry<k, v>> entrySet() {
         return forwardsMapping.entrySet();
     }
+
+    // Implementation of UserCollection type
+
 }

@@ -2,19 +2,22 @@ package group.ms_312.Proxy.Providers;
 
 import group.ms_312.Proxy.Resources.Bimap;
 import jakarta.persistence.*;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.security.SecureRandom;
+import java.util.Map;
 
 @Entity
 public class TokenBasedProvider extends MessageProvider{
-    @Autowired
-    private MessageProviderRepository providerRepository;
 
     /**
      * Store the bearer tokens for users by associating them with the username
      */
-    private Bimap<Integer, String> tokenMapping;
+    @ElementCollection
+    @CollectionTable(name = "token_username_mapping",
+            joinColumns = {@JoinColumn(name = "tokenbasedeprovider_id", referencedColumnName = "id")})
+    @MapKeyColumn(name = "token")
+    @Column(name = "username")
+    private Map<Integer, String> tokenMapping;
 
     /**
      * Primary Constructor for creating a new TokenBasedProvider
@@ -70,7 +73,7 @@ public class TokenBasedProvider extends MessageProvider{
      * @return The 16 digit bearer token for the given user
      */
     public int getTokenForUser(String username){
-        return tokenMapping.getKey(username);
+        return ((Bimap<Integer,String>) tokenMapping).getKey(username);
     }
 
     /**

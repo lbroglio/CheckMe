@@ -13,18 +13,23 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 @SpringBootApplication
+@RestController
 public class ProxyApplication {
 	/**
 	 * Hardcoded long id for the token based provider
 	 */
-	private final long TOKENBASED_ID = 0x4368616F730AL;
+	private static final long TOKENBASED_ID = 0x4368616F730AL;
+
 	@Autowired
 	MessageProviderRepository providerRepository;
 
@@ -45,7 +50,7 @@ public class ProxyApplication {
 		}
 
 		//Add the message
-		tokenBasedProvider.loadMessage(new Message(messageJSON),username);
+		tokenBasedProvider.loadMessage(new Message(messageJSON), username);
 
 		//Save the provider
 		providerRepository.save(tokenBasedProvider);
@@ -89,7 +94,7 @@ public class ProxyApplication {
 			//Get the username, the message objects, and the Provider name (String used to indicate which provider this should be added to)
 			 // Provider name = TOKEN |
 			String username = (String) currObj.get("username");
-			String providerName = (String) currObj.get("provider");
+			String providerName = (String) currObj.get("service");
 			LinkedHashMap<Object, Object> messageObj = (LinkedHashMap<Object, Object>) currObj.get("message");
 
 			//Return 400 if any of the needed fields are missing
@@ -97,7 +102,7 @@ public class ProxyApplication {
 				return new ResponseEntity<>("Request body was missing required field: username", HttpStatus.BAD_REQUEST);
 			}
 			else if(providerName == null){
-				return new ResponseEntity<>("Request body was missing required field: provider", HttpStatus.BAD_REQUEST);
+				return new ResponseEntity<>("Request body was missing required field: service", HttpStatus.BAD_REQUEST);
 			}
 			else if(messageObj == null){
 				return new ResponseEntity<>("Request body was missing required field: message", HttpStatus.BAD_REQUEST);
@@ -116,6 +121,12 @@ public class ProxyApplication {
 		}
 
 		return new ResponseEntity<>("Data successfully loaded", HttpStatus.CREATED);
+	}
+
+	@GetMapping("/test")
+	public Message[] testTokenBased(){
+		MessageProvider tokenBased = providerRepository.findByID(TOKENBASED_ID);
+		return tokenBased.getAllMessagesForUser("BaseballBob");
 	}
 
 

@@ -1,24 +1,24 @@
 package group.ms_312.Proxy.Providers;
 
 import group.ms_312.Proxy.Messages.Message;
+import group.ms_312.Proxy.Messages.MessageBucket;
 import group.ms_312.Proxy.Resources.Sorting;
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Entity
 public abstract class MessageProvider {
     @Id
-    private long id;
+    private long ID;
 
+    @ElementCollection
+    @CollectionTable(name = "provider_bucket_Mapping",
+            joinColumns = {@JoinColumn(name = "messageprovider_id", referencedColumnName = "id")})
+    @MapKeyColumn(name = "username")
+    @Column(name = "message_bucket")
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "user_message_mapping",
-            joinColumns = {@JoinColumn(name = "messageprovider_id", referencedColumnName = "id")},
-            inverseJoinColumns = {@JoinColumn(name = "message_id", referencedColumnName = "id")})
-    protected Map<String, ArrayList<Message>> messagesByUser;
+    protected Map<String, MessageBucket> messagesByUser;
 
     /**
      * Object to compare two Messages based on date
@@ -80,7 +80,7 @@ public abstract class MessageProvider {
      * @param id The long link to use when persisting this Provider in the JPA
      */
     protected MessageProvider(long id){
-        this.id = id;
+        this.ID = id;
         messagesByUser = new HashMap<>();
     }
 
@@ -127,7 +127,7 @@ public abstract class MessageProvider {
      * @return The numerical id assigned to this object by the JPA
      */
     public long getId(){
-        return id;
+        return ID;
     }
 
     /**
@@ -136,6 +136,10 @@ public abstract class MessageProvider {
      * @param username The user to serve the message to
      */
     public void loadMessage(Message toLoad, String username){
+        // If there is no List for this user's Messages add one
+        this.messagesByUser.computeIfAbsent(username, k -> new MessageBucket());
+
+        // Add this Message to the list for the User
         this.messagesByUser.get(username).add(toLoad);
     }
 
