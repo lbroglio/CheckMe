@@ -1,6 +1,6 @@
 package group.ms_312.Proxy;
 
-import group.ms_312.Proxy.Providers.TokenBased.TokenMapper;
+import group.ms_312.Proxy.Providers.AuthMapper;
 import group.ms_312.Proxy.Resources.Sorting;
 import org.junit.jupiter.api.Test;
 
@@ -34,46 +34,46 @@ public class ResourceTests {
 
 
     @Test
-    public void testTokenMapperSize(){
-        TokenMapper testOn = new TokenMapper();
-        testOn.put(1L, "one");
-        testOn.put(2L, "two");
-        testOn.put(3L, "three");
+    public void testAuthMapperSize(){
+        AuthMapper testOn = new AuthMapper();
+        testOn.put("1", "one");
+        testOn.put("2", "two");
+        testOn.put("3", "three");
 
         assertEquals(3, testOn.size());
     }
 
     @Test
-    public void testTokenMapperForwardsAccess(){
-        TokenMapper testOn = new TokenMapper();
-        testOn.put(1L, "one");
-        testOn.put(2L, "two");
-        testOn.put(3L, "three");
+    public void testAuthMapperForwardsAccess(){
+        AuthMapper testOn = new AuthMapper();
+        testOn.put("1", "one");
+        testOn.put("2", "two");
+        testOn.put("3", "three");
 
-        assertEquals("one", testOn.get(1L));
-        assertEquals("two", testOn.get(2L));
-        assertEquals("three", testOn.get(3L));
+        assertEquals("one", testOn.get("1"));
+        assertEquals("two", testOn.get("2"));
+        assertEquals("three", testOn.get("3"));
 
     }
 
     @Test
-    public void testTokenMapperBackwardsAccess(){
-        TokenMapper testOn = new TokenMapper();
-        testOn.put(1L, "one");
-        testOn.put(2L, "two");
-        testOn.put(3L, "three");
+    public void testAuthMapperBackwardsAccess(){
+        AuthMapper testOn = new AuthMapper();
+        testOn.put("1", "one");
+        testOn.put("2", "two");
+        testOn.put("3", "three");
 
-        assertEquals(1L, testOn.getKey("one"));
-        assertEquals(2L, testOn.getKey("two"));
-        assertEquals(3L, testOn.getKey("three"));
+        assertEquals("1", testOn.getKey("one"));
+        assertEquals("2", testOn.getKey("two"));
+        assertEquals("3", testOn.getKey("three"));
     }
 
     @Test
-    public void testTokenMapperRemove(){
-        TokenMapper testOn = new TokenMapper();
-        testOn.put(1L, "one");
-        testOn.put(2L, "two");
-        testOn.put(3L, "three");
+    public void testAuthMapperRemove(){
+        AuthMapper testOn = new AuthMapper();
+        testOn.put("1", "one");
+        testOn.put("2", "two");
+        testOn.put("3", "three");
 
         testOn.remove(3L);
 
@@ -81,23 +81,23 @@ public class ResourceTests {
     }
 
     @Test
-    public void testTokenMapperPutAll(){
-        HashMap<Long, String> buildFrom = new HashMap<>();
-        buildFrom.put(1L, "one");
-        buildFrom.put(2L, "two");
-        buildFrom.put(3L, "three");
+    public void testAuthMapperPutAll(){
+        HashMap<String, String> buildFrom = new HashMap<>();
+        buildFrom.put("1", "one");
+        buildFrom.put("2", "two");
+        buildFrom.put("3", "three");
 
-        TokenMapper testOn = new TokenMapper();
+        AuthMapper testOn = new AuthMapper();
 
         testOn.putAll(buildFrom);
 
-        assertEquals("one", testOn.get(1L));
-        assertEquals("two", testOn.get(2L));
-        assertEquals("three", testOn.get(3L));
+        assertEquals("one", testOn.get("1"));
+        assertEquals("two", testOn.get("2"));
+        assertEquals("three", testOn.get("3"));
 
-        assertEquals(1L, testOn.getKey("one"));
-        assertEquals(2L, testOn.getKey("two"));
-        assertEquals(3L, testOn.getKey("three"));
+        assertEquals("1", testOn.getKey("one"));
+        assertEquals("2", testOn.getKey("two"));
+        assertEquals("3", testOn.getKey("three"));
     }
 
 }

@@ -1,6 +1,7 @@
-package group.ms_312.Proxy.Providers.TokenBased;
+package group.ms_312.Proxy.Providers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import group.ms_312.Proxy.Providers.TokenBased.TokenBasedProvider;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 
@@ -14,7 +15,7 @@ import java.util.*;
  */
 @Entity
 @Table(name = "mapper")
-public class TokenMapper implements Map<Long, String> {
+public class AuthMapper implements Map<String, String> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,25 +25,25 @@ public class TokenMapper implements Map<Long, String> {
      * The Hashmap which stores the key -> value mapping for this Bimap
      */
     @ElementCollection
-    private Map<Long, String> forwardsMapping;
+    private Map<String, String> forwardsMapping;
 
     /**
      * The Hashmap which stores the value -> key mapping for this Bimap
      */
     @ElementCollection
-    private final Map<String ,Long> backwardsMapping;
+    private final Map<String, String> backwardsMapping;
 
     /**
      * The TokenBasedProvider which owns this mapping
      */
     @OneToOne
     @JsonIgnore
-    private TokenBasedProvider owner;
+    private MessageProvider owner;
 
     /**
      * Default constructor for creating an empty bimap
      */
-    public TokenMapper(){
+    public AuthMapper(){
         forwardsMapping = new HashMap<>();
         backwardsMapping = new HashMap<>();
     }
@@ -78,12 +79,12 @@ public class TokenMapper implements Map<Long, String> {
      *
      * @param value The value to get the key for
      */
-    public Long getKey(Object value){
+    public String getKey(Object value){
         return backwardsMapping.get(value);
     }
 
     @Override
-    public String put(Long key, String value) {
+    public String put(String key, String value) {
         backwardsMapping.put(value, key);
         return forwardsMapping.put(key, value);
 
@@ -97,9 +98,9 @@ public class TokenMapper implements Map<Long, String> {
     }
 
     @Override
-    public void putAll(Map<? extends Long, ? extends String> m) {
+    public void putAll(Map<? extends String, ? extends String> m) {
         // Add all items in m to backwards mapping in reverse
-        for (Long o : m.keySet()) {
+        for (String o : m.keySet()) {
             String val = m.get(o);
             backwardsMapping.put(val, o);
         }
@@ -115,7 +116,7 @@ public class TokenMapper implements Map<Long, String> {
     }
 
     @Override
-    public Set<Long> keySet() {
+    public Set<String> keySet() {
         return forwardsMapping.keySet();
     }
 
@@ -125,7 +126,7 @@ public class TokenMapper implements Map<Long, String> {
     }
 
     @Override
-    public Set<Entry<Long, String>> entrySet() {
+    public Set<Entry<String, String>> entrySet() {
         return forwardsMapping.entrySet();
     }
 

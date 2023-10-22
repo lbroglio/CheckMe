@@ -1,6 +1,7 @@
 package group.ms_312.Proxy.Providers.TokenBased;
 
 import group.ms_312.Proxy.Providers.MessageProvider;
+import group.ms_312.Proxy.Providers.AuthMapper;
 import jakarta.persistence.*;
 
 
@@ -13,7 +14,7 @@ public class TokenBasedProvider extends MessageProvider {
      * Store the bearer tokens for users by associating them with the username
      */
     @OneToOne(cascade=CascadeType.ALL)
-    private TokenMapper tokenMapping;
+    private AuthMapper tokenMapping;
 
     /**
      * Primary Constructor for creating a new TokenBasedProvider
@@ -21,7 +22,7 @@ public class TokenBasedProvider extends MessageProvider {
      */
     public TokenBasedProvider() {
         super(0x4368616F730AL);
-        tokenMapping = new TokenMapper();
+        tokenMapping = new AuthMapper();
     }
 
 
@@ -33,7 +34,7 @@ public class TokenBasedProvider extends MessageProvider {
      * @return True
      */
     public boolean authenticate(long token){
-        return tokenMapping.containsKey(token);
+        return tokenMapping.containsKey(Long.toString(token));
     }
 
     /**
@@ -72,7 +73,7 @@ public class TokenBasedProvider extends MessageProvider {
         }
 
         // Add the new token and user mapping
-        tokenMapping.put(token, username);
+        tokenMapping.put(Long.toString(token), username);
 
         // Return the token, so it can be given to the user
         return token;
@@ -87,7 +88,7 @@ public class TokenBasedProvider extends MessageProvider {
      * @return The 16 digit bearer token for the given user
      */
     public long getTokenForUser(String username){
-        return  tokenMapping.getKey(username);
+        return  Long.parseLong(tokenMapping.getKey(username));
     }
 
     /**
@@ -98,7 +99,7 @@ public class TokenBasedProvider extends MessageProvider {
      * @return The String username associated with the given token
      */
     public String getUsernameFromToken(long token){
-        return tokenMapping.get(token);
+        return tokenMapping.get(Long.toString(token));
     }
 
     /**
@@ -124,7 +125,7 @@ public class TokenBasedProvider extends MessageProvider {
      * false - if the token doesn't exist
      */
     public boolean tokenExists(long token){
-        return tokenMapping.containsKey(token);
+        return tokenMapping.containsKey(Long.toString(token));
     }
 
 
