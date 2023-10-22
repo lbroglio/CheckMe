@@ -1,6 +1,6 @@
 package group.ms_312.Proxy;
 
-import group.ms_312.Proxy.Providers.AuthMapper;
+import group.ms_312.Proxy.Providers.Storage.AuthMapper;
 import group.ms_312.Proxy.Resources.Sorting;
 import org.junit.jupiter.api.Test;
 

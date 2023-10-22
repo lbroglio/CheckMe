@@ -1,7 +1,7 @@
-package group.ms_312.Proxy.Providers;
+package group.ms_312.Proxy.Providers.Storage;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import group.ms_312.Proxy.Providers.TokenBased.TokenBasedProvider;
+import group.ms_312.Proxy.Providers.MessageProvider;
 import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 
@@ -14,7 +14,6 @@ import java.util.*;
  *
  */
 @Entity
-@Table(name = "mapper")
 public class AuthMapper implements Map<String, String> {
 
     @Id

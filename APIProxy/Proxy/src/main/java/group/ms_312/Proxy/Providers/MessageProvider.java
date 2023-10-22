@@ -2,6 +2,7 @@ package group.ms_312.Proxy.Providers;
 
 import group.ms_312.Proxy.Messages.Message;
 import group.ms_312.Proxy.Messages.MessageBucket;
+import group.ms_312.Proxy.Providers.Storage.AuthMapper;
 import group.ms_312.Proxy.Resources.Sorting;
 import jakarta.persistence.*;
 
@@ -19,6 +20,12 @@ public abstract class MessageProvider {
     @Column(name = "message_bucket")
     @OneToMany(cascade = CascadeType.ALL)
     protected Map<String, MessageBucket> messagesByUser;
+
+    /**
+     * Store the bearer tokens for users by associating them with the username
+     */
+    @OneToOne(cascade=CascadeType.ALL)
+    protected AuthMapper tokenMapping;
 
     /**
      * Object to compare two Messages based on date
@@ -82,6 +89,7 @@ public abstract class MessageProvider {
     protected MessageProvider(long id){
         this.ID = id;
         messagesByUser = new HashMap<>();
+        tokenMapping = new AuthMapper();
     }
 
     /**
@@ -141,6 +149,19 @@ public abstract class MessageProvider {
 
         // Add this Message to the list for the User
         this.messagesByUser.get(username).add(toLoad);
+    }
+
+    /**
+     * Check if a given username has been created for this Provider
+     *
+     * @param username The username to check if exists
+     *
+     * @return
+     * true - if the username has been added
+     * false - if the username has not been added
+     */
+    public boolean userExists(String username){
+        return  tokenMapping.containsValue(username);
     }
 
 }

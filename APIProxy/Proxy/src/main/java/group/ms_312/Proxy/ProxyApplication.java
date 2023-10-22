@@ -4,7 +4,7 @@ import group.ms_312.Proxy.Messages.Message;
 import group.ms_312.Proxy.Providers.MessageOrdering;
 import group.ms_312.Proxy.Providers.MessageProvider;
 import group.ms_312.Proxy.Providers.MessageProviderRepository;
-import group.ms_312.Proxy.Providers.TokenBased.TokenBasedProvider;
+import group.ms_312.Proxy.Providers.TokenBasedProvider;
 import jakarta.annotation.PostConstruct;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;

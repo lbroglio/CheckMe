@@ -1,7 +1,6 @@
-package group.ms_312.Proxy.Providers.TokenBased;
+package group.ms_312.Proxy.Providers;
 
-import group.ms_312.Proxy.Providers.MessageProvider;
-import group.ms_312.Proxy.Providers.AuthMapper;
+import group.ms_312.Proxy.Providers.Storage.AuthMapper;
 import jakarta.persistence.*;
 
 
@@ -10,19 +9,14 @@ import java.security.SecureRandom;
 @Entity
 public class TokenBasedProvider extends MessageProvider {
 
-    /**
-     * Store the bearer tokens for users by associating them with the username
-     */
-    @OneToOne(cascade=CascadeType.ALL)
-    private AuthMapper tokenMapping;
+
 
     /**
      * Primary Constructor for creating a new TokenBasedProvider
-     * The ID of a TokenBasedProvider is hardcoded to be 101
+     * The ID of a TokenBasedProvider is hardcoded to be 0x4368616F730A
      */
     public TokenBasedProvider() {
         super(0x4368616F730AL);
-        tokenMapping = new AuthMapper();
     }
 
 
@@ -100,19 +94,6 @@ public class TokenBasedProvider extends MessageProvider {
      */
     public String getUsernameFromToken(long token){
         return tokenMapping.get(Long.toString(token));
-    }
-
-    /**
-     * Check if a given username has been created for this Provider
-     *
-     * @param username The username to check if exists
-     *
-     * @return
-     * true - if the username has been added
-     * false - if the username has not been added
-     */
-    public boolean userExists(String username){
-        return  tokenMapping.containsValue(username);
     }
 
     /**
