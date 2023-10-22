@@ -1,6 +1,6 @@
 package group.ms_312.Proxy;
 
-import group.ms_312.Proxy.Resources.Bimap;
+import group.ms_312.Proxy.Providers.TokenBased.TokenMapper;
 import group.ms_312.Proxy.Resources.Sorting;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 
 
 public class ResourceTests {
@@ -31,69 +32,72 @@ public class ResourceTests {
 
     }
 
+
     @Test
-    public void testBimapSize(){
-        Bimap<String, Integer> testOn = new Bimap<>();
-        testOn.put("one", 1);
-        testOn.put("two", 2);
-        testOn.put("three", 3);
+    public void testTokenMapperSize(){
+        TokenMapper testOn = new TokenMapper();
+        testOn.put(1L, "one");
+        testOn.put(2L, "two");
+        testOn.put(3L, "three");
 
         assertEquals(3, testOn.size());
     }
 
     @Test
-    public void testBimapForwardsAccess(){
-        Bimap<String, Integer> testOn = new Bimap<>();
-        testOn.put("one", 1);
-        testOn.put("two", 2);
-        testOn.put("three", 3);
+    public void testTokenMapperForwardsAccess(){
+        TokenMapper testOn = new TokenMapper();
+        testOn.put(1L, "one");
+        testOn.put(2L, "two");
+        testOn.put(3L, "three");
 
-        assertEquals(1, testOn.get("one"));
-        assertEquals(2, testOn.get("two"));
-        assertEquals(3, testOn.get("three"));
+        assertEquals("one", testOn.get(1L));
+        assertEquals("two", testOn.get(2L));
+        assertEquals("three", testOn.get(3L));
+
     }
 
     @Test
-    public void testBimapBackwardsAccess(){
-        Bimap<String, Integer> testOn = new Bimap<>();
-        testOn.put("one", 1);
-        testOn.put("two", 2);
-        testOn.put("three", 3);
+    public void testTokenMapperBackwardsAccess(){
+        TokenMapper testOn = new TokenMapper();
+        testOn.put(1L, "one");
+        testOn.put(2L, "two");
+        testOn.put(3L, "three");
 
-        assertEquals("one", testOn.getKey(1));
-        assertEquals("two", testOn.getKey(2));
-        assertEquals("three", testOn.getKey(3));
+        assertEquals(1L, testOn.getKey("one"));
+        assertEquals(2L, testOn.getKey("two"));
+        assertEquals(3L, testOn.getKey("three"));
     }
 
     @Test
-    public void testBimapRemove(){
-        Bimap<String, Integer> testOn = new Bimap<>();
-        testOn.put("one", 1);
-        testOn.put("two", 2);
-        testOn.put("three", 3);
+    public void testTokenMapperRemove(){
+        TokenMapper testOn = new TokenMapper();
+        testOn.put(1L, "one");
+        testOn.put(2L, "two");
+        testOn.put(3L, "three");
 
-        testOn.remove("three");
+        testOn.remove(3L);
 
-        assertNull(testOn.get("three"));
+        assertNull(testOn.get(3L));
     }
 
     @Test
-    public void testBimapPutAll(){
-        HashMap<String, Integer> buildFrom = new HashMap<>();
-        buildFrom.put("one", 1);
-        buildFrom.put("two", 2);
-        buildFrom.put("three", 3);
+    public void testTokenMapperPutAll(){
+        HashMap<Long, String> buildFrom = new HashMap<>();
+        buildFrom.put(1L, "one");
+        buildFrom.put(2L, "two");
+        buildFrom.put(3L, "three");
 
-        Bimap<String, Integer> testOn = new Bimap<>();
+        TokenMapper testOn = new TokenMapper();
 
         testOn.putAll(buildFrom);
 
-        assertEquals(1, testOn.get("one"));
-        assertEquals(2, testOn.get("two"));
-        assertEquals(3, testOn.get("three"));
+        assertEquals("one", testOn.get(1L));
+        assertEquals("two", testOn.get(2L));
+        assertEquals("three", testOn.get(3L));
 
-        assertEquals("one", testOn.getKey(1));
-        assertEquals("two", testOn.getKey(2));
-        assertEquals("three", testOn.getKey(3));
+        assertEquals(1L, testOn.getKey("one"));
+        assertEquals(2L, testOn.getKey("two"));
+        assertEquals(3L, testOn.getKey("three"));
     }
+
 }

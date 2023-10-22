@@ -1,31 +1,48 @@
-package group.ms_312.Proxy.Resources;
+package group.ms_312.Proxy.Providers.TokenBased;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
+import jakarta.persistence.Entity;
 
 import java.util.*;
 
 /**
- * Bidirectional map implementation <br/>
+ * Bidirectional map implementation used for associating tokens and usernames<br/>
  * 
- * Acts as a normal map for methods and  return values but allows for backwards access with {@link #getKey(Object)}
+ * Acts as a normal map for methods and return values but allows for backwards access with {@link #getKey(Object)}
  *
- * @param <k> The type of the key for the map
- * @param <v> The type of the value for the map
  */
-public class Bimap<k, v> implements Map<k,v>{
+@Entity
+@Table(name = "mapper")
+public class TokenMapper implements Map<Long, String> {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long ID;
 
     /**
      * The Hashmap which stores the key -> value mapping for this Bimap
      */
-    private final HashMap<k,v> forwardsMapping;
+    @ElementCollection
+    private Map<Long, String> forwardsMapping;
 
     /**
      * The Hashmap which stores the value -> key mapping for this Bimap
      */
-    private final HashMap<v,k> backwardsMapping;
+    @ElementCollection
+    private final Map<String ,Long> backwardsMapping;
+
+    /**
+     * The TokenBasedProvider which owns this mapping
+     */
+    @OneToOne
+    @JsonIgnore
+    private TokenBasedProvider owner;
 
     /**
      * Default constructor for creating an empty bimap
      */
-    public Bimap(){
+    public TokenMapper(){
         forwardsMapping = new HashMap<>();
         backwardsMapping = new HashMap<>();
     }
@@ -52,7 +69,7 @@ public class Bimap<k, v> implements Map<k,v>{
     }
 
     @Override
-    public v get(Object key) {
+    public String get(Object key) {
         return forwardsMapping.get(key);
     }
 
@@ -61,29 +78,29 @@ public class Bimap<k, v> implements Map<k,v>{
      *
      * @param value The value to get the key for
      */
-    public k getKey(Object value){
+    public Long getKey(Object value){
         return backwardsMapping.get(value);
     }
 
     @Override
-    public v put(k key, v value) {
+    public String put(Long key, String value) {
         backwardsMapping.put(value, key);
         return forwardsMapping.put(key, value);
 
     }
 
     @Override
-    public v remove(Object key) {
-        v val = forwardsMapping.get(key);
+    public String remove(Object key) {
+        String val = forwardsMapping.get(key);
         backwardsMapping.remove(val);
         return forwardsMapping.remove(key);
     }
 
     @Override
-    public void putAll(Map<? extends k, ? extends v> m) {
+    public void putAll(Map<? extends Long, ? extends String> m) {
         // Add all items in m to backwards mapping in reverse
-        for (k o : m.keySet()) {
-            v val = m.get(o);
+        for (Long o : m.keySet()) {
+            String val = m.get(o);
             backwardsMapping.put(val, o);
         }
         // Add to forwards map
@@ -98,20 +115,33 @@ public class Bimap<k, v> implements Map<k,v>{
     }
 
     @Override
-    public Set<k> keySet() {
+    public Set<Long> keySet() {
         return forwardsMapping.keySet();
     }
 
     @Override
-    public Collection<v> values() {
+    public Collection<String> values() {
         return forwardsMapping.values();
     }
 
     @Override
-    public Set<Entry<k, v>> entrySet() {
+    public Set<Entry<Long, String>> entrySet() {
         return forwardsMapping.entrySet();
     }
 
-    // Implementation of UserCollection type
+    /**
+     * @return The id assigned to this Bimap by the JPA
+     */
+    public long getID() {
+        return ID;
+    }
+
+    /**
+     * @param ID Set the id of this object
+     */
+    private void setID(long ID) {
+        this.ID = ID;
+    }
+
 
 }
