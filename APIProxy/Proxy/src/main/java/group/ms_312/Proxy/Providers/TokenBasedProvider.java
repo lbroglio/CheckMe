@@ -1,15 +1,14 @@
 package group.ms_312.Proxy.Providers;
 
-import group.ms_312.Proxy.Providers.Storage.AuthMapper;
+import group.ms_312.Proxy.Users.UserAccount;
 import jakarta.persistence.*;
 
 
 import java.security.SecureRandom;
+import java.util.Map;
 
 @Entity
 public class TokenBasedProvider extends MessageProvider {
-
-
 
     /**
      * Primary Constructor for creating a new TokenBasedProvider
@@ -19,26 +18,29 @@ public class TokenBasedProvider extends MessageProvider {
         super(0x4368616F730AL);
     }
 
-
     /**
-     * Confirm whether a given token is valid
-     *
-     * @param token The token to check
-     *
-     * @return True
+     * Maps the Bearer Token of a User to the username
      */
-    public boolean authenticate(long token){
-        return tokenMapping.containsKey(Long.toString(token));
-    }
+    private Map<String, String> tokenMap;
+
 
     /**
      * Add a new User to have Messages stored by this provider
      *
-     * @param username The username of the user to add
+     * @param accountInfo A map containing the information needed to create an account with this provider.<br/>
+     * Must contain the following field(s) { <pre>
+     *  - username: The username for the user to create
+     * <br/>}
+     * </pre>
+     *
      * @return The 16 digit bearer token generated for the User
      */
-    public long addUser(String username){
+    @Override
+    public String addUser(Map<String, String> accountInfo){
         SecureRandom secRand = new SecureRandom();
+
+        // Get the username from the account info Map
+        String username = accountInfo.get("username");
 
         // generate a random bearer token
         long token = 0;
@@ -66,11 +68,19 @@ public class TokenBasedProvider extends MessageProvider {
             }
         }
 
+        // Convert the token to a string
+        String strToken = Long.toString(token);
+
         // Add the new token and user mapping
-        tokenMapping.put(Long.toString(token), username);
+        userMap.put(strToken, new UserAccount(username, strToken));
 
         // Return the token, so it can be given to the user
-        return token;
+        return strToken;
+    }
+
+    @Override
+    public boolean authenticate(String authString) {
+        return false;
     }
 
     /**
@@ -81,8 +91,8 @@ public class TokenBasedProvider extends MessageProvider {
      *
      * @return The 16 digit bearer token for the given user
      */
-    public long getTokenForUser(String username){
-        return  Long.parseLong(tokenMapping.getKey(username));
+    public String getTokenForUser(String username){
+        return userMap.get(username).getAuthString();
     }
 
     /**
@@ -92,21 +102,21 @@ public class TokenBasedProvider extends MessageProvider {
      *
      * @return The String username associated with the given token
      */
-    public String getUsernameFromToken(long token){
-        return tokenMapping.get(Long.toString(token));
+    public String getUsernameFromToken(String token){
+        return tokenMap.get(token);
     }
 
     /**
      * Check if a given token exists for this Provider
      *
-     * @param token To token to check if exists
+     * @param token The token to check if exists
      *
      * @return
      * true -  if the token exists
      * false - if the token doesn't exist
      */
-    public boolean tokenExists(long token){
-        return tokenMapping.containsKey(Long.toString(token));
+    public boolean tokenExists(String token){
+        return tokenMap.containsKey(token);
     }
 
 

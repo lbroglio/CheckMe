@@ -1,10 +1,7 @@
 package group.ms_312.Proxy;
 
 import group.ms_312.Proxy.Messages.Message;
-import group.ms_312.Proxy.Providers.MessageOrdering;
-import group.ms_312.Proxy.Providers.MessageProvider;
-import group.ms_312.Proxy.Providers.MessageProviderRepository;
-import group.ms_312.Proxy.Providers.TokenBasedProvider;
+import group.ms_312.Proxy.Providers.*;
 import jakarta.annotation.PostConstruct;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
@@ -16,7 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 @SpringBootApplication
@@ -142,7 +141,7 @@ public class ProxyApplication {
 	 * @return An Array of {@link Message} objects for the messages to retrieve for the user
 	 */
 	@GetMapping("/chaos/messages/{bearerToken}")
-	public Message[] getMessagesFromTokenBasedProvider(@PathVariable long bearerToken, @RequestParam(required = false) String sortBy){
+	public Message[] getMessagesFromTokenBasedProvider(@PathVariable String bearerToken, @RequestParam(required = false) String sortBy){
 		// Get the token based provider and downcast it
 		TokenBasedProvider tokenBased = (TokenBasedProvider) providerRepository.findByID(TOKENBASED_ID);
 
@@ -155,13 +154,13 @@ public class ProxyApplication {
 
 		// Return the messages in the indicated order
 		if(sortBy.equals("date")){
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), MessageOrdering.DATE);
+			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken, MessageOrdering.DATE);
 		}
 		else if(sortBy.equals("sender")){
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), MessageOrdering.SENDER);
+			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken, MessageOrdering.SENDER);
 		}
 		else{
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken));
+			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken);
 		}
 
 	}
@@ -177,7 +176,7 @@ public class ProxyApplication {
 	 * @return The int Bearer token associated with the username
 	 */
 	@GetMapping("/chaos/tokens/{username}")
-	public long getTokenForUser(@PathVariable String username){
+	public String getTokenForUser(@PathVariable String username){
 		// Get the token based provider and downcast it
 		TokenBasedProvider tokenBased = (TokenBasedProvider) providerRepository.findByID(TOKENBASED_ID);
 
@@ -203,7 +202,7 @@ public class ProxyApplication {
 	// Unchecked casts are from interacting with JSON API
 	@SuppressWarnings("unchecked")
 	@PostMapping("/chaos/user")
-	public long addUserTokenBased(@RequestBody String body){
+	public String addUserTokenBased(@RequestBody String body){
 		// Retrieve the username from  the request body
 		JSONParser parser = new JSONParser(body);
 		LinkedHashMap<Object,  Object> requestBody;
@@ -231,7 +230,10 @@ public class ProxyApplication {
 		}
 
 		//Add the new user and get the generated token
-		long token = tokenBased.addUser(username);
+		//Create the map containing the user account info (For this provider type it is only a username)
+		HashMap<String, String> accountInfo = new HashMap<>();
+		accountInfo.put("username", username);
+		String token = tokenBased.addUser(accountInfo);
 
 		// Save the provider
 		providerRepository.save(tokenBased);
@@ -239,9 +241,5 @@ public class ProxyApplication {
 		// Return the token
 		return token;
 	}
-
-
-
-
 
 }
