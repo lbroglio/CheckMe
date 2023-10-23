@@ -158,8 +158,7 @@ public class ProxyApplication {
 		ArrayList<Object> messagesToLoad;
 		try{
 			messagesToLoad = parser.parseArray();
-		}
-		catch (ParseException e){
+		} catch (ParseException e){
 			//Return 400 is the body cannot be parsed
 			return new ResponseEntity<>("Could not parse request body as JSON array", HttpStatus.BAD_REQUEST);
 		}
@@ -170,7 +169,7 @@ public class ProxyApplication {
 			LinkedHashMap<Object, Object> currObj = (LinkedHashMap<Object, Object>) o;
 
 			//Get the username, the message objects, and the Provider name (String used to indicate which provider this should be added to)
-			 // Provider name = TOKEN |
+			// Provider name = TOKEN |
 			String username = (String) currObj.get("username");
 			String providerName = (String) currObj.get("service");
 			LinkedHashMap<Object, Object> messageObj = (LinkedHashMap<Object, Object>) currObj.get("message");
@@ -178,11 +177,9 @@ public class ProxyApplication {
 			//Return 400 if any of the needed fields are missing
 			if(username == null ){
 				return new ResponseEntity<>("Request body was missing required field: username", HttpStatus.BAD_REQUEST);
-			}
-			else if(providerName == null){
+			} else if(providerName == null){
 				return new ResponseEntity<>("Request body was missing required field: service", HttpStatus.BAD_REQUEST);
-			}
-			else if(messageObj == null){
+			} else if(messageObj == null){
 				return new ResponseEntity<>("Request body was missing required field: message", HttpStatus.BAD_REQUEST);
 			}
 
@@ -203,37 +200,40 @@ public class ProxyApplication {
 	 * Retrieve the Messages for a specific User from the Token Based Provider ("Chaos Service"). The messages will
 	 * be sorted in the order indicated by the sortBy parameter
 	 *
+	 * @param username The string username of the account to retrieve messages for
 	 * @param bearerToken The integer token issued to the User for retrieving Messages
 	 * @param sortBy Either the string "date" or "sender" depending on how the messages should be ordered.
 	 * If neither in included then the messages will be returned unordered
 	 *
 	 * @return An Array of {@link Message} objects for the messages to retrieve for the user
 	 */
-	@GetMapping("/chaos/messages/{bearerToken}")
-	public Message[] getMessagesFromTokenBasedProvider(@PathVariable String bearerToken, @RequestParam(required = false) String sortBy){
+	@GetMapping("/chaos/messages/{username}")
+	public Message[] getMessagesFromTokenBasedProvider(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String bearerToken, @RequestParam(required = false) String sortBy){
 		// Get the token based provider and downcast it
 		TokenBasedProvider tokenBased = (TokenBasedProvider) providerRepository.findByID(TOKENBASED_ID);
 
-		// Check if the given token exists within the provider
-		if(!tokenBased.tokenExists(bearerToken)){
+		//Parse the token from the header
+		String[] tokenHeaderSplit = bearerToken.split(" ");
+		bearerToken = tokenHeaderSplit[1];
+
+		// Check if the given user exists within the provider
+		if(!tokenBased.userExists(username)){
 			// If the token doesn't exist return 404
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Given token does not exist");
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No Username exists for user: " + username);
 
 		}
 
 		//If sortBy isn't included return the Messages unordered
 		if(sortBy == null){
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken);
+			return tokenBased.getAllMessagesForUser(username, bearerToken);
 		}
 		// Return the messages in the indicated order
 		if(sortBy.equals("date")){
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken, MessageOrdering.DATE);
-		}
-		else if(sortBy.equals("sender")){
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken, MessageOrdering.SENDER);
-		}
-		else{
-			return tokenBased.getAllMessagesForUser(tokenBased.getUsernameFromToken(bearerToken), bearerToken);
+			return tokenBased.getAllMessagesForUser(username, bearerToken, MessageOrdering.DATE);
+		} else if(sortBy.equals("sender")){
+			return tokenBased.getAllMessagesForUser(username, bearerToken, MessageOrdering.SENDER);
+		} else{
+			return tokenBased.getAllMessagesForUser(username, bearerToken);
 		}
 
 	}
@@ -354,11 +354,9 @@ public class ProxyApplication {
 		// Return the messages in the indicated order
 		else if(sortBy.equals("date")){
 			return provider.getAllMessagesForUser(username, authString, MessageOrdering.DATE);
-		}
-		else if(sortBy.equals("sender")){
+		} else if(sortBy.equals("sender")){
 			return provider.getAllMessagesForUser(username, authString, MessageOrdering.SENDER);
-		}
-		else{
+		} else{
 			return provider.getAllMessagesForUser(username, authString);
 		}
 
@@ -463,11 +461,9 @@ public class ProxyApplication {
 		// Return the messages in the indicated order
 		else if(sortBy.equals("date")){
 			return provider.getAllMessagesForUser(username, basicAuthStr, MessageOrdering.DATE);
-		}
-		else if(sortBy.equals("sender")){
+		} else if(sortBy.equals("sender")){
 			return provider.getAllMessagesForUser(username, basicAuthStr, MessageOrdering.SENDER);
-		}
-		else{
+		} else{
 			return provider.getAllMessagesForUser(username, basicAuthStr);
 		}
 

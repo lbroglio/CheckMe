@@ -105,17 +105,6 @@ public class TokenBasedProvider extends MessageProvider {
     }
 
     /**
-     * Return the Username associated with a specific token
-     *
-     * @param token The token for the desired user
-     *
-     * @return The String username associated with the given token
-     */
-    public String getUsernameFromToken(String token){
-        return tokenMap.get(token);
-    }
-
-    /**
      * Check if a given token exists for this Provider
      *
      * @param token The token to check if exists
