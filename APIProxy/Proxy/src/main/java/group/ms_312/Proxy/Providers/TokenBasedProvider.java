@@ -5,10 +5,17 @@ import jakarta.persistence.*;
 
 
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Map;
 
 @Entity
 public class TokenBasedProvider extends MessageProvider {
+
+    /**
+     * Maps the Bearer Token of a User to the username
+     */
+    @ElementCollection
+    private Map<String, String> tokenMap;
 
     /**
      * Primary Constructor for creating a new TokenBasedProvider
@@ -16,12 +23,8 @@ public class TokenBasedProvider extends MessageProvider {
      */
     public TokenBasedProvider() {
         super(0x4368616F730AL);
+        tokenMap = new HashMap<>();
     }
-
-    /**
-     * Maps the Bearer Token of a User to the username
-     */
-    private Map<String, String> tokenMap;
 
 
     /**
@@ -71,16 +74,18 @@ public class TokenBasedProvider extends MessageProvider {
         // Convert the token to a string
         String strToken = Long.toString(token);
 
-        // Add the new token and user mapping
-        userMap.put(strToken, new UserAccount(username, strToken));
+        // Add the new user associated with its username
+        userMap.put(username, new UserAccount(username, strToken));
+        //Store the username associated with the token
+        tokenMap.put(strToken, username);
 
         // Return the token, so it can be given to the user
         return strToken;
     }
 
     @Override
-    public boolean authenticate(String authString) {
-        return false;
+    public boolean authenticate(String username, String authString) {
+        return tokenMap.get(authString).equals(username);
     }
 
     /**

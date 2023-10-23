@@ -1,6 +1,5 @@
 package group.ms_312.Proxy;
 
-import group.ms_312.Proxy.Providers.Storage.AuthMapper;
 import group.ms_312.Proxy.Resources.Sorting;
 import org.junit.jupiter.api.Test;
 
@@ -31,73 +30,4 @@ public class ResourceTests {
         assertArrayEquals(sorted, toSort);
 
     }
-
-
-    @Test
-    public void testAuthMapperSize(){
-        AuthMapper testOn = new AuthMapper();
-        testOn.put("1", "one");
-        testOn.put("2", "two");
-        testOn.put("3", "three");
-
-        assertEquals(3, testOn.size());
-    }
-
-    @Test
-    public void testAuthMapperForwardsAccess(){
-        AuthMapper testOn = new AuthMapper();
-        testOn.put("1", "one");
-        testOn.put("2", "two");
-        testOn.put("3", "three");
-
-        assertEquals("one", testOn.get("1"));
-        assertEquals("two", testOn.get("2"));
-        assertEquals("three", testOn.get("3"));
-
-    }
-
-    @Test
-    public void testAuthMapperBackwardsAccess(){
-        AuthMapper testOn = new AuthMapper();
-        testOn.put("1", "one");
-        testOn.put("2", "two");
-        testOn.put("3", "three");
-
-        assertEquals("1", testOn.getKey("one"));
-        assertEquals("2", testOn.getKey("two"));
-        assertEquals("3", testOn.getKey("three"));
-    }
-
-    @Test
-    public void testAuthMapperRemove(){
-        AuthMapper testOn = new AuthMapper();
-        testOn.put("1", "one");
-        testOn.put("2", "two");
-        testOn.put("3", "three");
-
-        testOn.remove(3L);
-
-        assertNull(testOn.get(3L));
-    }
-
-    @Test
-    public void testAuthMapperPutAll(){
-        HashMap<String, String> buildFrom = new HashMap<>();
-        buildFrom.put("1", "one");
-        buildFrom.put("2", "two");
-        buildFrom.put("3", "three");
-
-        AuthMapper testOn = new AuthMapper();
-
-        testOn.putAll(buildFrom);
-
-        assertEquals("one", testOn.get("1"));
-        assertEquals("two", testOn.get("2"));
-        assertEquals("three", testOn.get("3"));
-
-        assertEquals("1", testOn.getKey("one"));
-        assertEquals("2", testOn.getKey("two"));
-        assertEquals("3", testOn.getKey("three"));
-    }
-
 }

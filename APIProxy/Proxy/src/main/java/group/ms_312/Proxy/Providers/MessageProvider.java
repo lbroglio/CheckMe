@@ -83,13 +83,14 @@ public abstract class MessageProvider {
     /**
      * Abstract function to be implemented by the subclasses. Handles authenticating with this MessageProvider.
      *
+     * @param username The name of the user to authenticate with
      * @param authString The string needed for authentication with this Provider
      *
      * @return
      * true - If authentication was successful <br/>
      * false - If authentication was unsuccessful
      */
-    public abstract boolean authenticate(String authString);
+    public abstract boolean authenticate(String username, String authString);
 
     /**
      * Abstract Method for adding a User account to this Provider.
@@ -97,7 +98,8 @@ public abstract class MessageProvider {
      * @param accountInfo A map containing the information needed to create an account with this provider. What fields
      * are specifically needed depends on type of provider.
      *
-     * @return The auth string for the newly created user.
+     * @return The auth string for the newly created user.0
+     *
      */
     public abstract String addUser(Map<String, String> accountInfo);
 
@@ -115,7 +117,7 @@ public abstract class MessageProvider {
      */
     public Message[] getAllMessagesForUser(String username, String authString){
         //
-        if(!this.authenticate(authString)){
+        if(!this.authenticate(username, authString)){
             return new Message[0];
         }
 
@@ -136,7 +138,7 @@ public abstract class MessageProvider {
      * If the authentication for the user fails returns an empty array
      */
     public Message[] getAllMessagesForUser(String username, String authString, MessageOrdering order){
-        if(!this.authenticate(authString)){
+        if(!this.authenticate(username, authString)){
             return new Message[0];
         }
         // Get the list of Messages
@@ -170,7 +172,7 @@ public abstract class MessageProvider {
      */
     public void loadMessage(Message toLoad, String username){
         // If there is no List for this user's Messages throw and exception
-        if(userMap.containsKey(username)){
+        if(!userMap.containsKey(username)){
             throw new IllegalArgumentException("No user with the given username exists");
         }
 

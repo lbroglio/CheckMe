@@ -25,7 +25,7 @@ public class UserAccount {
     private String authString;
 
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages;
 
     @ManyToOne

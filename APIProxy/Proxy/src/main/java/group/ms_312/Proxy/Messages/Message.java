@@ -1,6 +1,7 @@
 package group.ms_312.Proxy.Messages;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import group.ms_312.Proxy.Users.UserAccount;
 import jakarta.persistence.*;
 
 import java.lang.annotation.Annotation;
@@ -29,7 +30,7 @@ public class Message {
 
     @ManyToOne
     @JsonIgnore
-    private MessageBucket containedIn;
+    private UserAccount user;
 
 
     public Message(String sender, String recipient, String contents, String subject, LocalDateTime sendTime) {
