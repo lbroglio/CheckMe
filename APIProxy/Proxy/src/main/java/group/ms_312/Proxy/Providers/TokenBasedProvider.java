@@ -8,6 +8,10 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Provider which simulates a message service which uses a Bearer Token to authorize a User. In the API this maps to the
+ * Chaos Message Service
+ */
 @Entity
 public class TokenBasedProvider extends MessageProvider {
 

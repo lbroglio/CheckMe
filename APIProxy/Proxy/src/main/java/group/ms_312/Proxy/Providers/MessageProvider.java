@@ -7,6 +7,9 @@ import jakarta.persistence.*;
 
 import java.util.*;
 
+/**
+ * Abstract class for an Object which serves Messages via the API. Providers act as stand ins for
+ */
 @Entity
 public abstract class MessageProvider {
     @Id
@@ -64,7 +67,7 @@ public abstract class MessageProvider {
     /**
      * Default constructor for MessageProvider used by JPA
      */
-    private MessageProvider() {
+    protected MessageProvider() {
         userMap = new HashMap<>();
     }
 
