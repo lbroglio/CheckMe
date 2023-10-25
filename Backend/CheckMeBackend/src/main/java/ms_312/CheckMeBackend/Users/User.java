@@ -2,12 +2,14 @@ package ms_312.CheckMeBackend.Users;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import ms_312.CheckMeBackend.Messages.DemoRetriever;
-import ms_312.CheckMeBackend.Messages.MessageRetriever;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Class for a User of the application. Users own Retrievers which serve them Messages.
+ */
 @Entity
 //@Table(name="USERS")
 public class User extends RetrieverOwner{

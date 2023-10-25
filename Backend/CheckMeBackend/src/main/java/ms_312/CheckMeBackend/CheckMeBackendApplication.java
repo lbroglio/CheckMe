@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 
-
 @SpringBootApplication
 @RestController
 public class CheckMeBackendApplication {

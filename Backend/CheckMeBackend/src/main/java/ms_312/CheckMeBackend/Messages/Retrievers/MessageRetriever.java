@@ -1,7 +1,8 @@
-package ms_312.CheckMeBackend.Messages;
+package ms_312.CheckMeBackend.Messages.Retrievers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
 
 /**

@@ -2,8 +2,8 @@ package ms_312.CheckMeBackend.Messages;
 
 
 import jakarta.persistence.Entity;
+import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
-import ms_312.CheckMeBackend.Users.User;
 
 /**
  * A small test version of the object used to retrieve messages for a user. Used for building out the user class.
