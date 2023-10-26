@@ -1,17 +1,8 @@
 package ms_312.CheckMeBackend.Resources;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.transaction.Transactional;
-import ms_312.CheckMeBackend.Messages.Message;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
+import org.json.JSONObject;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
@@ -27,59 +18,79 @@ import java.util.*;
  * Class which holds static method for performing cryptographic operations (Encryption and Decryption).
  * Handles encrypting a string and storing / retrieving keys and other related info.
  */
-@Service
-public class CryptoService {
-    @Autowired
-    private static AESKeyRepository keyRepository;
-
+public class Crypto {
     /**
-     * Class used for storing the information associated with a cipher (key and iv) in the database.
+     * Read in the contents of the JSON file used for storing keys and ivs <br/>
+     * !! THIS METHOD OF KEY STORAGE IS NOT SECURE BUT IS NECESSARY WHILE IN DEVELOPMENT (FOR CLASS)
+     *
+     * @return A {@link LinkedHashMap} containing the JSON data parsed from the file
      */
-    @Entity
-    private static class AESKey {
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private long ID;
+    //Unchecked casts are from interacting with unchecked casts
+    @SuppressWarnings("unchecked")
+    private static LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> readKeysJSON(){
+        // Get the file for the keys JSON
+        File keysFile = new File(System.getProperty("user.home") + "/CheckMe/keys.json");
 
-        public String referenceName;
-
-        /**
-         * AES cipher key for this AESKey
-         */
-        public byte[] key;
-
-        /**
-         * Initialization Vector for this cryptokey
-         */
-        public byte[] iv;
-
-        /**
-         * Create a new AESKey
-         *
-         * @param referenceName The name to reference this key by. -- Must be unique
-         * @param key The key to store in this object
-         * @param iv The iv to store in this object.
-         */
-        public AESKey(String referenceName, byte[] key, byte[] iv){
-            this.referenceName = referenceName;
-            this.key = Arrays.copyOf(key, key.length);
-            this.iv = Arrays.copyOf(iv, iv.length);
-
+        //Scan in the file
+        String fileContents;
+        try{
+            Scanner readFile = new Scanner(keysFile);
+            fileContents = readFile.useDelimiter("\\Z").next();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("Could not read contents of keys.json file. Root Cause: " + e);
         }
 
-        /**
-         * Private constructor used by JPA
-         */
-        private AESKey(){}
+        // Parse the file contents as JSON and cast it
+        JSONParser parser = new JSONParser(fileContents);
+        LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> keysJSON;
+        try{
+            keysJSON = (LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>>) parser.parse();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse contents of keys.json. Root Cause: " + e);
+        }
 
+        //Return the parse JSON
+        return keysJSON;
     }
 
-    /**
-     * Interface used by the JPA for persisting AESKey objects
-     */
-    private interface AESKeyRepository extends JpaRepository<AESKey, Long> {
-        AESKey findByID(int ID);
-        AESKey findByReferenceName(String referenceName);
+    private static void storeKey(String referenceName, byte[] key, byte[] iv){
+        // Get the existing keys.json information
+        LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> existing = readKeysJSON();
+
+        //Create an object storing the new key info
+        LinkedHashMap<String, ArrayList<Integer>> newInfo = new LinkedHashMap<>();
+
+        // Build ArrayLists (of ints) for the key and iv
+        ArrayList<Integer> keyList = new ArrayList<>(key.length);
+        for (byte currByte : key) {
+            keyList.add((int) currByte);
+        }
+        ArrayList<Integer> ivList = new ArrayList<>(key.length);
+        for (byte currByte : iv) {
+            ivList.add((int) currByte);
+        }
+
+        //Associate the new info with there type (key or iv) in the map
+        newInfo.put("key", keyList);
+        newInfo.put("iv", ivList);
+
+        //Associate the new map with its reference name in the new map
+        existing.put(referenceName, newInfo);
+
+        // Create a JSONObject from the map
+        JSONObject toSave = new JSONObject(existing);
+
+        //Save the JSON to the keys.json file
+        File keysFile = new File(System.getProperty("user.home") + "/CheckMe/keys.json");
+
+        // Write the JSON to the file
+        try{
+            BufferedWriter writer = new BufferedWriter(new FileWriter(keysFile));
+            writer.write(toSave.toString());
+            writer.close();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not write to keys.json. Root Cause: " + e);
+        }
     }
 
 
@@ -93,8 +104,6 @@ public class CryptoService {
      * string.
      *
      */
-    //Unchecked casts are from interacting with unchecked casts
-    @SuppressWarnings("unchecked")
     public static byte[] encryptStringAES(String plaintext, String referenceName)  {
         //Generate an encryption key
         KeyGenerator keyGen;
@@ -138,15 +147,10 @@ public class CryptoService {
         }
 
         /*
-        Store the encryption key and IV in the database
+        Store the encryption key and IV in a file
         ## THIS METHOD OF STORAGE IS INSECURE BUT NECESSARY WHILE IN DEVELOPMENT(For class) ##
          */
-
-        //Create a new AESKey object to store the data to be saved
-        AESKey toStore = new AESKey(referenceName, key.getEncoded(), ivArray);
-
-        //Save the new AESKey to the database
-        keyRepository.save(toStore);
+        storeKey(referenceName, key.getEncoded(),  ivArray);
 
         return cipherText;
     }
@@ -160,15 +164,27 @@ public class CryptoService {
      *
      * @return The decrypted cipher as a String
      */
-    //Unchecked casts are from interacting with unchecked casts
-    @SuppressWarnings("unchecked")
     public static String decryptStringAES(byte[] ciphertext, String referenceName){
-        // Retrieve the IV and keys for decryption from the database
-        AESKey cipherInfo = keyRepository.findByReferenceName(referenceName);
+        // Retrieve the IV and keys for decryption from the keys.JSON file
+        LinkedHashMap<String, ArrayList<Byte>> cipherInfo = readKeysJSON().get(referenceName);
+
+        //Unbox the ArrayLists for the key and iv
+        ArrayList<Byte> keyList = cipherInfo.get("key");
+        byte[] keyArray = new byte[keyList.size()];
+        for(int i=0; i<keyList.size(); i++){
+            Byte currWrapper = keyList.get(i);
+            keyArray[i] = currWrapper;
+        }
+        ArrayList<Byte> ivList = cipherInfo.get("iv");
+        byte[] ivArray = new byte[ivList.size()];
+        for(int i=0; i<ivList.size(); i++){
+            Byte currWrapper = ivList.get(i);
+            ivArray[i] = currWrapper;
+        }
 
         // Set up the key and the IV
-        SecretKey key = new SecretKeySpec(cipherInfo.key, "AES");
-        IvParameterSpec iv = new IvParameterSpec(cipherInfo.iv);
+        SecretKey key = new SecretKeySpec(keyArray, "AES");
+        IvParameterSpec iv = new IvParameterSpec(ivArray);
 
         // Create and Initialize and AES Cipher Object
         Cipher c;
