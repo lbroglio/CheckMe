@@ -1,33 +1,88 @@
 package ms_312.CheckMeBackend.Resources;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.transaction.Transactional;
+import ms_312.CheckMeBackend.Messages.Message;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
-import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.security.auth.kerberos.EncryptionKey;
 import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Class which holds static method for performing cryptographic operations (Encryption and Decryption).
  * Handles encrypting a string and storing / retrieving keys and other related info.
  */
-public class Crypto {
+@Service
+public class CryptoService {
+    @Autowired
+    private static AESKeyRepository keyRepository;
+
     /**
-     * Store the path to the JSON file used for key storage.
-     * Storing keys this was in insecure but necessary for development (for class)
+     * Class used for storing the information associated with a cipher (key and iv) in the database.
      */
-    private static final String KEY_STORAGE = "classpath:keys.json";
+    @Entity
+    private static class AESKey {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private long ID;
+
+        public String referenceName;
+
+        /**
+         * AES cipher key for this AESKey
+         */
+        public byte[] key;
+
+        /**
+         * Initialization Vector for this cryptokey
+         */
+        public byte[] iv;
+
+        /**
+         * Create a new AESKey
+         *
+         * @param referenceName The name to reference this key by. -- Must be unique
+         * @param key The key to store in this object
+         * @param iv The iv to store in this object.
+         */
+        public AESKey(String referenceName, byte[] key, byte[] iv){
+            this.referenceName = referenceName;
+            this.key = Arrays.copyOf(key, key.length);
+            this.iv = Arrays.copyOf(iv, iv.length);
+
+        }
+
+        /**
+         * Private constructor used by JPA
+         */
+        private AESKey(){}
+
+    }
+
+    /**
+     * Interface used by the JPA for persisting AESKey objects
+     */
+    private interface AESKeyRepository extends JpaRepository<AESKey, Long> {
+        AESKey findByID(int ID);
+        AESKey findByReferenceName(String referenceName);
+    }
+
+
 
     /**
      * Encrypt a String using AES (Advanced Encryption Standard). Also handles storing the Key and IV associated with
@@ -37,11 +92,10 @@ public class Crypto {
      * @param referenceName The string to be used for retrieving the key and Initialization Vector used to encrypt the
      * string.
      *
-     * @throws ParseException Occurs when keys.json can not be parsed as JSON
      */
     //Unchecked casts are from interacting with unchecked casts
     @SuppressWarnings("unchecked")
-    public static byte[] encryptStringAES(String plaintext, String referenceName) throws ParseException {
+    public static byte[] encryptStringAES(String plaintext, String referenceName)  {
         //Generate an encryption key
         KeyGenerator keyGen;
         try {
@@ -64,7 +118,7 @@ public class Crypto {
         Cipher c;
         try {
             // Create and Initialize and AES Cipher Object
-            c = Cipher.getInstance("AES");
+            c = Cipher.getInstance("AES/CBC/PKCS5Padding");
             c.init(Cipher.ENCRYPT_MODE, key, iv);
         }
         //Not expected to ever occur since algorithm is hardcode
@@ -84,90 +138,43 @@ public class Crypto {
         }
 
         /*
-        Store the encryption key and IV
+        Store the encryption key and IV in the database
         ## THIS METHOD OF STORAGE IS INSECURE BUT NECESSARY WHILE IN DEVELOPMENT(For class) ##
          */
-        //Read in the JSON file containing the keys
-        File jsonFile = new File(KEY_STORAGE);
-        Scanner readFile;
-        try{
-            readFile = new Scanner(jsonFile);
 
-        }
-        //Not expected to ever occur since file is hardcode
-        catch (FileNotFoundException e){
-            throw new RuntimeException("Could not read keys.json");
-        }
+        //Create a new AESKey object to store the data to be saved
+        AESKey toStore = new AESKey(referenceName, key.getEncoded(), ivArray);
 
-        //Reads the entries file in as a JSON string for the JSON Parser
-        JSONParser parser = new JSONParser(readFile.useDelimiter("\\Z").next());
-        readFile.close();
-
-        // Parse the  JSON
-        LinkedHashMap<String, LinkedHashMap<String, byte[]>> keysJSON = (LinkedHashMap<String, LinkedHashMap<String, byte[]>>) parser.parse();
-
-        //Create a Map to store the data to be saved
-        LinkedHashMap<String, byte[]> keyInfo = new LinkedHashMap<>();
-        keyInfo.put("key", key.getEncoded());
-        keyInfo.put("iv", ivArray);
-
-        //Add the new key data to the parsed JSON associated with the given reference name
-        keysJSON.put(referenceName, keyInfo);
-
-        //Create A JSON Object to store the JSON information as a JSONObject instance
-        JSONObject output = new JSONObject();
-        //Add all the keysJSON to the new object
-        for (String currKey : keysJSON.keySet()) {
-            output.put(currKey, keysJSON.get(currKey));
-        }
-
-        //Save the JSON to the file
-        try{
-            BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile));
-            writer.write(output.toString());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        //Save the new AESKey to the database
+        keyRepository.save(toStore);
 
         return cipherText;
     }
 
+    /**
+     * Decrypt a given ciphertext (Stored as a byte array) using AES (Advanced Encryption standard)
+     * Handles retrieving the key and IV stored associated with the given reference name.
+     *
+     * @param ciphertext The cipher to decrypt
+     * @param referenceName The name used to retrieve the key and IV for the cipher.
+     *
+     * @return The decrypted cipher as a String
+     */
+    //Unchecked casts are from interacting with unchecked casts
+    @SuppressWarnings("unchecked")
     public static String decryptStringAES(byte[] ciphertext, String referenceName){
-        // Retrieve the IV and keys for decryption from keys.json
-        // Read in the file
-        File keysFile = new File(KEY_STORAGE);
-        Scanner readFile;
-        try{
-            readFile = new Scanner(keysFile);
-
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("Could not read keys.json. Root  Cause: " + e);
-        }
-        String fileContents = readFile.useDelimiter("\\Z").next();
-        readFile.close();
-
-        //Parse the file contents as JSON
-        JSONParser parser = new JSONParser(fileContents);
-        LinkedHashMap<Object, Object> keysJSON;
-
-        try{
-            keysJSON = (LinkedHashMap<Object, Object>) parser.parse();
-        } catch (ParseException e) {
-            throw new RuntimeException("Could not parse keys.json. Root Cause: " + e);
-        }
-
-        // Get the key info for the given reference name from the parsed JSON
-        LinkedHashMap<String, byte[]>  cipherInfo = (LinkedHashMap<String, byte[]>) keysJSON.get(referenceName);
+        // Retrieve the IV and keys for decryption from the database
+        AESKey cipherInfo = keyRepository.findByReferenceName(referenceName);
 
         // Set up the key and the IV
-        SecretKey key = new SecretKeySpec(cipherInfo.get("key"), "AES");
-        IvParameterSpec iv = new IvParameterSpec(cipherInfo.get("iv"));
+        SecretKey key = new SecretKeySpec(cipherInfo.key, "AES");
+        IvParameterSpec iv = new IvParameterSpec(cipherInfo.iv);
 
         // Create and Initialize and AES Cipher Object
         Cipher c;
         try {
             // Create and Initialize and AES Cipher Object
-            c = Cipher.getInstance("AES");
+            c = Cipher.getInstance("AES/CBC/PKCS5Padding");
             c.init(Cipher.DECRYPT_MODE, key, iv);
         }
         catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException e){
