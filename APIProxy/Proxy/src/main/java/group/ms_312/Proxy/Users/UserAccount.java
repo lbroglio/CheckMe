@@ -13,9 +13,15 @@ import java.util.List;
 @Entity
 public class UserAccount {
     /**
-     * Automatically generated id used by the JPA
+     * The ID used to identify this by the JPA
      */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long ID;
+
+    /**
+     * Automatically generated id used by the JPA
+     */
     private String  username;
 
     /**
