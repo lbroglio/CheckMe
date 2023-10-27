@@ -8,6 +8,8 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -27,7 +29,7 @@ public class Crypto {
      */
     //Unchecked casts are from interacting with unchecked casts
     @SuppressWarnings("unchecked")
-    private static LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> readKeysJSON(){
+    private static LinkedHashMap<String, LinkedHashMap<String, ArrayList<BigInteger>>> readKeysJSON(){
         // Get the file for the keys JSON
         File keysFile = new File(System.getProperty("user.home") + "/CheckMe/keys.json");
 
@@ -42,33 +44,43 @@ public class Crypto {
 
         // Parse the file contents as JSON and cast it
         JSONParser parser = new JSONParser(fileContents);
-        LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> keysJSON;
+        LinkedHashMap<String, LinkedHashMap<String, ArrayList<BigInteger>>> keysJSON;
         try{
-            keysJSON = (LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>>) parser.parse();
+            keysJSON = (LinkedHashMap<String, LinkedHashMap<String, ArrayList<BigInteger>>>) parser.parse();
         } catch (ParseException e) {
             throw new RuntimeException("Could not parse contents of keys.json. Root Cause: " + e);
         }
 
-        //Return the parse JSON
+        //Return the parsed JSON
         return keysJSON;
     }
 
+    /**
+     * Stores a key and iv for a cipher associated with a given reference name in the keys.json file.
+     * byte arrays are stored as a string representation
+     *
+     * @param referenceName The name to store the cipher info associated with. Must be unqiuq compared to the reference
+     * name of other key info
+     * @param key The key for the cipher -- will be stored as a String representation
+     * @param iv The initialization vector for the cipher -- will be stored as a String representation
+     */
     private static void storeKey(String referenceName, byte[] key, byte[] iv){
         // Get the existing keys.json information
-        LinkedHashMap<String, LinkedHashMap<String, ArrayList<Integer>>> existing = readKeysJSON();
+        LinkedHashMap<String, LinkedHashMap<String, ArrayList<BigInteger>>> existing = readKeysJSON();
 
         //Create an object storing the new key info
-        LinkedHashMap<String, ArrayList<Integer>> newInfo = new LinkedHashMap<>();
+        LinkedHashMap<String, ArrayList<BigInteger>> newInfo = new LinkedHashMap<>();
 
-        // Build ArrayLists (of ints) for the key and iv
-        ArrayList<Integer> keyList = new ArrayList<>(key.length);
-        for (byte currByte : key) {
-            keyList.add((int) currByte);
+        // Convert the byte arrays to lists for storage
+        ArrayList<BigInteger> keyList = new ArrayList<>();
+        ArrayList<BigInteger> ivList = new ArrayList<>();
+        for (byte b : key) {
+            keyList.add(new BigInteger(new byte[]{b}));
         }
-        ArrayList<Integer> ivList = new ArrayList<>(key.length);
-        for (byte currByte : iv) {
-            ivList.add((int) currByte);
+        for (byte b : iv) {
+            ivList.add(new BigInteger(new byte[]{b}));
         }
+
 
         //Associate the new info with there type (key or iv) in the map
         newInfo.put("key", keyList);
@@ -166,21 +178,22 @@ public class Crypto {
      */
     public static String decryptStringAES(byte[] ciphertext, String referenceName){
         // Retrieve the IV and keys for decryption from the keys.JSON file
-        LinkedHashMap<String, ArrayList<Byte>> cipherInfo = readKeysJSON().get(referenceName);
+        LinkedHashMap<String, ArrayList<BigInteger>> cipherInfo = readKeysJSON().get(referenceName);
 
-        //Unbox the ArrayLists for the key and iv
-        ArrayList<Byte> keyList = cipherInfo.get("key");
+       //Unbox the values of the key and iv and convert them to bytes
+        ArrayList<BigInteger> keyList = cipherInfo.get("key");
+        ArrayList<BigInteger> ivList = cipherInfo.get("iv");
+
         byte[] keyArray = new byte[keyList.size()];
-        for(int i=0; i<keyList.size(); i++){
-            Byte currWrapper = keyList.get(i);
-            keyArray[i] = currWrapper;
-        }
-        ArrayList<Byte> ivList = cipherInfo.get("iv");
         byte[] ivArray = new byte[ivList.size()];
-        for(int i=0; i<ivList.size(); i++){
-            Byte currWrapper = ivList.get(i);
-            ivArray[i] = currWrapper;
+
+        for(int i=0; i<keyList.size(); i++){
+            keyArray[i] = keyList.get(i).byteValue();
         }
+        for(int i=0; i<ivList.size(); i++){
+            ivArray[i] = ivList.get(i).byteValue();
+        }
+
 
         // Set up the key and the IV
         SecretKey key = new SecretKeySpec(keyArray, "AES");
