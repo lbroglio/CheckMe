@@ -25,7 +25,7 @@ public class DemoRetriever extends MessageRetriever {
     /**
      * Default constructor for Persistence API
      */
-    public DemoRetriever (){
+    private DemoRetriever (){
         super();
     }
 
@@ -34,13 +34,4 @@ public class DemoRetriever extends MessageRetriever {
         return new Message[0];
     }
 
-    @Override
-    public Message[] getAllAfterTime(LocalDateTime time) {
-        return new Message[0];
-    }
-
-    @Override
-    public Message[] getAllAfterMessage(Message dividerMsg) {
-        return new Message[0];
-    }
 }
