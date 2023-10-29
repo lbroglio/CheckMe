@@ -1,7 +1,7 @@
 package ms_312.CheckMeBackend.Users;
 
 import jakarta.persistence.*;
-import ms_312.CheckMeBackend.Messages.DemoRetriever;
+import ms_312.CheckMeBackend.Messages.Retrievers.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Messages.Message;
 

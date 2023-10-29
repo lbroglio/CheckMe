@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ms_312.CheckMeBackend.Users.User;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 /**
@@ -26,15 +27,19 @@ public class Message {
     private String recipient;
     private String contents;
     private String subject;
+
+    private LocalDateTime sendTime;
+
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    public Message(String sender, String recipient, String contents, String subject) {
+    public Message(String sender, String recipient, String contents, String subject, LocalDateTime sendTime) {
         this.sender = sender;
         this.recipient = recipient;
         this.contents = contents;
         this.subject = subject;
+        this.sendTime = sendTime;
         this.ID = this.hashCode();
     }
 
@@ -45,13 +50,29 @@ public class Message {
      * @param sender The name or identifier associated with this message
      * @param contents The contents or body of this message
      */
-    public Message(String sender, String recipient, String contents) {
+    public Message(String sender, String recipient, String contents, LocalDateTime sendTime) {
         this.sender = sender;
         this.recipient = recipient;
         this.contents = contents;
         this.subject = null;
+        this.sendTime = sendTime;
         this.ID = this.hashCode();
     }
+
+    /**
+     * Create a new Message from a LinkedHashMap holding the fields.Used for creating Messages from JSON
+     *
+     * @param jsonObj The LinkedHashMap containing the fields for the message
+     */
+    public Message(LinkedHashMap<Object, Object> jsonObj){
+        this.sender =  (String) jsonObj.get("sender");
+        this.recipient =  (String) jsonObj.get("recipient");
+        this.contents =  (String) jsonObj.get("contents");
+        this.subject =  (String) jsonObj.get("subject");
+        this.sendTime =  LocalDateTime.parse((String) jsonObj.get("sendTime")) ;
+        this.ID = this.hashCode();
+    }
+
 
     public Message() {}
 
@@ -113,6 +134,13 @@ public class Message {
      * Retrieve the ID for this message. A unique identifier created from the Has of its sender, contents, sendTime, and platform
      */
     public int getID(){return ID;}
+
+    /**
+     * @return The time that this Message was sent as a {@link LocalDateTime} object
+     */
+    public LocalDateTime getSendTime() {
+        return sendTime;
+    }
 
     @Override
     public boolean equals(Object o) {

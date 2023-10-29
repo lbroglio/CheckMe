@@ -939,10 +939,10 @@ public class CheckMeBackendApplication {
 		String contents = (String) messageJSON.get("contents");
 		String subject = (String) messageJSON.get("subject");
 //		String platform = (String) messageJSON.get("platform");
-//		LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
+		LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
 
 
-		Message createdMessage = new Message(sender, recipient, contents, subject);
+		Message createdMessage = new Message(sender, recipient, contents, subject, sendTime);
 		messageRepository.save(createdMessage);
 
 		return new ResponseEntity<>("Saved message: " + createdMessage.getID(),HttpStatus.OK );

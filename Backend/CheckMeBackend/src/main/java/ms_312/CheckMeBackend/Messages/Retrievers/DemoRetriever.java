@@ -1,9 +1,12 @@
-package ms_312.CheckMeBackend.Messages;
+package ms_312.CheckMeBackend.Messages.Retrievers;
 
 
 import jakarta.persistence.Entity;
+import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
+
+import java.time.LocalDateTime;
 
 /**
  * A small test version of the object used to retrieve messages for a user. Used for building out the user class.
@@ -28,6 +31,16 @@ public class DemoRetriever extends MessageRetriever {
 
     @Override
     public Message[] getAll() {
+        return new Message[0];
+    }
+
+    @Override
+    public Message[] getAllAfterTime(LocalDateTime time) {
+        return new Message[0];
+    }
+
+    @Override
+    public Message[] getAllAfterMessage(Message dividerMsg) {
         return new Message[0];
     }
 }

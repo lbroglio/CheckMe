@@ -5,6 +5,12 @@ import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+
 /**
  * Abstract class that contains the API used by platform specific classes for retrieving messages
  * from different sources.
@@ -24,18 +30,29 @@ public abstract class MessageRetriever {
     protected String source;
 
     /**
+     * Client object used by providers for making Http Requests
+     */
+    protected final HttpClient HTTPCLIENT;
+
+    /**
      * @param source A complete URL pointing to the API location this Retriever should get Messages from
      * @param owner The {@link RetrieverOwner} that this reriever should get messages for
      */
     public MessageRetriever(String source, RetrieverOwner owner) {
         this.source = source;
         this.owner = owner;
+        this.HTTPCLIENT = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_2)
+                .build();
     }
 
     /**
      * Default constructor for Persistence API
      */
-    protected MessageRetriever() {}
+    protected MessageRetriever() {
+        this.HTTPCLIENT = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_2)
+            .build();}
 
 
     /**
@@ -47,11 +64,61 @@ public abstract class MessageRetriever {
     private RetrieverOwner owner;
 
     /**
-     * Get all the Messages provided by the {@link MessageRetriever#source} for this Retriever
+     * Get all the Messages provided by the {@link MessageRetriever#source} for this Retriever. Messages will be
+     * returned ordered by the time they were sent
      *
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
     public abstract Message[] getAll();
+
+    /**
+     * Get all the Messages provided by the {@link MessageRetriever#source} for this Retriever sent after a given
+     * time provided as a {@link LocalDateTime}
+     *
+     * @param time The {@link LocalDateTime} object to use to decide whether to include a Message
+     *
+     * @return An array of {@link Message} objects corresponding to all the retrieved messages.
+     */
+    public Message[] getAllAfterTime(LocalDateTime time){
+        //Get the list of all Messages from the API
+        Message[] allMessages = getAll();
+
+        // Index to cut off array at
+        int index = -1;
+
+        //Find the message item in the array sent after time
+        for(int i=0; i < allMessages.length; i++){
+            Message check = allMessages[i];
+            if(check.getSendTime().isBefore(time)){
+                index = i;
+                i += allMessages.length;
+            }
+        }
+
+        // If no Message sent before time was sent return the entire array
+        if(index == -1){
+            return allMessages;
+        }
+
+        // If none of the array should be included return an empty array
+        if(index == 0){
+            return new Message[0];
+        }
+        // Return all Messages up until the found index
+        return Arrays.copyOfRange(allMessages, 0, index);
+    }
+
+    /**
+     * Get all the Messages provided by the {@link MessageRetriever#source} for this Retriever sent after a given
+     * Message. (Only Messages with a timestamp later than that of the given Message will be included.)
+     *
+     * @param dividerMsg The {@link Message} object to use to decide whether to include a Message
+     *
+     * @return An array of {@link Message} objects corresponding to all the retrieved messages.
+     */
+    public Message[] getAllAfterMessage(Message dividerMsg){
+        return getAllAfterTime(dividerMsg.getSendTime());
+    }
 
     /**
      * @return The {@link RetrieverOwner} this retriever gets messages  for
@@ -79,7 +146,7 @@ public abstract class MessageRetriever {
      * @return The string holding the URL to the API endpoint this retriever gets messages from
      */
     public String getSource() {
-        return source;
+        return source.toString();
     }
 
 

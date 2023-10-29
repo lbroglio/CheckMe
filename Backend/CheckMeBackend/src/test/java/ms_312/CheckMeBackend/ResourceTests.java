@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend;
 
+import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Resources.Crypto;
 
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-@SpringBootTest
 public class ResourceTests {
 
     @Test
@@ -26,6 +26,5 @@ public class ResourceTests {
         //Assert that the decrypted string is accurate
         assertEquals("UnitTestCrypto", plaintext);
     }
-
 
 }
