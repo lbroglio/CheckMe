@@ -32,6 +32,7 @@ public abstract class MessageRetriever {
     /**
      * Client object used by providers for making Http Requests
      */
+    @Transient
     protected final HttpClient HTTPCLIENT;
 
     /**
