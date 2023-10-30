@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+task wrapper(type: Wrapper){
+    gradleVersion = '7.2'
+}
+
+task prepareKotlinBuildScriptModel {
+
+}
+
 android {
     namespace 'com.example.emailaggregatorapp2'
     compileSdk 33
