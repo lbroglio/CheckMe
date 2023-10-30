@@ -1,6 +1,6 @@
 package group.ms_312.Proxy.Providers;
 
-import group.ms_312.Proxy.Users.UserAccount;
+import group.ms_312.Proxy.Users.UserAcnt;
 import jakarta.persistence.*;
 
 
@@ -79,7 +79,7 @@ public class TokenBasedProvider extends MessageProvider {
         String strToken = Long.toString(token);
 
         // Add the new user associated with its username
-        userMap.put(username, new UserAccount(username, strToken));
+        acntMap.put(username, new UserAcnt(username, strToken));
         //Store the username associated with the token
         tokenMap.put(strToken, username);
 
@@ -101,7 +101,7 @@ public class TokenBasedProvider extends MessageProvider {
      * @return The 16 digit bearer token for the given user
      */
     public String getTokenForUser(String username){
-        return userMap.get(username).getAuthString();
+        return acntMap.get(username).getAuthString();
     }
 
     /**

@@ -11,7 +11,7 @@ import java.util.List;
  * Represents a User account made with one of the simulated services. Owns Messages and tracks its auth string
  */
 @Entity
-public class UserAccount {
+public class UserAcnt {
     /**
      * The ID used to identify this by the JPA
      */
@@ -19,10 +19,7 @@ public class UserAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long ID;
 
-    /**
-     * Automatically generated id used by the JPA
-     */
-    private String  username;
+    private String username;
 
     /**
      * The string assigned for authentication with this User account. What exactly this consists of depends on the type
@@ -38,13 +35,13 @@ public class UserAccount {
     private MessageProvider owner;
 
     /**
-     * Create a new UserAccount
+     * Create a new UserAcnt
      *
      * @param username The username to use as the id for this USer (Must be unique)
      * @param authString The string assigned for authentication with this User account. What exactly this consists
      * of depends on the type of Provider this account owned by
      */
-    public UserAccount(String username, String authString){
+    public UserAcnt(String username, String authString){
         this.username = username;
         this.authString = authString;
         messages = new ArrayList<>();
@@ -54,12 +51,12 @@ public class UserAccount {
     /**
      * Empty Constructor used by the JPA
      */
-    private UserAccount(){
+    private UserAcnt(){
         messages = new ArrayList<>();
     }
 
     /**
-     * @return The username used as the ID for this UserAccount
+     * @return The username used as the ID for this UserAcnt
      */
     public  String getUsername(){
         return username;

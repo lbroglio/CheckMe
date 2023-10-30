@@ -1,6 +1,6 @@
 package group.ms_312.Proxy.Providers;
 
-import group.ms_312.Proxy.Users.UserAccount;
+import group.ms_312.Proxy.Users.UserAcnt;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 
@@ -88,7 +88,7 @@ public class BasicAuthProvider extends MessageProvider{
         byte[] hashedAuth = digest.digest(authString.getBytes(StandardCharsets.UTF_8));
 
         //Compare the string representation of the Hash to the one for the user to authenticate as and return the result
-        UserAccount toAuth = userMap.get(username);
+        UserAcnt toAuth = acntMap.get(username);
         return toAuth.getAuthString().equals(storeByteArray(hashedAuth));
     }
 
@@ -150,7 +150,7 @@ public class BasicAuthProvider extends MessageProvider{
         String hashAuthStr = storeByteArray(hashedAuth);
 
         // Add the new user
-        userMap.put(username, new UserAccount(username, hashAuthStr));
+        acntMap.put(username, new UserAcnt(username, hashAuthStr));
 
         //Return the auth string
         return authString;

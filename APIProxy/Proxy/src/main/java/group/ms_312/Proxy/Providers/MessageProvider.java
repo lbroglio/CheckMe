@@ -2,7 +2,7 @@ package group.ms_312.Proxy.Providers;
 
 import group.ms_312.Proxy.Messages.Message;
 import group.ms_312.Proxy.Resources.Sorting;
-import group.ms_312.Proxy.Users.UserAccount;
+import group.ms_312.Proxy.Users.UserAcnt;
 import jakarta.persistence.*;
 
 import java.util.*;
@@ -18,10 +18,10 @@ public abstract class MessageProvider {
     @ElementCollection
     @CollectionTable(name = "provider_user_Mapping",
             joinColumns = {@JoinColumn(name = "messageprovider_id", referencedColumnName = "id")})
-    @MapKeyColumn(name = "username")
-    @Column(name = "user_account")
+    @MapKeyColumn(name = "acnt_name")
+    @Column(name = "user_acnt")
     @OneToMany(cascade = CascadeType.ALL)
-    protected Map<String, UserAccount> userMap;
+    protected Map<String, UserAcnt> acntMap;
 
     /**
      * Object to compare two Messages based on date
@@ -68,7 +68,7 @@ public abstract class MessageProvider {
      * Default constructor for MessageProvider used by JPA
      */
     protected MessageProvider() {
-        userMap = new HashMap<>();
+        acntMap = new HashMap<>();
     }
 
     /**
@@ -78,7 +78,7 @@ public abstract class MessageProvider {
      */
     protected MessageProvider(long id) {
         this.ID = id;
-        userMap = new HashMap<>();
+        acntMap = new HashMap<>();
     }
 
 
@@ -124,7 +124,7 @@ public abstract class MessageProvider {
             return new Message[0];
         }
 
-        List<Message> messages = userMap.get(username).getMessages();
+        List<Message> messages = acntMap.get(username).getMessages();
         int listSize = messages.size();
         return messages.toArray(new Message[listSize]);
     }
@@ -145,7 +145,7 @@ public abstract class MessageProvider {
             return new Message[0];
         }
         // Get the list of Messages
-        List<Message> messages = userMap.get(username).getMessages();
+        List<Message> messages = acntMap.get(username).getMessages();
         int listSize = messages.size();
         Message[] messageList = messages.toArray(new Message[listSize]);
 
@@ -175,12 +175,12 @@ public abstract class MessageProvider {
      */
     public void loadMessage(Message toLoad, String username){
         // If there is no List for this user's Messages throw and exception
-        if(!userMap.containsKey(username)){
+        if(!acntMap.containsKey(username)){
             throw new IllegalArgumentException("No user with the given username exists");
         }
 
         // Add this Message to the list for the User
-        this.userMap.get(username).getMessages().add(toLoad);
+        this.acntMap.get(username).getMessages().add(toLoad);
     }
 
 
@@ -194,7 +194,7 @@ public abstract class MessageProvider {
      * false - if the username has not been added
      */
     public boolean userExists(String username){
-        return  userMap.containsKey(username);
+        return  acntMap.containsKey(username);
     }
 
 }
