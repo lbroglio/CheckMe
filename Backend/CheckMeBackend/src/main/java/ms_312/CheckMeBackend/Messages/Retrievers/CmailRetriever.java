@@ -33,6 +33,12 @@ public class CmailRetriever extends MessageRetriever{
     private byte[] password;
 
     /**
+     * Store the reference name used for retrieving the cipher keys for this Retriever. <br/>
+     * Found by combining the username of the owner with the current number of Retrievers owned by the user
+     */
+    private String cipherReferenceName;
+
+    /**
      * Create a new ChaosRetriever for a specific User.
      *
      * @param source The URL of the endpoint to retrieve messages.
@@ -45,8 +51,18 @@ public class CmailRetriever extends MessageRetriever{
         super(source, owner);
         this.username = username;
 
+        // Set the reference name for used to store the cipher key (and iv) for this retriever
+        cipherReferenceName = owner.getName() + "_" + owner.getMessageRetrievers().size();
+
         //Encrypt the Password using AES and save it
-        this.password = Crypto.encryptStringAES(password,Integer.toString(this.id));
+        this.password = Crypto.encryptStringAES(password,cipherReferenceName);
+    }
+
+    /**
+     * Default Constructor used by the JPA
+     */
+    private CmailRetriever(){
+        super();
     }
 
 
@@ -58,7 +74,7 @@ public class CmailRetriever extends MessageRetriever{
     @Override
     public Message[] getAll() {
         //Decrypt the Password for use in the request
-        String unencryptedPassword = Crypto.decryptStringAES(password, Integer.toString(this.id));
+        String unencryptedPassword = Crypto.decryptStringAES(password, cipherReferenceName);
 
         // Put the username and password into
         String unencodedAuthString = username + ":" + unencryptedPassword;

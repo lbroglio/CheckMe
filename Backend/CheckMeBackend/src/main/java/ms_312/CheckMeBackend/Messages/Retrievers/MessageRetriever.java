@@ -70,6 +70,7 @@ public abstract class MessageRetriever {
      *
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
+    @JsonIgnore
     public abstract Message[] getAll();
 
     /**
@@ -80,6 +81,7 @@ public abstract class MessageRetriever {
      *
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
+    @JsonIgnore
     public Message[] getAllAfterTime(LocalDateTime time){
         //Get the list of all Messages from the API
         Message[] allMessages = getAll();
@@ -117,6 +119,7 @@ public abstract class MessageRetriever {
      *
      * @return An array of {@link Message} objects corresponding to all the retrieved messages.
      */
+    @JsonIgnore
     public Message[] getAllAfterMessage(Message dividerMsg){
         return getAllAfterTime(dividerMsg.getSendTime());
     }

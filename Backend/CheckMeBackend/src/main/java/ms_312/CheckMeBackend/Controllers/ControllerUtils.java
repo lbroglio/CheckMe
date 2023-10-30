@@ -92,4 +92,48 @@ public class ControllerUtils {
         // Return true if the given password is correct and false if it isn't
         return checkPassword(authUser, password);
     }
+
+    /**
+     * Verifies if a login passed via a Base64 String (HTTP Basic Authentication) is correct.
+     * Handles decoding the given String verifying if the USer exists and if the password is correct.
+     *
+     * @param encodedAuth A Base64 encoded string in the form of <br/>{username}:{password} --
+     * <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">For more Information</a>
+     * @param authAs The user that the Basic Auth string is being used to authorize as. The encoded username and password
+     * must match those saved for this User.
+     *
+     * @return
+     * true if the User was correctly logged in  -- User exists, the correct password was given and they both matched
+     * the user to authorize as
+     * false if the login  failed for any reason
+     *
+     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+     */
+    public static boolean checkBasicAuth(String encodedAuth, User authAs, UserRepository userRepository) throws NoSuchAlgorithmException{
+        //Decode the authorization header
+        byte[] authBytes = Base64.getDecoder().decode(encodedAuth);
+        String auth = new String(authBytes);
+
+        //Separate the Username and password
+        int authSplit = auth.lastIndexOf(':');
+        String username = auth.substring(0, authSplit);
+        String password = auth.substring(authSplit +1);
+
+        //Find the User with the given Username
+        User authUser = userRepository.findByName(username);
+
+        //Return false if no such User exists
+        if(authUser == null){
+            return false;
+        }
+
+        // Confirm that the User is the same as the that is being authorized as
+        if(!authUser.equals(authAs)){
+            return false;
+        }
+
+        // Return true if the given password is correct and false if it isn't
+        return checkPassword(authUser, password);
+    }
 }

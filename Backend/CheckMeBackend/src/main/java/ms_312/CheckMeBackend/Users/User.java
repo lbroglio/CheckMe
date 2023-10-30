@@ -135,5 +135,13 @@ public class User extends RetrieverOwner{
         groups.remove(group);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User user)) return false;
+        if (!super.equals(o)) return false;
+
+        return super.equals(o);
+    }
 
 }

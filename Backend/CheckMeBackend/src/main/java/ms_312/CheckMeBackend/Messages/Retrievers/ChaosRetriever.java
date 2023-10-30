@@ -1,6 +1,8 @@
 package ms_312.CheckMeBackend.Messages.Retrievers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Resources.Crypto;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
@@ -26,6 +28,12 @@ public class ChaosRetriever extends MessageRetriever{
     private byte[] APIToken;
 
     /**
+     * Store the reference name used for retrieving the cipher keys for this Retriever. <br/>
+     * Found by combining the username of the owner with the current number of Retrievers owned by the user
+     */
+    private String cipherReferenceName;
+
+    /**
      * Create a new ChaosRetriever for a specific User.
      *
      * @param source The URL of the endpoint to retrieve messages.
@@ -36,8 +44,18 @@ public class ChaosRetriever extends MessageRetriever{
     public ChaosRetriever(String source, String chaosAPIToken, RetrieverOwner owner) {
         super(source, owner);
 
+        // Set the reference name for used to store the cipher key (and iv) for this retriever
+        cipherReferenceName = owner.getName() + "_" + owner.getMessageRetrievers().size();
+
         //Encrypt the BearerToken using AES and save it
-        this.APIToken = Crypto.encryptStringAES(chaosAPIToken,Integer.toString(this.id));
+        this.APIToken = Crypto.encryptStringAES(chaosAPIToken, cipherReferenceName);
+    }
+
+    /**
+     * Default Constructor used by the JPA
+     */
+    private ChaosRetriever(){
+        super();
     }
 
 
@@ -49,7 +67,7 @@ public class ChaosRetriever extends MessageRetriever{
     @Override
     public Message[] getAll() {
         //Decrypt the API token for use in the request
-        String bearerToken = Crypto.decryptStringAES(APIToken, Integer.toString(this.id));
+        String bearerToken = Crypto.decryptStringAES(APIToken, cipherReferenceName);
         String authString = "Bearer " + bearerToken;
 
         //Build the request to the Chaos API
