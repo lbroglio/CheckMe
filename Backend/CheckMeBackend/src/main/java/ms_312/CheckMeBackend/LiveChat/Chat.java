@@ -2,13 +2,12 @@ package ms_312.CheckMeBackend.LiveChat;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Users.User;
 
+
 import java.util.Objects;
 
 @Entity
 @Table(name="CHATS")
 public class Chat {
-
-
 
     @Id
     private int id;
