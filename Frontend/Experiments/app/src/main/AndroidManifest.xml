@@ -24,7 +24,7 @@
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".MessageActivity"
+            android:name=".MessagesActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
