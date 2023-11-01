@@ -1,9 +1,12 @@
-package ms_312.CheckMeBackend.Messages;
+package ms_312.CheckMeBackend.Messages.Retrievers;
 
 
 import jakarta.persistence.Entity;
+import ms_312.CheckMeBackend.Messages.Message;
+import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
-import ms_312.CheckMeBackend.Users.User;
+
+import java.time.LocalDateTime;
 
 /**
  * A small test version of the object used to retrieve messages for a user. Used for building out the user class.
@@ -22,7 +25,7 @@ public class DemoRetriever extends MessageRetriever {
     /**
      * Default constructor for Persistence API
      */
-    public DemoRetriever (){
+    private DemoRetriever (){
         super();
     }
 
@@ -30,4 +33,5 @@ public class DemoRetriever extends MessageRetriever {
     public Message[] getAll() {
         return new Message[0];
     }
+
 }
