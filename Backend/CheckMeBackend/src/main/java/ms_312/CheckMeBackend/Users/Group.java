@@ -1,15 +1,17 @@
 package ms_312.CheckMeBackend.Users;
 
 
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
-import ms_312.CheckMeBackend.Messages.DemoRetriever;
-import ms_312.CheckMeBackend.Messages.MessageRetriever;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
+/**
+ * Object which represents a Group of Users which can all be served messages from a set of Retrievers served by the
+ * group.
+ */
 @Entity
 //@Table(name="GROUPS")
 public class Group extends RetrieverOwner{
@@ -45,6 +47,12 @@ public class Group extends RetrieverOwner{
      */
     private String joinCode;
 
+    /**
+     * Create a new Group.
+     *
+     * @param name The name for this group. Must be unique
+     * @param creator The {@link User} creating this group. Will be set as the first member and admin
+     */
     public Group(String name, User creator){
         super(name);
 

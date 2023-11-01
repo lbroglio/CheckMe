@@ -1,8 +1,8 @@
 package ms_312.CheckMeBackend.Users;
 
 import jakarta.persistence.*;
-import ms_312.CheckMeBackend.Messages.DemoRetriever;
-import ms_312.CheckMeBackend.Messages.MessageRetriever;
+import ms_312.CheckMeBackend.Messages.Retrievers.DemoRetriever;
+import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Messages.Message;
 
 import java.util.ArrayList;
@@ -47,12 +47,14 @@ public abstract class RetrieverOwner {
     /**
      * Adds a new {@link MessageRetriever} to get messages for this User.
      *
-     * @param APIEndpoint Complete URL to the API endpoint to request for messages
+     * @param toAdd The Message Retriever to add as a source. Must be a Retriever owned by this RetrieverOwner
      */
     //@param platformName Which platform (Gmail, Discord, ETC) the new retriever gets messages from
-    public void newMessageSource(String APIEndpoint){
-        MessageRetriever temp = new DemoRetriever(APIEndpoint, this);
-        messageSources.add(temp);
+    public void newMessageSource(MessageRetriever toAdd){
+        if(!toAdd.getOwner().equals(this)){
+            throw new IllegalArgumentException("Given MessageRetriever is not owned by this RetrieverOwner");
+        }
+        messageSources.add(toAdd);
     }
 
     /**
