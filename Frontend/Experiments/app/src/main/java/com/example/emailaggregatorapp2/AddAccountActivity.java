@@ -1,20 +1,9 @@
 package com.example.emailaggregatorapp2;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -25,62 +14,14 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MessageActivity extends AppCompatActivity{
-    private static final String API_URL_POST = "http://coms-309-047.class.las.iastate.edu:8080/message";
-    private static final String API_URL_GET = "http://coms-309-047.class.las.iastate.edu:8080/message/user/";
-
-    private Button postSendButton;
-    private Button getSendButton;
-    private EditText senderInput;
-    private EditText toInput;
-    private EditText subjectInput;
-    private EditText contentInput;
-
-    private EditText retrieveInput;
-    private TextView messageDisplay;
-
-
+public class AddAccountActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message);
-
-        postSendButton = (Button) findViewById(R.id.button);
-        getSendButton = (Button) findViewById(R.id.button3);
-
-        senderInput = (EditText) findViewById(R.id.editTextText);
-        toInput = (EditText) findViewById(R.id.editTextText3);
-        subjectInput = (EditText) findViewById(R.id.editTextText4);
-        contentInput = (EditText) findViewById(R.id.editTextText5);
-
-        retrieveInput = (EditText) findViewById(R.id.editTextText6);
-        messageDisplay = (TextView) findViewById(R.id.textView8);
+        setContentView(R.layout.activity_add_acount);
 
 
-        postSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String from = senderInput.getText().toString();
-                String to = toInput.getText().toString();
-                String subject = subjectInput.getText().toString();
-                String contents = contentInput.getText().toString();
-
-                makeJSONObjectPostRequest(from,to,subject,contents);
-
-            }
-        });
-
-
-        getSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String user = retrieveInput.getText().toString();
-
-                makeJSONObjectGetRequest(user);
-
-            }
-        });
 
     }
 
@@ -98,7 +39,7 @@ public class MessageActivity extends AppCompatActivity{
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                 Request.Method.POST,
-                API_URL_POST,
+                "API_URL_POST",
                 body,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -127,12 +68,11 @@ public class MessageActivity extends AppCompatActivity{
 
         StringRequest jsonObjectRequest = new StringRequest(
                 Request.Method.GET,
-                (API_URL_GET + user),
+                ("API_URL_GET" + user),
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        // Handle the successful response here
-                        messageDisplay.setText(response);
+
                     }
                 },
                 new Response.ErrorListener() {
