@@ -30,6 +30,12 @@
             android:name=".AddAccountActivity"
             android:exported="false" />
         <activity
+            android:name=".GroupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NewGroupActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

@@ -32,6 +32,17 @@
     <string name="AddChaosAccount">Chaos</string>
     <string name="AddCrewsAccount">Crews</string>
     <string name="AddCmailAccount">Cmail</string>
+    <string name="GroupButton">Groups</string>
+    <string name="GroupDefault">Select Group</string>
+    <string name="JoinGroupHeader">Join Group</string>
+    <string name="JoinCodeEntry">Enter Join Code</string>
+    <string name="JoinCodeTbDefault">Join Code</string>
+    <string name="JoinGroupButtonTxt">Join Group</string>
+    <string name="BackButton">Back</string>
+    <string name="CreateGroupHeaderStr">Create Group</string>
+    <string name="CreateGroupTBLabel">Enter New Group Name</string>
+    <string name="CreateGroupTBDefault">New Group Name</string>
+    <string name="CreateGroupButtonStr">Create Group</string>
 
 
 </resources>

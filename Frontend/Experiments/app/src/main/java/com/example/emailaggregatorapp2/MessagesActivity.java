@@ -43,6 +43,8 @@ public class MessagesActivity extends AppCompatActivity{
         // Button for going to accounts page
         Button accountButton = (Button) findViewById(R.id.TPAccountsGoTo);
 
+        //Button for going to groups page
+        Button groupsButton = (Button) findViewById(R.id.groupButton);
 
         // Toggle navbar visibility
         visButton.setOnClickListener(new View.OnClickListener() {
@@ -63,6 +65,15 @@ public class MessagesActivity extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MessagesActivity.this, AddAccountActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        // Go to groups Screen
+        groupsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MessagesActivity.this, GroupActivity.class);
                 startActivity(intent);
             }
         });
