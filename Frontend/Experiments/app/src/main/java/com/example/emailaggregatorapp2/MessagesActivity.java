@@ -1,20 +1,17 @@
 package com.example.emailaggregatorapp2;
 
 import android.content.Intent;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.Group;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -25,62 +22,51 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class MessageActivity extends AppCompatActivity{
-    private static final String API_URL_POST = "http://coms-309-047.class.las.iastate.edu:8080/message";
-    private static final String API_URL_GET = "http://coms-309-047.class.las.iastate.edu:8080/message/user/";
-
-    private Button postSendButton;
-    private Button getSendButton;
-    private EditText senderInput;
-    private EditText toInput;
-    private EditText subjectInput;
-    private EditText contentInput;
-
-    private EditText retrieveInput;
-    private TextView messageDisplay;
-
-
+public class MessagesActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message);
+        setContentView(R.layout.activity_messages);
 
-        postSendButton = (Button) findViewById(R.id.button);
-        getSendButton = (Button) findViewById(R.id.button3);
-
-        senderInput = (EditText) findViewById(R.id.editTextText);
-        toInput = (EditText) findViewById(R.id.editTextText3);
-        subjectInput = (EditText) findViewById(R.id.editTextText4);
-        contentInput = (EditText) findViewById(R.id.editTextText5);
-
-        retrieveInput = (EditText) findViewById(R.id.editTextText6);
-        messageDisplay = (TextView) findViewById(R.id.textView8);
+        //TODO - Rework for Message frontend
 
 
-        postSendButton.setOnClickListener(new View.OnClickListener() {
+        // Navigation Bar
+
+        //Group for all Navbar Objects
+        Group navBar = (Group)  findViewById(R.id.NavBarGroup);
+
+        // Button for toggling Visibility
+        ToggleButton visButton = (ToggleButton) findViewById(R.id.navBarToggle);
+
+        // Button for going to accounts page
+        Button accountButton = (Button) findViewById(R.id.TPAccountsGoTo);
+
+
+        // Toggle navbar visibility
+        visButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String from = senderInput.getText().toString();
-                String to = toInput.getText().toString();
-                String subject = subjectInput.getText().toString();
-                String contents = contentInput.getText().toString();
+                if(navBar.getVisibility() == View.GONE){
+                    navBar.setVisibility(View.VISIBLE);
+                }
+                else{
+                    navBar.setVisibility(View.GONE);
 
-                makeJSONObjectPostRequest(from,to,subject,contents);
-
+                }
             }
         });
 
-
-        getSendButton.setOnClickListener(new View.OnClickListener() {
+        // Go to third party accounts Screen
+        accountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String user = retrieveInput.getText().toString();
-
-                makeJSONObjectGetRequest(user);
-
+                Intent intent = new Intent(MessagesActivity.this, AddAccountActivity.class);
+                startActivity(intent);
             }
         });
+
 
     }
 
@@ -98,7 +84,7 @@ public class MessageActivity extends AppCompatActivity{
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                 Request.Method.POST,
-                API_URL_POST,
+                "API_URL_POST",
                 body,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -127,12 +113,11 @@ public class MessageActivity extends AppCompatActivity{
 
         StringRequest jsonObjectRequest = new StringRequest(
                 Request.Method.GET,
-                (API_URL_GET + user),
+                ("API_URL_GET" + user),
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
-                        // Handle the successful response here
-                        messageDisplay.setText(response);
+
                     }
                 },
                 new Response.ErrorListener() {

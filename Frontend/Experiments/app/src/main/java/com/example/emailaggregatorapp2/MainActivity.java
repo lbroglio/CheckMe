@@ -16,7 +16,6 @@ public class MainActivity extends AppCompatActivity {
 
         Button loginbut = (Button) findViewById(R.id.loginbut1);
         Button signupbut = (Button) findViewById(R.id.signupbut1);
-        Button messagesBut = (Button) findViewById(R.id.messagesButton);
 
         signupbut.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -30,14 +29,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        messagesBut.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MessageActivity.class);
                 startActivity(intent);
             }
         });

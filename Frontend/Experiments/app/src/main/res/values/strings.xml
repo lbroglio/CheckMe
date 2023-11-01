@@ -24,6 +24,14 @@
     <string name="IdPrompt">Message ID:</string>
     <string name="SendButton">Send</string>
     <string name="RecipientPrompt">Message Recipient</string>
+    <string name="LoginFailure">Incorrect Username or Password</string>
+    <string name="TPAccountsGoToStr">Add Account</string>
+    <string name="SeeNavBar">See Nav Bar</string>
+    <string name="HideNavBar">Hide Nav Bar</string>
+    <string name="SelectServiceHeader">Select Message Service to Add Account For</string>
+    <string name="AddChaosAccount">Chaos</string>
+    <string name="AddCrewsAccount">Crews</string>
+    <string name="AddCmailAccount">Cmail</string>
 
 
 </resources>
