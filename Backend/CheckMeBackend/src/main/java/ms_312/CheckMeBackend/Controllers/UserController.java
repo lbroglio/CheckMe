@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Controllers;
 
+import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.apache.tomcat.util.json.JSONParser;
@@ -17,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 
 @RestController
@@ -262,6 +264,53 @@ public class UserController {
 
         //Return the requested settings
         return toReturn.getProfileSettings();
+
+    }
+
+    /**
+     * API endpoint to retrieve the groups a User is a member of
+     *
+     * @param username The username of the user to update the account settings for -- passed as a path variable
+     * in the HTTP request.
+     * @param password The password used to authenticate as the User
+     *
+     * @return
+     * If the GET was successful (Existing user and correct password were given)
+     * 	Return the list of Groups the User is a member of and status code 200
+     * If the GET was unsuccessful throw an exception and return the following status codes
+     * 	404 If no user exists with the given username
+     * 	400 If no password was sent in the header
+     * 	401 If the password was incorrect
+     *
+     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+     * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+     */
+    @GetMapping("/user/{username}/groups")
+    public List<Group> getUserGroups(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+        // Get the User to update the account settings for
+        User toReturn = userRepository.findByName(username);
+
+        // Return 404 if the no User exists with the given Username
+        if(toReturn == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"No user  with the username "  + username + "  exists.");
+        }
+
+        // Return 400 if a password wasn't given
+        if(password == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing Authentication Header");
+        }
+
+        //Check if the given password was correct
+        Boolean passwordMatch = ControllerUtils.checkPassword(toReturn, password);
+
+        // If the wrong password was given return 401
+        if(!passwordMatch){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,"Incorrect Password");
+        }
+
+
+        //Return the requested settings
+        return toReturn.getGroups();
 
     }
 
