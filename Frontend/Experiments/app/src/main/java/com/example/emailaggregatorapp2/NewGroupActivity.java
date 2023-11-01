@@ -13,11 +13,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Base64;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.HttpHeaderParser;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,7 +82,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
         // Setup create group button
         Button groupCreateButton = (Button) findViewById(R.id.createGroupButton);
-        groupJoinButton.setOnClickListener(new View.OnClickListener() {
+        groupCreateButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
                 // Get the current text in the join code text box
                 EditText groupNameEntry = (EditText) findViewById(R.id.createGroupTB);
@@ -120,13 +123,13 @@ public class NewGroupActivity extends AppCompatActivity {
         body.put("username", UserLoginInfo.username);
         body.put("password", UserLoginInfo.password);
 
-        JsonObjectRequest joinGroupRequest = new JsonObjectRequest(
+        JsonRequest<String> joinGroupRequest = new JsonRequest<String>(
                 Request.Method.PUT,
                 (JOIN_GROUP_ENDPOINT + joinCode),
-                body,
-                new Response.Listener<JSONObject>() {
+                body.toString(),
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(String response) {
                         joinGroupRequestSuccess = true;
                     }
                 },
@@ -137,7 +140,7 @@ public class NewGroupActivity extends AppCompatActivity {
                         Log.e("Volley Error", error.toString());
 
                         //Display error to user
-                        if(joinGroupError.getVisibility() == View.INVISIBLE){
+                        if (joinGroupError.getVisibility() == View.INVISIBLE) {
                             joinGroupError.setVisibility(View.VISIBLE);
                         }
                         String errorMsg = "Could not Join Group. Cause: " + error.toString();
@@ -145,7 +148,12 @@ public class NewGroupActivity extends AppCompatActivity {
 
                     }
                 }
-        );
+        ) {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                return Response.success(response.toString(), HttpHeaderParser.parseCacheHeaders(response));
+            }
+        };
         // Adding request to request queue
         VolleySingleton.getInstance(getApplicationContext()).addToRequestQueue(joinGroupRequest);
     }
@@ -155,13 +163,13 @@ public class NewGroupActivity extends AppCompatActivity {
         JSONObject body = new JSONObject();
         body.put("name", groupName);
 
-        JsonObjectRequest createGroupRequest = new JsonObjectRequest(
-                Request.Method.PUT,
+        JsonRequest<String> createGroupRequest = new JsonRequest<String>(
+                Request.Method.POST,
                 (CREATE_GROUP_ENDPOINT),
-                body,
-                new Response.Listener<JSONObject>() {
+                body.toString(),
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(JSONObject response) {
+                    public void onResponse(String response) {
                         createGroupRequestSuccess = true;
                     }
                 },
@@ -181,6 +189,11 @@ public class NewGroupActivity extends AppCompatActivity {
                     }
                 }
         ){
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                return Response.success(response.toString(), HttpHeaderParser.parseCacheHeaders(response));
+            }
+
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {
                 Map<String, String> params = new HashMap<String, String>();

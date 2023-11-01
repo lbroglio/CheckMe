@@ -32,7 +32,7 @@ import android.widget.TextView;
 
 public class GroupActivity extends AppCompatActivity {
 
-    private final String USER_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/user/"+UserLoginInfo.username;
+    private final String USER_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/user/"+UserLoginInfo.username+"/groups";
 
     private final String GROUP_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/group/name/";
 
@@ -41,21 +41,15 @@ public class GroupActivity extends AppCompatActivity {
 
     private ArrayList<String> userGroups = new ArrayList<>();
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group);
-
-        // Populate the list of Groups
-        makeUserGroupRequest();
-
-        // Add a Button for all Groups the User is in
+    private void addGroupButtons(){
 
         // Get the layout to add the button to
         LinearLayout addTo = (LinearLayout) findViewById(R.id.groupButtonLayout);
 
+
         // Add a button for every group in the list
         for(int i=0; i < userGroups.size(); i++){
+
             // Create a new button and set its id
             Button newButton = new Button(this);
             newButton.setId(numButtons);
@@ -66,6 +60,7 @@ public class GroupActivity extends AppCompatActivity {
             // Set the text for the new button to be the name of its corresponding group
             String groupTitle = userGroups.get(i);
             newButton.setText(groupTitle);
+            Log.d("GROUP" + i, groupTitle);
 
             // Create a listener for when the new button is clicked
             newButton.setOnClickListener(new View.OnClickListener() {
@@ -81,6 +76,20 @@ public class GroupActivity extends AppCompatActivity {
             addTo.addView(newButton);
 
         }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_group);
+
+        // Populate the list of Groups
+        makeUserGroupRequest();
+
+        // Add a Button for all Groups the User is in
+
+        // Get the layout to add the button to
+        LinearLayout addTo = (LinearLayout) findViewById(R.id.groupButtonLayout);
 
         // Setup button for making a new Group
         // Create a new button and set its id
@@ -134,21 +143,28 @@ public class GroupActivity extends AppCompatActivity {
                         //Add all Groups in the response to the Group list
                         for(int i=0; i < response.length(); i++){
                             // Get the item at the current index
-                            LinkedHashMap<String, String> curr;
+                            JSONObject curr;
                             try{
                                 // Unchecked cast is from interacting with JSON API
-                                curr = (LinkedHashMap<String, String>) response.get(i);
+                                curr = (JSONObject) response.get(i);
                             } catch (JSONException e) {
                                 throw new RuntimeException(e);
                             }
 
                             // Get the name of the current group
-                            String name = curr.get("name");
+                            String name;
+                            try {
+                                name = (String) curr.get("name");
+                            } catch (JSONException e) {
+                                throw new RuntimeException(e);
+                            }
 
                             //Add the current group name to the list
                             userGroups.add(name);
 
                         }
+
+                        addGroupButtons();
 
                     }
                 },

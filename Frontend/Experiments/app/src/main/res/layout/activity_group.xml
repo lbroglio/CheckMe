@@ -31,6 +31,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
+    <Button
+        android:id="@+id/backButtonGroupActiv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.926"
+        app:layout_constraintStart_toEndOf="@+id/divider"
+        app:layout_constraintTop_toBottomOf="@+id/groupTitle"
+        app:layout_constraintVertical_bias="0.974" />
+
     <ScrollView
         android:id="@+id/groupButtonScroll"
         android:layout_width="104dp"
@@ -48,19 +60,5 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
     </ScrollView>
-
-    <Button
-        android:id="@+id/backButtonGroupActiv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="188dp"
-        android:layout_marginTop="610dp"
-        android:layout_marginEnd="27dp"
-        android:layout_marginBottom="21dp"
-        android:text="@string/Back"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/divider"
-        app:layout_constraintTop_toBottomOf="@+id/groupTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
