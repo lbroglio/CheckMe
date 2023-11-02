@@ -24,7 +24,16 @@
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".MessageActivity"
+            android:name=".MessagesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AddAccountActivity"
+            android:exported="false" />
+        <activity
+            android:name=".GroupActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NewGroupActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"

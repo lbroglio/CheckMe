@@ -6,6 +6,7 @@ import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Messages.Message;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -78,6 +79,18 @@ public abstract class RetrieverOwner {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Removes all items stored in the MessageSources list. Leaves this RetrieverOwner with no Retrievers
+     *
+     */
+    public void clearRetrievers(){
+        Iterator<MessageRetriever> retrieverIterator = messageSources.iterator();
+        while (retrieverIterator.hasNext()){
+            retrieverIterator.next();
+            retrieverIterator.remove();
+        }
     }
 
 
