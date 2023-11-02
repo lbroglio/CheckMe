@@ -43,6 +43,14 @@
     <string name="CreateGroupTBLabel">Enter New Group Name</string>
     <string name="CreateGroupTBDefault">New Group Name</string>
     <string name="CreateGroupButtonStr">Create Group</string>
+    <string name="TargetURLDefault">Target URL</string>
+    <string name="EnterURLLabel">Enter URL for getting Messages</string>
+    <string name="EnterTokenLabel">Enter API Token for Chaos</string>
+    <string name="EnterTokenTB">API Token</string>
+    <string name="EnterUsernameLabel">Enter the username of the account to connect.</string>
+    <string name="EnterAccountPasswordLabel">Enter the password for the account to connect</string>
+    <string name="AddAccountButtonText">Add Account</string>
+    <string name="AddAccountGroup">Add Service Account for this Group\n</string>
 
 
 </resources>

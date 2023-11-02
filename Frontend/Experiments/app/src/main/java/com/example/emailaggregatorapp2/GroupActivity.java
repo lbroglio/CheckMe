@@ -36,6 +36,7 @@ public class GroupActivity extends AppCompatActivity {
 
     private final String GROUP_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/group/name/";
 
+    private String selectedGroup = null;
 
     private int numButtons = 0;
 
@@ -68,6 +69,7 @@ public class GroupActivity extends AppCompatActivity {
                     // Set the Title text to be the current group name
                     TextView groupHeader = (TextView)  findViewById(R.id.groupTitle);
                     groupHeader.setText(groupTitle);
+                    selectedGroup = groupTitle;
                 }
             });
 
@@ -123,6 +125,21 @@ public class GroupActivity extends AppCompatActivity {
                 // Return to Message Screen
                 Intent intent = new Intent(GroupActivity.this, MessagesActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        //Setup Add account button
+        Button addAccountButton = (Button) findViewById(R.id.addAccountGroups);
+        addAccountButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // If a group has been selected
+                if(selectedGroup != null){
+                    // Setup for adding for groups
+                    AddAccountActivity.targetGroup = selectedGroup;
+                    Intent intent = new Intent(GroupActivity.this, AddAccountActivity.class);
+                    startActivity(intent);
+                }
+
             }
         });
 

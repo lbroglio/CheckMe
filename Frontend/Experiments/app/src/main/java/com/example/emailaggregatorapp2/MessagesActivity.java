@@ -64,6 +64,8 @@ public class MessagesActivity extends AppCompatActivity{
         accountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Configure for adding for the user
+                AddAccountActivity.targetGroup = null;
                 Intent intent = new Intent(MessagesActivity.this, AddAccountActivity.class);
                 startActivity(intent);
             }
