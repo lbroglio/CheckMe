@@ -3,6 +3,7 @@ package ms_312.CheckMeBackend.Controllers;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Messages.MessageRepository;
 import ms_312.CheckMeBackend.Messages.Retrievers.ChaosRetriever;
+import ms_312.CheckMeBackend.Messages.Retrievers.CmailRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.CrewsRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
 import ms_312.CheckMeBackend.Users.Group;
@@ -153,7 +154,7 @@ public class MessageController {
             }
 
             // Add the new retriever to the User
-            toAdd.newMessageSource(new CrewsRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));
+            toAdd.newMessageSource(new CmailRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));
         }
         // Invalid service name
         else{
@@ -309,7 +310,7 @@ public class MessageController {
             }
 
             // Add the new retriever to the User
-            toAdd.newMessageSource(new CrewsRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));
+            toAdd.newMessageSource(new CmailRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));
         }
         // Invalid service name
         else{
@@ -381,5 +382,33 @@ public class MessageController {
         return requested.toString();
 
     }
+
+
+    @DeleteMapping("/user/{username}/clear-retrievers")
+    public ResponseEntity<String> clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException{
+        // Get the user to add the retriever for
+        User clearFrom = userRepository.findByName(username);
+
+        // Return 404 if the User to add is null
+        if(clearFrom == null){
+            return new ResponseEntity<>("No User exists with name " + username, HttpStatus.NOT_FOUND);
+        }
+
+        // Confirm that the proper authentication was passed to make changes for the indicate user
+        // Parse the encoded Base64 String from the Authorization Header and verify it's accurate for the given user
+        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader),clearFrom, userRepository)){
+            return new ResponseEntity<>("Incorrect Username or Password.", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Remove all  the User's retriever
+        clearFrom.clearRetrievers();
+
+        //Save the user
+        userRepository.save(clearFrom);
+
+        // Return 200 to indicate success
+        return new ResponseEntity<>("Retrievers Cleared", HttpStatus.OK);
+    }
+
 
 }
