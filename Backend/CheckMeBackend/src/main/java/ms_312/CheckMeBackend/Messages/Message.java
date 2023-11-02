@@ -165,5 +165,4 @@ public class Message {
                 ", subject='" + subject + '\'' +
                 '}';
     }
-
 }

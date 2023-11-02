@@ -6,6 +6,7 @@ import ms_312.CheckMeBackend.Messages.Retrievers.ChaosRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.CmailRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.CrewsRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
+import ms_312.CheckMeBackend.Resources.Sorting;
 import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.GroupRepository;
 import ms_312.CheckMeBackend.Users.User;
@@ -18,12 +19,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.xml.sax.helpers.AttributesImpl;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.LinkedHashMap;
+import java.util.*;
 
 @RestController
 public class MessageController {
@@ -346,7 +347,7 @@ public class MessageController {
         String contents = (String) messageJSON.get("contents");
         String subject = (String) messageJSON.get("subject");
 //		String platform = (String) messageJSON.get("platform");
-		LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
+        LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get("sendTime"));
 
 
         Message createdMessage = new Message(sender, recipient, contents, subject, sendTime);
@@ -383,20 +384,33 @@ public class MessageController {
 
     }
 
-
+    /**
+     * Remove all MessageRetrievers owned by a given user
+     *
+     * @param username The name of the User to remove Retrievers for
+     * @param authHeader The target User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+     * Info should be sent in the form of Basic: {username}:{password}
+     * @return
+     * Status 200 - If the removal was successful
+     * Status 401 - If the username or password given as authorization is incorrect
+     * Status 404 - If the no user exists with the given username
+     *
+     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+     */
     @DeleteMapping("/user/{username}/clear-retrievers")
-    public ResponseEntity<String> clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException{
+    public ResponseEntity<String> clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException {
         // Get the user to add the retriever for
         User clearFrom = userRepository.findByName(username);
 
         // Return 404 if the User to add is null
-        if(clearFrom == null){
+        if (clearFrom == null) {
             return new ResponseEntity<>("No User exists with name " + username, HttpStatus.NOT_FOUND);
         }
 
         // Confirm that the proper authentication was passed to make changes for the indicate user
         // Parse the encoded Base64 String from the Authorization Header and verify it's accurate for the given user
-        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader),clearFrom, userRepository)){
+        if (!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader), clearFrom, userRepository)) {
             return new ResponseEntity<>("Incorrect Username or Password.", HttpStatus.UNAUTHORIZED);
         }
 
@@ -408,6 +422,68 @@ public class MessageController {
 
         // Return 200 to indicate success
         return new ResponseEntity<>("Retrievers Cleared", HttpStatus.OK);
+    }
+
+
+    @GetMapping("/user/{username}/messages")
+    public Message[] getMessagesForUsers(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
+        // Get the user to get Messages for
+        User getFrom = userRepository.findByName(username);
+
+        // Respond 404 if the User is null
+        if(getFrom == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No User exists with the name: " + username);
+        }
+
+        // Confirm that the user's authorization is correct
+        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader), getFrom, userRepository)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect Username or Password");
+        }
+
+        // Get the list of MessageRetrievers for the user
+        List<MessageRetriever> retrievers = getFrom.getMessageRetrievers();
+
+        //List to store the retrieved Messages
+        List<Message[]> retrievedLists =  new ArrayList<>();
+
+        //Get the Messages returned by all the retrievers
+        for (MessageRetriever currRetriever : retrievers) {
+            // If the sentAfter parameter is set
+            if (sentAfter != null) {
+                // Get all Messages sentAfter the time in sentAfter
+                retrievedLists.add(currRetriever.getAllAfterTime(LocalDateTime.parse(sentAfter)));
+            }
+            // If the sentAfter parameter is not set
+            else{
+                // Get all Messages without a cutoff being given
+                retrievedLists.add(currRetriever.getAll());
+            }
+        }
+
+        // Combine all the Retrieved lists into a single array
+
+        // Get first array
+        Message[] sorted = retrievedLists.get(0);
+
+        // Loop through all retrieved arrays after the first
+        for(int i=1; i < retrievedLists.size(); i++){
+            // Get the next array to add in
+            Message[] nextArr = retrievedLists.get(i);
+
+
+            // Create an array to hold the previously sorted and the next arrays combined
+            Message[] mergeInto = new Message[sorted.length + nextArr.length];
+
+            // Merge the two arrays
+            Sorting.mergeSortedArrays(sorted, nextArr, mergeInto, new ControllerUtils.MessageDateComp());
+
+            // Set up the result as the first array for the next iteration (or the end of the loop)
+            sorted = mergeInto;
+        }
+
+        // Return the combined arrays
+        return sorted;
+
     }
 
 
