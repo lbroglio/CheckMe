@@ -61,4 +61,16 @@
             android:orientation="vertical" />
     </ScrollView>
 
+    <Button
+        android:id="@+id/addAccountGroups"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/AddAccountButtonText"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/backButtonGroupActiv"
+        app:layout_constraintHorizontal_bias="0.126"
+        app:layout_constraintStart_toEndOf="@+id/divider"
+        app:layout_constraintTop_toBottomOf="@+id/groupTitle"
+        app:layout_constraintVertical_bias="0.974" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
