@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Controllers;
 
+import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 
@@ -8,11 +9,25 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Comparator;
 
 /**
  * Class which stores utility Methods used by the different Controllers
  */
 public class ControllerUtils {
+
+    /**
+     * Object used for comparing two {@link Message}s based on the times there were sent
+     */
+    public static class MessageDateComp implements Comparator<Message> {
+        @Override
+        public int compare(Message o1, Message o2) {
+            return o1.getSendTime().compareTo(o2.getSendTime());
+        }
+    }
+
+
+
     /**
      * Hashes a string and compares it to the saved hash belonging to a given {@link User}
      *
