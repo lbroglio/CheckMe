@@ -136,4 +136,24 @@ public class ControllerUtils {
         // Return true if the given password is correct and false if it isn't
         return checkPassword(authUser, password);
     }
+
+    /**
+     * Get the {@link User} with the given username from a Base64 encoded HTTP Basic Authentication String
+     * @param encodedAuth
+     * @param userRepository
+     * @return The {@link User} with the given username
+     */
+    public static User getUsername(String encodedAuth, UserRepository userRepository){
+        byte[] authBytes = Base64.getDecoder().decode(encodedAuth);
+        String auth = new String(authBytes);
+
+        //Separate the Username and password
+        int authSplit = auth.lastIndexOf(':');
+        String username = auth.substring(0, authSplit);
+
+        //Find the User with the given Username
+        User authUser = userRepository.findByName(username);
+        return authUser;
+    }
+
 }
