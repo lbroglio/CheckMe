@@ -24,10 +24,9 @@ public class ChatRoom {
     public ChatRoom(Group group) {
         this.group = group;
         this.id = this.hashCode();
-
+        this.chats = new ArrayList<>();
+        chatRooms.add(this.group.getName());
 
     }
-
-
 
 }
