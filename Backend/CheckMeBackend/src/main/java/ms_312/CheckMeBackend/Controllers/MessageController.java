@@ -424,7 +424,20 @@ public class MessageController {
         return new ResponseEntity<>("Retrievers Cleared", HttpStatus.OK);
     }
 
-
+    /**
+     * API endpoint to request Messages for a User. 
+     *
+     * @param username The user to get a the Messages for
+     * @param authHeader The target User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+     * Info should be sent in the form of Basic: {username}:{password}
+     * @param sentAfter A time String which to use as a cutoff to only get recent Messages
+     * @return
+     * Status 200 - Returns the list of Messages
+     * Status 401 - If the username or password given as authorization is incorrect
+     * Status 404 - If the no user exists with the given username
+     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+     */
     @GetMapping("/user/{username}/messages")
     public Message[] getMessagesForUsers(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
         // Get the user to get Messages for
