@@ -1,10 +1,8 @@
 package ms_312.CheckMeBackend.LiveChat;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
+import jakarta.websocket.*;
+import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import ms_312.CheckMeBackend.Controllers.ControllerUtils;
 import ms_312.CheckMeBackend.Users.Group;
@@ -16,18 +14,17 @@ import ms_312.CheckMeBackend.Users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-@SpringBootApplication
-@RestController
-@ComponentScan(basePackages = {"ms_312.CheckMeBackend"})
-@ServerEndpoint("/livechat/{group}")
+//@ComponentScan(basePackages = {"ms_312.CheckMeBackend"})
+@ServerEndpoint("/livechat/{auth}/{group}")
+@Component
 public class ChatRoomController {
 
 
@@ -48,14 +45,7 @@ public class ChatRoomController {
     /**
      *
      */
-    @PostConstruct
-    private void init(){
-        // Create a chat room for each group
-        List<Group> groups = groupRepository.findAll();
-        for(Group group : groups){
-            ChatRoom newChatRoom = new ChatRoom(group);
-        }
-    }
+
 
     /**
      *
@@ -65,10 +55,13 @@ public class ChatRoomController {
      * @throws ResponseStatusException
      */
     @OnOpen
-    public void onOpen(Session session, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws NoSuchAlgorithmException, ResponseStatusException {
+    public void onOpen(Session session, @PathParam("auth") String authorization, @PathParam("group") String group) throws NoSuchAlgorithmException, ResponseStatusException {
+        System.out.println("Entered into open");
+        System.out.println("User repository: " + userRepository);
         User user = ControllerUtils.getUsername(authorization, userRepository);
+        System.out.println("Got user");
         String username = user.getName();
-
+        System.out.println("Opening for user: " + username);
         //Separate the Base64 string from the rest of the authentication header
         authorization =  ControllerUtils.parseBasicAuthHeader(authorization);
 
@@ -108,6 +101,12 @@ public class ChatRoomController {
     @OnMessage
 //    public void onMessage(Session session, String message, )
 
+
+    @OnError
+    public void onError(Session session, Throwable throwable) {
+        // Do error handling here
+        logger.info("Entered into Error");
+    }
 
     private void broadcast(String message) {
         sessionUsernameMap.forEach((session, username) -> {
