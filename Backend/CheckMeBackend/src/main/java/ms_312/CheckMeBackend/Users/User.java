@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Users;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -13,6 +14,14 @@ import java.util.List;
 @Entity
 //@Table(name="USERS")
 public class User extends RetrieverOwner{
+
+    enum UserType{
+        @JsonEnumDefaultValue
+        DEFAULT,
+        ADMIN
+    }
+
+
     /**
      * The email address associated with the user's account
      */
