@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @ComponentScan(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
 public class ChatRoomWebSocketServer {
 
-
     private final Logger logger = LoggerFactory.getLogger(ChatRoomWebSocketServer.class);
 
     private static Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
@@ -97,6 +96,7 @@ public class ChatRoomWebSocketServer {
         ChatRoom chatRoom = chatRooms.computeIfAbsent(group, k -> new ChatRoom(group));
         chatRoom.addSession(session);
         session.getUserProperties().put("username", username);
+        session.getUserProperties().put("group", group);
 
         String message = "User:" + username + " has Joined the Chat";
         broadcastToRoom(group, message);
@@ -110,11 +110,14 @@ public class ChatRoomWebSocketServer {
      * @throws IOException
      */
     @OnClose
-    public void onClose(Session session, @PathParam("group") String group) throws IOException {
+    public void onClose(Session session) throws IOException {
         logger.info("Entered into Close");
         String username = getUserName(session);
+        String group = getGroupName(session);
         String message = username + " has disconnected";
+        chatRooms.get(group).removeSession(session);
         broadcastToRoom(group, message);
+        session.getUserProperties().remove("username", username);
     }
 
     @OnMessage
@@ -150,8 +153,12 @@ public class ChatRoomWebSocketServer {
     }
 
 
-private String getUserName(Session session){
-    return session.getUserProperties().get("username").toString();
-}
+    private String getUserName(Session session){
+        return session.getUserProperties().get("username").toString();
+    }
+
+    private String getGroupName(Session session){
+        return session.getUserProperties().get("group").toString();
+    }
 }
 
