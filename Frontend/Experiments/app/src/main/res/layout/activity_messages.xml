@@ -63,14 +63,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
 
-
     <Button
-        android:id="@+id/groupButton"
+        android:id="@+id/livechatButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="280dp"
-        android:layout_marginTop="20dp"
-        android:backgroundTint="#FFFFFF"
+        android:text="Chat Rooms"
+        tools:layout_editor_absoluteX="292dp"
+        tools:layout_editor_absoluteY="266dp" />
+
+    <Button
+        android:id="@+id/GroupButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/GroupButton"
         android:textColor="#000000"
         app:layout_constraintStart_toStartOf="@+id/messageListView"
