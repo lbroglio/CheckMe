@@ -69,23 +69,21 @@ public class LiveChatActivity extends AppCompatActivity {
         //Encode auth str in Base64
         String encodedStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT).trim();
 
-        URI serverURI = new URI("wss://10.0.2.2:8080/livechat/" + encodedStr +"/"+UserSelectedGroup.groupname+"/");
+        URI serverURI = new URI((String)("ws://10.0.2.2:8080/livechat/" + encodedStr +"/"+UserSelectedGroup.groupname+"/").trim());
 
         Log.d("URI", serverURI.toString());
 
         webSocketClient = new WebSocketClient(serverURI, (Draft) drafts[0]) {
             @Override
-            public void onOpen(ServerHandshake handshakedata) {
+            public void onOpen(ServerHandshake handshake) {
                 Log.d("OPEN", "run() returned: " + "is connecting");
             }
 
             @Override
             public void onMessage(String message) {
-                runOnUiThread(() -> {
                     // Handle incoming messages
                     messageList.add(message);
                     messageAdapter.notifyDataSetChanged();
-                });
             }
 
             @Override
