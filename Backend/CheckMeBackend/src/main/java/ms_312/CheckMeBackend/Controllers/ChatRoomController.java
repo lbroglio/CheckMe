@@ -1,26 +1,20 @@
-package ms_312.CheckMeBackend.LiveChat;
+package ms_312.CheckMeBackend.Controllers;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import ms_312.CheckMeBackend.Controllers.ControllerUtils;
-import ms_312.CheckMeBackend.Users.Group;
+import ms_312.CheckMeBackend.LiveChat.ChatRepository;
+import ms_312.CheckMeBackend.LiveChat.ChatRoom;
 import ms_312.CheckMeBackend.Users.GroupRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
 
 import java.io.IOException;
 import java.net.URI;
@@ -34,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 //@ComponentScan(basePackages = {"ms_312.CheckMeBackend"})
 @ServerEndpoint("/livechat/{auth}/{group}")
 @Component
+@EnableJpaRepositories(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
+
 @ComponentScan(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
 public class ChatRoomController {
 
@@ -42,22 +38,17 @@ public class ChatRoomController {
 
     private static Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
 
-//    private static Map < Session, String > sessionUsernameMap = new Hashtable < > ();
-//    private static Map < String, Session > usernameSessionMap = new Hashtable < > ();
 
-    @Autowired
-    ChatRepository chatRepository;
+//TODO fix autowiring to allow chats to be saved to the database
 
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    GroupRepository groupRepository;
-
-    /**
-     *
-     */
-
+//    @Autowired
+//    ChatRepository chatRepository;
+//
+//    @Autowired
+//    UserRepository userRepository;
+//
+//    @Autowired
+//    GroupRepository groupRepository;
 
     /**
      *
@@ -104,14 +95,11 @@ public class ChatRoomController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
         }
 
-        System.out.println("Group repository: " + groupRepository);
-        Group g = groupRepository.findByName(group);
-        System.out.println("Group: " + g);
 
-        ChatRoom chatRoom = chatRooms.computeIfAbsent(group, k -> new ChatRoom(g));
 
-//        sessionUsernameMap.put(session, username);
-//        usernameSessionMap.put(username, session);
+        ChatRoom chatRoom = chatRooms.computeIfAbsent(group, k -> new ChatRoom(group));
+        chatRoom.addSession(session);
+        session.getUserProperties().put("username", username);
 
         String message = "User:" + username + " has Joined the Chat";
         broadcastToRoom(group, message);
@@ -127,19 +115,17 @@ public class ChatRoomController {
     @OnClose
     public void onClose(Session session, @PathParam("group") String group) throws IOException {
         logger.info("Entered into Close");
-
-//        String username = sessionUsernameMap.get(session);
-//
-//        sessionUsernameMap.remove(session);
-//        usernameSessionMap.remove(username);
-//
-//        String message = username + " disconnected";
-//        broadcastToRoom(group, message);
+        String username = getUserName(session);
+        String message = username + " has disconnected";
+        broadcastToRoom(group, message);
     }
 
     @OnMessage
-    public void onMessage(Session session, String message, @PathParam("username") String username){
-
+    public void onMessage(Session session, String message, @PathParam("group") String group) {
+        logger.info("Got Message:" + message);
+        String username = getUserName(session);
+        message = username + ": " + message;
+        broadcastToRoom(group, message);
     }
 
 
@@ -151,33 +137,23 @@ public class ChatRoomController {
 
     private void broadcastToRoom(String groupName, String message) {
         ChatRoom chatRoom = chatRooms.get(groupName);
+        logger.info("Sending message: " + message + " to room: " + groupName);
         if (chatRoom != null) {
             List<Session> sessions = chatRoom.getSessions();
-
+            logger.info("Sending message: " + message + " to " + sessions.size() + " sessions");
             for (Session session : sessions) {
                 try {
                     session.getBasicRemote().sendText(message);
                 } catch (IOException e) {
                     e.printStackTrace();
-                    // Handle the exception, such as removing the session from the chat room
                 }
             }
         }
     }
 
 
-//    private void broadcastToRoom(String group, String message) {
-//        sessionUsernameMap.forEach((session, username) -> {
-//            try {
-//                session.getBasicRemote().sendText(message);
-//            } catch (IOException e) {
-//                logger.info("Exception: " + e.getMessage().toString());
-//                e.printStackTrace();
-//            }
-//
-//        });
-//
-//    }
-
+private String getUserName(Session session){
+    return session.getUserProperties().get("username").toString();
+}
 }
 

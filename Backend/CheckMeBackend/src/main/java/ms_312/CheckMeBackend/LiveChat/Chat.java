@@ -2,6 +2,7 @@ package ms_312.CheckMeBackend.LiveChat;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Users.User;
 
+//TODO will be implemented in the future to store chat history
 @Entity
 @Table(name="CHATS")
 public class Chat {
