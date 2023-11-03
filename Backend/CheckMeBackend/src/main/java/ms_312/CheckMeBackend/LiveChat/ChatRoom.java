@@ -25,11 +25,7 @@ public class ChatRoom {
     @JoinColumn(name = "chat_id")
     private List<Chat> chats;
 
-    @OneToOne
-    @JoinColumn(name = "group_id")
-    private Group group;
-
-
+    private String groupName;
 
 
     public ChatRoom(){
@@ -38,11 +34,11 @@ public class ChatRoom {
     }
 
 
-    public ChatRoom(Group group) {
-        this.group = group;
+    public ChatRoom(String group) {
+        this.groupName = group;
         this.id = this.hashCode();
         this.chats = new ArrayList<>();
-        chatRooms.add(this.group.getName());
+        chatRooms.add(this.groupName);
 
     }
 
