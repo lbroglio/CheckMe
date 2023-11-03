@@ -51,6 +51,8 @@
     <string name="EnterAccountPasswordLabel">Enter the password for the account to connect</string>
     <string name="AddAccountButtonText">Add Account</string>
     <string name="AddAccountGroup">Add Service Account for this Group\n</string>
+    <string name="type_your_message">Type your message</string>
+    <string name="send">Send</string>
 
 
 </resources>
