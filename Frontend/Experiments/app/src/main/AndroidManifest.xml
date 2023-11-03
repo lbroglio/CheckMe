@@ -36,6 +36,9 @@
             android:name=".NewGroupActivity"
             android:exported="false" />
         <activity
+            android:name=".LiveChatActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
