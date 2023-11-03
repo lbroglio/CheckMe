@@ -2,6 +2,7 @@ package ms_312.CheckMeBackend;
 
 
 import jakarta.annotation.PostConstruct;
+import ms_312.CheckMeBackend.LiveChat.ChatRepository;
 import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.GroupRepository;
 
@@ -39,6 +40,9 @@ public class CheckMeBackendApplication {
 
 	@Autowired
 	MessageRepository messageRepository;
+
+	@Autowired
+	ChatRepository chatRepository;
 
 	@PostConstruct
 	private void rebuildStatics(){
