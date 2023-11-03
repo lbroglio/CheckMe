@@ -1,15 +1,10 @@
-package ms_312.CheckMeBackend.Controllers;
+package ms_312.CheckMeBackend.LiveChat;
 
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import ms_312.CheckMeBackend.LiveChat.ChatRepository;
-import ms_312.CheckMeBackend.LiveChat.ChatRoom;
-import ms_312.CheckMeBackend.Users.GroupRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ms_312.CheckMeBackend.Users.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
@@ -25,16 +20,17 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-//@ComponentScan(basePackages = {"ms_312.CheckMeBackend"})
+
+//TODO add comments to functions
+
 @ServerEndpoint("/livechat/{auth}/{group}")
 @Component
 @EnableJpaRepositories(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
-
 @ComponentScan(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
-public class ChatRoomController {
+public class ChatRoomWebSocketServer {
 
 
-    private final Logger logger = LoggerFactory.getLogger(ChatRoomController.class);
+    private final Logger logger = LoggerFactory.getLogger(ChatRoomWebSocketServer.class);
 
     private static Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
 
@@ -68,8 +64,8 @@ public class ChatRoomController {
         // Get the password from the auth string
         String password = decodedAuth.substring(authSplit +1);
 
-        System.out.println("Got user");
-        System.out.println("Opening for user: " + username);
+//        System.out.println("Got user");
+//        System.out.println("Opening for user: " + username);
 
         // Request to the Login endpoint
         // Body for the request
@@ -81,6 +77,7 @@ public class ChatRoomController {
 
         //Send the request and save the response
         HttpResponse<String> response;
+        //TODO change thrown exceptions to reflect the actual error
         try{
             response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         }
@@ -103,7 +100,7 @@ public class ChatRoomController {
 
         String message = "User:" + username + " has Joined the Chat";
         broadcastToRoom(group, message);
-        System.out.println("Opened");
+//        System.out.println("Opened");
     }
 
 
@@ -132,6 +129,7 @@ public class ChatRoomController {
     @OnError
     public void onError(Session session, Throwable throwable) {
         // Do error handling here
+        //TODO implement error handling
         logger.info("Entered into Error");
     }
 
