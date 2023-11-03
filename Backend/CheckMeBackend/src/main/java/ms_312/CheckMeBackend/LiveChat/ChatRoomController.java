@@ -14,10 +14,14 @@ import ms_312.CheckMeBackend.Users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.socket.config.annotation.EnableWebSocket;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -25,26 +29,30 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 //@ComponentScan(basePackages = {"ms_312.CheckMeBackend"})
 @ServerEndpoint("/livechat/{auth}/{group}")
 @Component
+@ComponentScan(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
 public class ChatRoomController {
 
 
     private final Logger logger = LoggerFactory.getLogger(ChatRoomController.class);
 
-    private static Map < Session, String > sessionUsernameMap = new Hashtable < > ();
-    private static Map < String, Session > usernameSessionMap = new Hashtable < > ();
+    private static Map<String, ChatRoom> chatRooms = new ConcurrentHashMap<>();
+
+//    private static Map < Session, String > sessionUsernameMap = new Hashtable < > ();
+//    private static Map < String, Session > usernameSessionMap = new Hashtable < > ();
 
     @Autowired
-    private ChatRepository chatRepository;
+    ChatRepository chatRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    UserRepository userRepository;
 
     @Autowired
-    private GroupRepository groupRepository;
+    GroupRepository groupRepository;
 
     /**
      *
@@ -96,10 +104,17 @@ public class ChatRoomController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
         }
 
-        sessionUsernameMap.put(session, username);
-        usernameSessionMap.put(username, session);
+        System.out.println("Group repository: " + groupRepository);
+        Group g = groupRepository.findByName(group);
+        System.out.println("Group: " + g);
+
+        ChatRoom chatRoom = chatRooms.computeIfAbsent(group, k -> new ChatRoom(g));
+
+//        sessionUsernameMap.put(session, username);
+//        usernameSessionMap.put(username, session);
+
         String message = "User:" + username + " has Joined the Chat";
-        broadcast(message);
+        broadcastToRoom(group, message);
         System.out.println("Opened");
     }
 
@@ -110,16 +125,16 @@ public class ChatRoomController {
      * @throws IOException
      */
     @OnClose
-    public void onClose(Session session) throws IOException {
+    public void onClose(Session session, @PathParam("group") String group) throws IOException {
         logger.info("Entered into Close");
 
-        String username = sessionUsernameMap.get(session);
-
-        sessionUsernameMap.remove(session);
-        usernameSessionMap.remove(username);
-
-        String message = username + " disconnected";
-        broadcast(message);
+//        String username = sessionUsernameMap.get(session);
+//
+//        sessionUsernameMap.remove(session);
+//        usernameSessionMap.remove(username);
+//
+//        String message = username + " disconnected";
+//        broadcastToRoom(group, message);
     }
 
     @OnMessage
@@ -134,18 +149,35 @@ public class ChatRoomController {
         logger.info("Entered into Error");
     }
 
-    private void broadcast(String message) {
-        sessionUsernameMap.forEach((session, username) -> {
-            try {
-                session.getBasicRemote().sendText(message);
-            } catch (IOException e) {
-                logger.info("Exception: " + e.getMessage().toString());
-                e.printStackTrace();
+    private void broadcastToRoom(String groupName, String message) {
+        ChatRoom chatRoom = chatRooms.get(groupName);
+        if (chatRoom != null) {
+            List<Session> sessions = chatRoom.getSessions();
+
+            for (Session session : sessions) {
+                try {
+                    session.getBasicRemote().sendText(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Handle the exception, such as removing the session from the chat room
+                }
             }
-
-        });
-
+        }
     }
+
+
+//    private void broadcastToRoom(String group, String message) {
+//        sessionUsernameMap.forEach((session, username) -> {
+//            try {
+//                session.getBasicRemote().sendText(message);
+//            } catch (IOException e) {
+//                logger.info("Exception: " + e.getMessage().toString());
+//                e.printStackTrace();
+//            }
+//
+//        });
+//
+//    }
 
 }
 
