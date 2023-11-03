@@ -133,9 +133,11 @@ public class UserController {
             return new ResponseEntity<>("Could not find email_address in request body", HttpStatus.BAD_REQUEST);
         }
 
+        User.UserType userType = User.UserType.valueOf((String) userJSON.get("user_type"));
+
         //Store the hash and the salt
         // Create the new User
-        User createdUser = new User(username, email, hashedPassword, salt);
+        User createdUser = new User(username, email, hashedPassword, salt, userType);
 
         userRepository.save(createdUser);
 

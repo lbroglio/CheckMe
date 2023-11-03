@@ -15,7 +15,7 @@ import java.util.List;
 //@Table(name="USERS")
 public class User extends RetrieverOwner{
 
-    enum UserType{
+    public enum UserType{
         @JsonEnumDefaultValue
         DEFAULT,
         ADMIN
@@ -44,6 +44,8 @@ public class User extends RetrieverOwner{
      */
     private String profileSettings;
 
+    private UserType userType;
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Group> groups;
@@ -56,12 +58,13 @@ public class User extends RetrieverOwner{
      * @param passwordHash A cryptographic hash of this account's password.
      * @param salt         The salt used to hash this user's password
      */
-    public User(String username, String email, byte[] passwordHash, byte[] salt) {
+    public User(String username, String email, byte[] passwordHash, byte[] salt, UserType userType) {
         super(username);
         this.groups = new ArrayList<>();
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
+        this.userType = userType;
     }
 
 
@@ -153,4 +156,10 @@ public class User extends RetrieverOwner{
         return super.equals(o);
     }
 
+    public UserType getUserType() {
+        return userType;
+    }
+
 }
+
+
