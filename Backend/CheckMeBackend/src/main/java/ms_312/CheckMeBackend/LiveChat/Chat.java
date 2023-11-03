@@ -2,15 +2,12 @@ package ms_312.CheckMeBackend.LiveChat;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Users.User;
 
-
-import java.util.Objects;
-
 @Entity
 @Table(name="CHATS")
 public class Chat {
 
     @Id
-    private int id;
+    private int ID;
 
 
     @OneToOne
@@ -22,18 +19,20 @@ public class Chat {
     @JoinColumn(name = "user_id")
     private User user;
 
+    private String sender;
 
     public Chat(ChatRoom chatRoom, User user) {
         this.chatRoom = chatRoom;
         this.user = user;
-        this.id = this.hashCode();
+        sender = user.getName();
+        this.ID = this.hashCode();
     }
-    public void setId(int id) {
-        this.id = id;
+    public void setID(int id) {
+        this.ID = id;
     }
 
-    public int getId() {
-        return id;
+    public int getID() {
+        return ID;
     }
 }
 

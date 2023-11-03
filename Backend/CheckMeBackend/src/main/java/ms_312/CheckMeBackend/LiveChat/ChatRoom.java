@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+@Entity
+@Table(name="CHATROOMS")
 public class ChatRoom {
 
     private static final ArrayList<String> chatRooms = new ArrayList<>();
@@ -17,7 +19,7 @@ public class ChatRoom {
     @JoinColumn(name = "chat_id")
     private List<Chat> chats;
 
-    @ManyToMany
+    @OneToOne
     @JoinColumn(name = "group_id")
     private Group group;
 
