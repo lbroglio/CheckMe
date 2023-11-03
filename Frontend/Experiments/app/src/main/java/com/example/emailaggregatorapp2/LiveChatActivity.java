@@ -3,18 +3,21 @@ package com.example.emailaggregatorapp2;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ServerHandshake;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import android.view.View;
-import android.widget.Toast;
+
+import org.java_websocket.drafts.Draft_6455;
 
 
 import java.net.URISyntaxException;
@@ -58,18 +61,22 @@ public class LiveChatActivity extends AppCompatActivity {
     }
 
     private void connectToWebSocketServer() throws URISyntaxException {
+        Draft[] drafts = {
+                new Draft_6455()
+        };
         String authStr = UserLoginInfo.username + ':' + UserLoginInfo.password;
 
         //Encode auth str in Base64
-        String encodedStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT);
+        String encodedStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT).trim();
 
+        URI serverURI = new URI("wss://10.0.2.2:8080/livechat/" + encodedStr +"/"+UserSelectedGroup.groupname+"/");
 
-        URI serverURI = new URI("wss://livechat/" + encodedStr +"/");
+        Log.d("URI", serverURI.toString());
 
-        webSocketClient = new WebSocketClient(serverURI) {
+        webSocketClient = new WebSocketClient(serverURI, (Draft) drafts[0]) {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
-                runOnUiThread(() -> showToast("WebSocket connection opened"));
+                Log.d("OPEN", "run() returned: " + "is connecting");
             }
 
             @Override
@@ -83,12 +90,12 @@ public class LiveChatActivity extends AppCompatActivity {
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                runOnUiThread(() -> showToast("WebSocket connection closed"));
+                Log.d("CLOSE", "onClose() returned: " + reason);
             }
 
             @Override
-            public void onError(Exception ex) {
-                runOnUiThread(() -> showToast("WebSocket connection error"));
+            public void onError(Exception e) {
+                Log.d("Exception:", e.toString());
             }
         };
         webSocketClient.connect();
@@ -102,9 +109,7 @@ public class LiveChatActivity extends AppCompatActivity {
         }
     }
 
-    private void showToast(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-    }
+
 
     @Override
     protected void onDestroy() {

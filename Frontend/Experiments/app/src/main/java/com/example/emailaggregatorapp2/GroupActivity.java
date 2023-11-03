@@ -70,6 +70,9 @@ public class GroupActivity extends AppCompatActivity {
                     TextView groupHeader = (TextView)  findViewById(R.id.groupTitle);
                     groupHeader.setText(groupTitle);
                     selectedGroup = groupTitle;
+                    UserSelectedGroup.groupname = groupTitle;
+                    Intent intent = new Intent(GroupActivity.this, LiveChatActivity.class);
+                    startActivity(intent);
                 }
             });
 
