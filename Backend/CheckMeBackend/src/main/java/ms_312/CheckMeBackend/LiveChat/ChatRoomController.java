@@ -19,6 +19,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
@@ -57,16 +61,36 @@ public class ChatRoomController {
     @OnOpen
     public void onOpen(Session session, @PathParam("auth") String authorization, @PathParam("group") String group) throws NoSuchAlgorithmException, ResponseStatusException {
         System.out.println("Entered into open");
-        System.out.println("User repository: " + userRepository);
-        User user = ControllerUtils.getUsername(authorization, userRepository);
-        System.out.println("Got user");
-        String username = user.getName();
-        System.out.println("Opening for user: " + username);
-        //Separate the Base64 string from the rest of the authentication header
-        authorization =  ControllerUtils.parseBasicAuthHeader(authorization);
 
-        //Check if the User's authentication is correct
-        boolean checkAuth =  ControllerUtils.checkBasicAuth(authorization, user, userRepository);
+        // Get the username from the auth string
+        String decodedAuth = new String(Base64.getDecoder().decode(authorization));
+        int authSplit = decodedAuth.lastIndexOf(':');
+        String username = decodedAuth.substring(0, authSplit);
+        // Get the password from the auth string
+        String password = decodedAuth.substring(authSplit +1);
+
+        System.out.println("Got user");
+        System.out.println("Opening for user: " + username);
+
+        // Request to the Login endpoint
+        // Body for the request
+        String body = "{\n\"username\": \"" + username + "\",\n\"password\": \"" + password + "\"\n}";
+
+        //Build a request to the login endpoint
+        HttpClient HTTPCLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
+        HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(body)).uri(URI.create("http://coms-309-047.class.las.iastate.edu:8080/user/login")).build();
+
+        //Send the request and save the response
+        HttpResponse<String> response;
+        try{
+            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        }
+        catch (IOException | InterruptedException e){
+            throw new RuntimeException("Could not make request to Chaos API. Root Cause: " + e);
+        }
+
+        // Parse the response as a boolean
+        boolean checkAuth = Boolean.parseBoolean(response.body());
 
         if(!checkAuth){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username or Password was incorrect");
@@ -75,7 +99,7 @@ public class ChatRoomController {
         sessionUsernameMap.put(session, username);
         usernameSessionMap.put(username, session);
         String message = "User:" + username + " has Joined the Chat";
-//        broadcast(message);
+        broadcast(message);
         System.out.println("Opened");
     }
 
@@ -99,7 +123,9 @@ public class ChatRoomController {
     }
 
     @OnMessage
-//    public void onMessage(Session session, String message, )
+    public void onMessage(Session session, String message, @PathParam("username") String username){
+
+    }
 
 
     @OnError
