@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Users;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.Retrievers.DemoRetriever;
 import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
@@ -14,12 +15,12 @@ import java.util.Objects;
  * An Abstract class for an object that owns {@link MessageRetriever}s that provide it with {@link Message}s
  */
 @Entity
-//TODO -- Rewrite to use actual Message classes not test code
 public abstract class RetrieverOwner {
     /**
      * The assigned name of this RetrieverOwner. Used as the ID for the persistence API
      */
     @Id
+    @Schema(type = "string", example = "Name")
     private String name;
 
     /**

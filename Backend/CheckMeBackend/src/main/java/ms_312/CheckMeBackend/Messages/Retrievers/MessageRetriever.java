@@ -1,6 +1,7 @@
 package ms_312.CheckMeBackend.Messages.Retrievers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
@@ -22,11 +23,13 @@ public abstract class MessageRetriever {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(type = "int", example = "1217")
     protected int id;
 
     /**
      * A string containing the complete URL for the API endpoint to retrieve the Messages from
      */
+    @Schema(type = "string", example = "http://coms-309-047.class.las.iastate.edu:8443/chaos/messages/BaseballBob")
     protected String source;
 
     /**
