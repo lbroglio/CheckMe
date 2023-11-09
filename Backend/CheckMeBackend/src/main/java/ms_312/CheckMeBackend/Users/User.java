@@ -1,6 +1,7 @@
 package ms_312.CheckMeBackend.Users;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -13,9 +14,12 @@ import java.util.List;
 @Entity
 //@Table(name="USERS")
 public class User extends RetrieverOwner{
+    @Schema(type = "string", example = "User101")
+    private String name = super.getName();
     /**
      * The email address associated with the user's account
      */
+    @Schema(type = "string", example = "example@gmail.com")
     private String email;
 
     /**
@@ -33,6 +37,7 @@ public class User extends RetrieverOwner{
     /**
      * JSON which represents any previously configured settings set by this user related to their account.
      */
+    @Schema(type = "string", example = "{'ExampleSetting': 'on'}")
     private String profileSettings;
 
     @ManyToMany(cascade = CascadeType.ALL)
