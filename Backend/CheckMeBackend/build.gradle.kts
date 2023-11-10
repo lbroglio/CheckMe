@@ -12,6 +12,13 @@ java {
 	targetCompatibility = JavaVersion.VERSION_17
 }
 
+// Build executable jar
+tasks.jar {
+	enabled = true
+	// Remove `plain` postfix from jar file name
+	archiveClassifier.set("")
+}
+
 repositories {
 	mavenCentral()
 }
