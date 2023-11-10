@@ -1,6 +1,8 @@
 package ms_312.CheckMeBackend.Users;
 
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -15,6 +17,9 @@ import java.util.Random;
 @Entity
 //@Table(name="GROUPS")
 public class Group extends RetrieverOwner{
+    @Schema(type = "string", example = "Group202")
+    private String name = super.getName();
+
     /**
      * Holds all the codes currently in use by groups to prevent two groups being assigned the same code.
      */
@@ -40,11 +45,13 @@ public class Group extends RetrieverOwner{
      * A list of the String username's of th is Group's members who have Admin privileges over the Group --
      * This list is in addition to the member's list. All admins will also be listed as members as well
      */
+    @ArraySchema(schema = @Schema(type = "string", example = "User101"))
     private List<String> admins;
 
     /**
      * An 8 character code used to join this group
      */
+    @Schema(type = "int", example = "ESDCACOY")
     private String joinCode;
 
     /**
