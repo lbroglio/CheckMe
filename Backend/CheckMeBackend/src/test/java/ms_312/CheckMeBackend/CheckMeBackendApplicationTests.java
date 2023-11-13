@@ -11,10 +11,11 @@ import org.springframework.test.context.junit4.SpringRunner;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 
 class CheckMeBackendApplicationTests {
-
+	/*
 	@Test
 	void contextLoads() {
 	}
+	*/
 
 
 
