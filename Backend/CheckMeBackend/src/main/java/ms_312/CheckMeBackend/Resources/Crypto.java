@@ -30,7 +30,7 @@ public class Crypto {
     @SuppressWarnings("unchecked")
     private static LinkedHashMap<String, LinkedHashMap<String, ArrayList<BigInteger>>> readKeysJSON(){
         // Get the file for the keys JSON
-        File keysFile = new File(System.getProperty("user.home") + "/CheckMe/keys.json");
+        File keysFile = new File("/CheckMe/keys.json");
 
         //Scan in the file
         String fileContents;
@@ -92,7 +92,7 @@ public class Crypto {
         JSONObject toSave = new JSONObject(existing);
 
         //Save the JSON to the keys.json file
-        File keysFile = new File(System.getProperty("user.home") + "/CheckMe/keys.json");
+        File keysFile = new File("/CheckMe/keys.json");
 
         // Write the JSON to the file
         try{

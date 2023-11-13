@@ -14,7 +14,7 @@ java {
 
 // Build executable jar
 tasks.jar {
-	enabled = true
+	enabled = false
 	// Remove `plain` postfix from jar file name
 	archiveClassifier.set("")
 }
