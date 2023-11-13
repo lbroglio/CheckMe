@@ -35,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Tag(name = "Message API", description = "Rest API for Creating and managing messages and message retrievers within the service")
 @RestController
 public class MessageController {
     @Autowired
@@ -239,8 +240,44 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     //Unchecked Casts come from interacting with JSON API
-    @SuppressWarnings("unchecked")
     @PutMapping("/group/{groupname}/connect-account")
+    @Operation(description = "Add a new MessageRetriever to a Group", tags = "addMessageRetriever")
+    @Parameter(name = "groupname", description = "Name of the Group to add the Retriever to.", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Group Name", value = "Group1")})
+    @Parameter(name = "Authorization", in = ParameterIn.HEADER, description = "The requesting User's username and password using HTTP Basic Authentication.", required = true, schema = @Schema(type = "string"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retriever Added"))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: message-service"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="User is not an admin of Group {groupname}", value = "User is not an admin of Group {groupname}"))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No Group exists with name {groupname}", value = "No Group exists with name {groupname}")))
+    }
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "JSON String to store the information needed to create the new Retriever",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                            @ExampleObject(
+                                    name = "An example request describing each field",
+                                    value = """
+                                            {
+                                            "message-service": "The name of the third party service to retrieve messages from",
+                                            "service-url": "The URL endpoint to retrieve messages from",
+                                            }
+                                            """
+                            )
+
+                    }
+            )
+    )
+    @SuppressWarnings("unchecked")
     public ResponseEntity<String> setupServiceAccountGroup(@PathVariable String groupname, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
         // Get the Group to add the retriever for
         Group toAdd = groupRepository.findByName(groupname);
