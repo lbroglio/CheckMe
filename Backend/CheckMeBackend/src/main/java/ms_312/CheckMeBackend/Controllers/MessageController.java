@@ -1,5 +1,13 @@
 package ms_312.CheckMeBackend.Controllers;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Messages.MessageRepository;
 import ms_312.CheckMeBackend.Messages.Retrievers.ChaosRetriever;
@@ -16,6 +24,7 @@ import org.apache.tomcat.util.json.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,6 +66,44 @@ public class MessageController {
     //Unchecked Casts come from interacting with JSON API
     @SuppressWarnings("unchecked")
     @PutMapping("/user/{username}/connect-account")
+    @Operation(description = "Add a new MessageRetriever to a User's account", tags = "addMessageRetriever")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retriever Added"))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: message-service"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "The body for the http request must contain the fields needed for adding the Retriever",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                            @ExampleObject(
+                                    name = "An example request describing each field",
+                                    value = """
+                                            {
+                                                "message-service": "The name of the third party service to retrieve messages from",
+                                                "service-url": "The URL endpoint to retrieve messages from",
+                                                "login-token": "The authorization token for each unique service."
+                                            }
+                                            """,
+                                    summary = "Example of a request body for adding a Chaos Retriever"),
+                            @ExampleObject(
+                                    name = "Example request body for adding a Chaos Retriever",
+                                    value = """
+                                            {
+                                                "message-service": "chaos",
+                                                "service-url": "http://coms-309-047.class.las.iastate.edu:8443/chaos/messages/BaseballBob",
+                                                "chaos-token": "6583000229007365"
+                                            }
+                                            """,
+                                    summary = "Example of a request body for adding a Chaos Retriever")
+                    }))
     public ResponseEntity<String> setupServiceAccount(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
         // Get the user to add the retriever for
         User toAdd = userRepository.findByName(username);
