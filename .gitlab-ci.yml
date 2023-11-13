@@ -9,6 +9,9 @@ springboot-build:
   stage: springbootbuild     # one of the stages listed above
   tags:                 # to specify which runner to execute this job
     - springboot_tag    # change to your runner's tag
+  before_script:                   # enable gradlew, change 'Frontend' to where you have 'gradlew'
+    - export GRADLE_USER_HOME=`pwd`/.gradle
+    - chmod +x ./Backend/CheckMeBackend/gradlew
   script:               # what to execute for this job
     - cd Backend/CheckMeBackend  # change 'Backend' to to where you have the pom.xml (do not add / in the beginning)
     - ./gradlew clean build -x test # Build Project
