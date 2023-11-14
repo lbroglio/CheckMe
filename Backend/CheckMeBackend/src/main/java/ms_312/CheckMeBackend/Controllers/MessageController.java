@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.print.attribute.standard.Media;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -410,7 +411,43 @@ public class MessageController {
         return new ResponseEntity<>("Retriever Added", HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param messageInfo
+     * @return
+     * 200 status - If the message was successfully created <br/>
+     * 400 status - If the request body is missing a required field <br/>
+     * @throws NoSuchAlgorithmException
+     */
     @PostMapping("/message")
+    @Operation(description = "Create a new Message", tags = "createMessage")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                examples = @ExampleObject(description ="Success", value = "Saved message: {messageID}"))),
+        @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: {field}"))),
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Information to create a message with",
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                        @ExampleObject(
+                                name = "An example request describing each field",
+                                value = """
+                                        {
+                                            "sender": "The username of the User who sent the message",
+                                            "recipient": "The username of the User who will receive the message",
+                                            "contents": "The contents of the message",
+                                            "subject": "The subject of the message",
+                                            "sendTime": "The time the message should be sent at"
+                                        }
+                                        """
+                        )
+                    }
+                )
+    )
     public ResponseEntity<String> createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
         // Parse the JSON body of the post request
         JSONParser parseBody = new JSONParser(messageInfo);
@@ -441,6 +478,15 @@ public class MessageController {
     }
 
     @GetMapping("/message/id/{id}")
+    @Operation(description = "Get the message with the given ID", tags = "getMessage")
+    @Parameter(name = "id", description = "The ID of the message to get", in = ParameterIn.PATH, required = true, schema = @Schema(type = "integer"), examples = {
+            @ExampleObject(name = "Example Message ID", value = "1")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Message: {message}"))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No message exists with the given ID", value = "There is no message with the given ID")))
+    })
     public String seeMessage(@PathVariable int id){
         Message requested = messageRepository.findByID(id);
 
@@ -454,7 +500,10 @@ public class MessageController {
 
     }
 
+    //TODO No usages??
+
     @GetMapping("/message/user/{user}")
+    @Operation(hidden=true)
     public String userMessages(@PathVariable String user){
         Message requested = messageRepository.findByRecipient(user);
 
@@ -483,6 +532,17 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     @DeleteMapping("/user/{username}/clear-retrievers")
+    @Operation(description = "Remove all MessageRetrievers owned by a given user", tags = "clearRetrievers")
+    @Parameter(name = "username", description = "The name of the User to remove Retrievers for", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Username", value = "BaseballBob")})
+    @ApiResponses(value ={
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retrievers Cleared"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
     public ResponseEntity<String> clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException {
         // Get the user to add the retriever for
         User clearFrom = userRepository.findByName(username);
@@ -523,6 +583,17 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     @GetMapping("/user/{username}/messages")
+    @Operation(description = "Get all Messages for a User", tags = "getMessages")
+    @Parameter(name = "username", description = "The name of the User to get Messages for", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Username", value = "BaseballBob")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = Message[].class),
+                    examples = @ExampleObject(description ="Success", value = "Message: {message}"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
     public Message[] getMessagesForUsers(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
         // Get the user to get Messages for
         User getFrom = userRepository.findByName(username);
