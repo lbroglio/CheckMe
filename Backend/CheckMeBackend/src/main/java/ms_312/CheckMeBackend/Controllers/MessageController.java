@@ -1,5 +1,13 @@
 package ms_312.CheckMeBackend.Controllers;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Messages.MessageRepository;
 import ms_312.CheckMeBackend.Messages.Retrievers.ChaosRetriever;
@@ -16,16 +24,19 @@ import org.apache.tomcat.util.json.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.helpers.AttributesImpl;
 
+import javax.print.attribute.standard.Media;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Tag(name = "MessageAPI", description = "Rest API for Creating and managing messages and message retrievers within the service")
 @RestController
 public class MessageController {
     @Autowired
@@ -57,6 +68,44 @@ public class MessageController {
     //Unchecked Casts come from interacting with JSON API
     @SuppressWarnings("unchecked")
     @PutMapping("/user/{username}/connect-account")
+    @Operation(description = "Add a new MessageRetriever to a User's account", tags = "addMessageRetriever")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retriever Added"))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: message-service"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "The body for the http request must contain the fields needed for adding the Retriever",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                            @ExampleObject(
+                                    name = "An example request describing each field",
+                                    value = """
+                                            {
+                                                "message-service": "The name of the third party service to retrieve messages from",
+                                                "service-url": "The URL endpoint to retrieve messages from",
+                                                "login-token": "The authorization token for each unique service."
+                                            }
+                                            """,
+                                    summary = "Example of a request body for adding a Chaos Retriever"),
+                            @ExampleObject(
+                                    name = "Example request body for adding a Chaos Retriever",
+                                    value = """
+                                            {
+                                                "message-service": "chaos",
+                                                "service-url": "http://coms-309-047.class.las.iastate.edu:8443/chaos/messages/BaseballBob",
+                                                "chaos-token": "6583000229007365"
+                                            }
+                                            """,
+                                    summary = "Example of a request body for adding a Chaos Retriever")
+                    }))
     public ResponseEntity<String> setupServiceAccount(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
         // Get the user to add the retriever for
         User toAdd = userRepository.findByName(username);
@@ -192,8 +241,44 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     //Unchecked Casts come from interacting with JSON API
-    @SuppressWarnings("unchecked")
     @PutMapping("/group/{groupname}/connect-account")
+    @Operation(description = "Add a new MessageRetriever to a Group", tags = "addMessageRetriever")
+    @Parameter(name = "groupname", description = "Name of the Group to add the Retriever to.", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Group Name", value = "Group1")})
+    @Parameter(name = "Authorization", in = ParameterIn.HEADER, description = "The requesting User's username and password using HTTP Basic Authentication.", required = true, schema = @Schema(type = "string"))
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retriever Added"))),
+            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: message-service"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="User is not an admin of Group {groupname}", value = "User is not an admin of Group {groupname}"))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No Group exists with name {groupname}", value = "No Group exists with name {groupname}")))
+    }
+    )
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "JSON String to store the information needed to create the new Retriever",
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                            @ExampleObject(
+                                    name = "An example request describing each field",
+                                    value = """
+                                            {
+                                            "message-service": "The name of the third party service to retrieve messages from",
+                                            "service-url": "The URL endpoint to retrieve messages from",
+                                            }
+                                            """
+                            )
+
+                    }
+            )
+    )
+    @SuppressWarnings("unchecked")
     public ResponseEntity<String> setupServiceAccountGroup(@PathVariable String groupname, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
         // Get the Group to add the retriever for
         Group toAdd = groupRepository.findByName(groupname);
@@ -326,7 +411,43 @@ public class MessageController {
         return new ResponseEntity<>("Retriever Added", HttpStatus.OK);
     }
 
+    /**
+     *
+     * @param messageInfo
+     * @return
+     * 200 status - If the message was successfully created <br/>
+     * 400 status - If the request body is missing a required field <br/>
+     * @throws NoSuchAlgorithmException
+     */
     @PostMapping("/message")
+    @Operation(description = "Create a new Message", tags = "createMessage")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                examples = @ExampleObject(description ="Success", value = "Saved message: {messageID}"))),
+        @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = String.class),
+                examples = @ExampleObject(description ="Missing required field", value = "Body is missing required field: {field}"))),
+    })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Information to create a message with",
+            required = true,
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    examples = {
+                        @ExampleObject(
+                                name = "An example request describing each field",
+                                value = """
+                                        {
+                                            "sender": "The username of the User who sent the message",
+                                            "recipient": "The username of the User who will receive the message",
+                                            "contents": "The contents of the message",
+                                            "subject": "The subject of the message",
+                                            "sendTime": "The time the message should be sent at"
+                                        }
+                                        """
+                        )
+                    }
+                )
+    )
     public ResponseEntity<String> createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
         // Parse the JSON body of the post request
         JSONParser parseBody = new JSONParser(messageInfo);
@@ -357,6 +478,15 @@ public class MessageController {
     }
 
     @GetMapping("/message/id/{id}")
+    @Operation(description = "Get the message with the given ID", tags = "getMessage")
+    @Parameter(name = "id", description = "The ID of the message to get", in = ParameterIn.PATH, required = true, schema = @Schema(type = "integer"), examples = {
+            @ExampleObject(name = "Example Message ID", value = "1")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Message: {message}"))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No message exists with the given ID", value = "There is no message with the given ID")))
+    })
     public String seeMessage(@PathVariable int id){
         Message requested = messageRepository.findByID(id);
 
@@ -370,7 +500,10 @@ public class MessageController {
 
     }
 
+    //TODO No usages??
+
     @GetMapping("/message/user/{user}")
+    @Operation(hidden=true)
     public String userMessages(@PathVariable String user){
         Message requested = messageRepository.findByRecipient(user);
 
@@ -399,6 +532,17 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     @DeleteMapping("/user/{username}/clear-retrievers")
+    @Operation(description = "Remove all MessageRetrievers owned by a given user", tags = "clearRetrievers")
+    @Parameter(name = "username", description = "The name of the User to remove Retrievers for", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Username", value = "BaseballBob")})
+    @ApiResponses(value ={
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Success", value = "Retrievers Cleared"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
     public ResponseEntity<String> clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException {
         // Get the user to add the retriever for
         User clearFrom = userRepository.findByName(username);
@@ -439,6 +583,17 @@ public class MessageController {
      * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
      */
     @GetMapping("/user/{username}/messages")
+    @Operation(description = "Get all Messages for a User", tags = "getMessages")
+    @Parameter(name = "username", description = "The name of the User to get Messages for", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Username", value = "BaseballBob")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = Message[].class),
+                    examples = @ExampleObject(description ="Success", value = "Message: {message}"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
     public Message[] getMessagesForUsers(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
         // Get the user to get Messages for
         User getFrom = userRepository.findByName(username);
