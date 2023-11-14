@@ -36,7 +36,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Tag(name = "Message API", description = "Rest API for Creating and managing messages and message retrievers within the service")
+@Tag(name = "MessageAPI", description = "Rest API for Creating and managing messages and message retrievers within the service")
 @RestController
 public class MessageController {
     @Autowired
