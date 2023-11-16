@@ -19,8 +19,8 @@ function start() {
          let demoDiv = document.getElementById("demoDiv");
 
          // Change the divs position
-         demoDiv.style.left = responseArr[0] + "px";
-         demoDiv.style.top = responseArr[1] + 50 + "px";
+         demoDiv.style.left = responseArr[0] * 5 + "px";
+         demoDiv.style.top = (responseArr[1]  * 5 )+ 50 + "px";
 
          // Change the color
          demoDiv.style.backgroundColor = responseArr[2];

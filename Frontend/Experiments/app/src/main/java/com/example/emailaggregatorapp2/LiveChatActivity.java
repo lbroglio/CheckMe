@@ -11,8 +11,6 @@ import android.widget.ListView;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ServerHandshake;
-
-import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import android.view.View;
@@ -69,7 +67,7 @@ public class LiveChatActivity extends AppCompatActivity {
         //Encode auth str in Base64
         String encodedStr = Base64.encodeToString(authStr.getBytes(), Base64.DEFAULT).trim();
 
-        URI serverURI = new URI((String)("ws://10.0.2.2:8080/livechat/" + encodedStr +"/"+UserSelectedGroup.groupname+"/").trim());
+        URI serverURI = new URI((String)("ws://coms-309-047.class.las.iastate.edu:8080/livechat/" + encodedStr +"/"+UserSelectedGroup.groupname+"/").trim());
 
         Log.d("URI", serverURI.toString());
 

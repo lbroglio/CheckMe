@@ -2,6 +2,7 @@ package ms_312.CheckMeBackend.Users;
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -22,9 +23,12 @@ public class User extends RetrieverOwner{
     }
 
 
+    @Schema(type = "string", example = "User101")
+    private String name = super.getName();
     /**
      * The email address associated with the user's account
      */
+    @Schema(type = "string", example = "example@gmail.com")
     private String email;
 
     /**
@@ -42,6 +46,7 @@ public class User extends RetrieverOwner{
     /**
      * JSON which represents any previously configured settings set by this user related to their account.
      */
+    @Schema(type = "string", example = "{'ExampleSetting': 'on'}")
     private String profileSettings;
 
     private UserType userType;
@@ -58,6 +63,15 @@ public class User extends RetrieverOwner{
      * @param passwordHash A cryptographic hash of this account's password.
      * @param salt         The salt used to hash this user's password
      */
+    public User(String username, String email, byte[] passwordHash, byte[] salt) {
+        super(username);
+        this.groups = new ArrayList<>();
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+    }
+
+
     public User(String username, String email, byte[] passwordHash, byte[] salt, UserType userType) {
         super(username);
         this.groups = new ArrayList<>();
