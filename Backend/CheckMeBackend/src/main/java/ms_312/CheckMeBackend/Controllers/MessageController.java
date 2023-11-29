@@ -411,6 +411,7 @@ public class MessageController {
         return new ResponseEntity<>("Retriever Added", HttpStatus.OK);
     }
 
+    /*
     /**
      *
      * @param messageInfo
@@ -418,7 +419,7 @@ public class MessageController {
      * 200 status - If the message was successfully created <br/>
      * 400 status - If the request body is missing a required field <br/>
      * @throws NoSuchAlgorithmException
-     */
+
     @PostMapping("/message")
     @Operation(description = "Create a new Message", tags = "createMessage")
     @ApiResponses(value = {
@@ -516,6 +517,7 @@ public class MessageController {
         return requested.toString();
 
     }
+     */
 
     /**
      * Remove all MessageRetrievers owned by a given user
@@ -630,8 +632,12 @@ public class MessageController {
 
         // Combine all the Retrieved lists into a single array
 
-        // Get first array
-        Message[] sorted = retrievedLists.get(0);
+        // Get first array if the list isn't empty
+        Message[] sorted = new Message[0];
+        if(retrievedLists.size() != 0){
+            sorted = retrievedLists.get(0);
+        }
+
 
         // Loop through all retrieved arrays after the first
         for(int i=1; i < retrievedLists.size(); i++){
