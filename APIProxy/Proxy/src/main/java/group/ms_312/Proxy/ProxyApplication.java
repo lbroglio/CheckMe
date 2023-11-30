@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -524,6 +525,272 @@ public class ProxyApplication {
 
 		// Save the provider
 		providerRepository.save(provider);
+
+	}
+
+	/**
+	 * Endpoint which simulates the process of replying to a message. If possible the reply will be added to the provider
+	 *
+	 * @param username The username of the user sending the reply
+	 * @param bearerToken The token used to authenticate with Token Based provider
+	 * @param body The request body should contain the message to reply to and the contents of the reply
+	 * @return A message indicating success or a failure status code
+	 */
+	// Unchecked casts are from interacting with JSON API
+	@SuppressWarnings("unchecked")
+	@PostMapping("/chaos/{username}/reply")
+	public ResponseEntity<String> sendMessageTokenBased(@PathVariable String username, @RequestHeader (HttpHeaders.AUTHORIZATION) String bearerToken, @RequestBody String body){
+		// Get the TokenBasedProvider
+		MessageProvider provider = providerRepository.findByID(TOKENBASED_ID);
+
+		//Parse the token from the header
+		String[] tokenHeaderSplit = bearerToken.split(" ");
+		bearerToken = tokenHeaderSplit[1];
+
+		// Authenticate as the given User
+		boolean auth =  provider.authenticate(username, bearerToken);
+
+		//Respond 401 if the authentication fails
+ 		if(!auth){
+			 return new ResponseEntity<>("Could not authenticate as: " + username, HttpStatus.UNAUTHORIZED);
+		}
+
+		// Attempt to parse the request body as JSON and respond 400 if it cannot be parsed
+		JSONParser parser = new JSONParser(body);
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		} catch (ParseException e) {
+			return new ResponseEntity<>("Could not parse request body as JSON", HttpStatus.BAD_REQUEST);
+
+		}
+
+		// Get the reply content from the body
+		String replyContent = (String)requestBody.get("content");
+
+		// Return 400 if the reply wasn't included
+		if(replyContent == null){
+			return new ResponseEntity<>("Missing Required Field: \"content\"", HttpStatus.BAD_REQUEST);
+		}
+
+		// Get the Message being replied to from the body
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
+
+		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
+		// a stand in program and many (if not most) user accounts will not exist
+		// Get the sender of the original message
+		String sender = (String) msg.get("sender");
+
+		// Get the subject of the original message
+		String subject = (String) msg.get("subject");
+
+		// If the sender and subject is not null  continue with the process of adding the reply
+		if(sender != null && subject != null){
+			// Check if the sender exists
+			boolean senderExists = provider.userExists(sender);
+
+			// Continue if the sender exists
+			if(senderExists){
+				//Construct the reply message
+				LinkedHashMap<Object, Object> replyMessage = new LinkedHashMap<>();
+				replyMessage.put("sender", username);
+				replyMessage.put("subject", "RE: " + subject);
+				replyMessage.put("recipient", sender);
+				replyMessage.put("contents", replyContent);
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
+
+				// Add the message to the message provider
+				loadTokenBasedMessage(replyMessage, sender);
+
+			}
+		}
+
+
+		 // Return a success message
+		return new ResponseEntity<>("Reply sent: " + replyContent, HttpStatus.OK);
+
+	}
+
+	/**
+	 * Endpoint which simulates the process of replying to a message. If possible the reply will be added to the provider
+	 *
+	 * @param authString The username and password of the user encoded in the format {username:password} in Base64 in
+	 * this is the same format as <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+	 * This should be passed in the HTTP Header under the field 'X-Crews-API'
+	 * @param body The request body should contain the message to reply to and the contents of the reply
+	 * @return A message indicating success or a failure status code
+	 */
+	// Unchecked casts are from interacting with JSON API
+	@SuppressWarnings("unchecked")
+	@PostMapping("/crews/reply")
+	public ResponseEntity<String> sendMessageCustomHeader(@RequestHeader("X-Crews-API") String authString, @RequestBody String body){
+		// Get the CustomHeaderProvider
+		MessageProvider provider = providerRepository.findByID(CUSTOMHEADER_ID);
+
+		// Get the username and password from the authString
+		//Decode the string
+		String decodedAuth = new String(Base64.getDecoder().decode(authString));
+
+		//Find the username
+		int splitIndex = decodedAuth.lastIndexOf(':');
+		//Get the substring containing the username
+		String username = decodedAuth.substring(0,splitIndex);
+
+
+		// Authenticate as the given User
+		boolean auth =  provider.authenticate(username, authString);
+
+		//Respond 401 if the authentication fails
+		if(!auth){
+			return new ResponseEntity<>("Could not authenticate as: " + username, HttpStatus.UNAUTHORIZED);
+		}
+
+		// Attempt to parse the request body as JSON and respond 400 if it cannot be parsed
+		JSONParser parser = new JSONParser(body);
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		} catch (ParseException e) {
+			return new ResponseEntity<>("Could not parse request body as JSON", HttpStatus.BAD_REQUEST);
+
+		}
+
+		// Get the reply content from the body
+		String replyContent = (String)requestBody.get("content");
+
+		// Return 400 if the reply wasn't included
+		if(replyContent == null){
+			return new ResponseEntity<>("Missing Required Field: \"content\"", HttpStatus.BAD_REQUEST);
+		}
+
+		// Get the Message being replied to from the body
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
+
+
+		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
+		// a stand in program and many (if not most) user accounts will not exist
+		// Get the sender of the original message
+		String sender = (String) msg.get("sender");
+
+		// Get the subject of the original message
+		String subject = (String) msg.get("subject");
+
+		// If the sender and subject is not null  continue with the process of adding the reply
+		if(sender != null && subject != null){
+			// Check if the sender exists
+			boolean senderExists = provider.userExists(sender);
+
+			// Continue if the sender exists
+			if(senderExists){
+				//Construct the reply message
+				LinkedHashMap<Object, Object> replyMessage = new LinkedHashMap<>();
+				replyMessage.put("sender", username);
+				replyMessage.put("subject", "RE: " + subject);
+				replyMessage.put("recipient", sender);
+				replyMessage.put("contents", replyContent);
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
+
+				// Add the message to the message provider
+				loadCustomHeaderMessage(replyMessage, sender);
+
+			}
+		}
+
+
+		// Return a success message
+		return new ResponseEntity<>("Reply sent: " + replyContent, HttpStatus.OK);
+
+	}
+
+	/**
+	 * Endpoint which simulates the process of replying to a message. If possible the reply will be added to the provider
+	 *
+	 * @param authString The username and password of the user encoded in the format {username:password} in Base64 in
+	 * this is the same format as <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+	 * This should be passed in the HTTP Header under the Authorization header
+	 * @param body The request body should contain the message to reply to and the contents of the reply
+	 * @return A message indicating success or a failure status code
+	 */
+	// Unchecked casts are from interacting with JSON API
+	@SuppressWarnings("unchecked")
+	@PostMapping("/cmail/reply")
+	public ResponseEntity<String> sendMessageBasicAuth(@RequestHeader(HttpHeaders.AUTHORIZATION) String authString, @RequestBody String body){
+		// Get the CustomHeaderProvider
+		MessageProvider provider = providerRepository.findByID(BASICAUTH_ID);
+
+		// Get the username and password from the authString
+		//Decode the string
+		String basicAuthStr = parseBasicAuthHeader(authString);
+		String decodedAuth = new String(Base64.getDecoder().decode(basicAuthStr));
+
+		//Find the username
+		int splitIndex = decodedAuth.lastIndexOf(':');
+		//Get the substring containing the username
+		String username = decodedAuth.substring(0,splitIndex);
+
+
+		// Authenticate as the given User
+		boolean auth =  provider.authenticate(username, basicAuthStr);
+
+		//Respond 401 if the authentication fails
+		if(!auth){
+			return new ResponseEntity<>("Could not authenticate as: " + username, HttpStatus.UNAUTHORIZED);
+		}
+
+		// Attempt to parse the request body as JSON and respond 400 if it cannot be parsed
+		JSONParser parser = new JSONParser(body);
+		LinkedHashMap<Object, Object> requestBody;
+		try{
+			requestBody = (LinkedHashMap<Object, Object>) parser.parse();
+		} catch (ParseException e) {
+			return new ResponseEntity<>("Could not parse request body as JSON", HttpStatus.BAD_REQUEST);
+
+		}
+
+		// Get the reply content from the body
+		String replyContent = (String)requestBody.get("content");
+
+		// Return 400 if the reply wasn't included
+		if(replyContent == null){
+			return new ResponseEntity<>("Missing Required Field: \"content\"", HttpStatus.BAD_REQUEST);
+		}
+
+		// Get the Message being replied to from the body
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
+
+
+		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
+		// a stand in program and many (if not most) user accounts will not exist
+		// Get the sender of the original message
+		String sender = (String) msg.get("sender");
+
+		// Get the subject of the original message
+		String subject = (String) msg.get("subject");
+
+		// If the sender and subject is not null  continue with the process of adding the reply
+		if(sender != null && subject != null){
+			// Check if the sender exists
+			boolean senderExists = provider.userExists(sender);
+
+			// Continue if the sender exists
+			if(senderExists){
+				//Construct the reply message
+				LinkedHashMap<Object, Object> replyMessage = new LinkedHashMap<>();
+				replyMessage.put("sender", username);
+				replyMessage.put("subject", "RE: " + subject);
+				replyMessage.put("recipient", sender);
+				replyMessage.put("contents", replyContent);
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
+
+				// Add the message to the message provider
+				loadBasicAuthMessage(replyMessage, sender);
+
+			}
+		}
+
+
+		// Return a success message
+		return new ResponseEntity<>("Reply sent: " + replyContent, HttpStatus.OK);
 
 	}
 

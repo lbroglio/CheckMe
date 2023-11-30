@@ -83,7 +83,7 @@ public class CmailRetriever extends MessageRetriever{
         String authString = Base64.getEncoder().encodeToString(unencodedAuthString.getBytes());
 
         //Build the request to the Cmail API
-        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(source+"?sortBy=date")).setHeader("Authorization",authString).build();
+        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(source+"?sortBy=date")).setHeader("Authorization","Basic " + authString).build();
 
         //Send the request and save the response
         HttpResponse<String> response;
@@ -91,19 +91,19 @@ public class CmailRetriever extends MessageRetriever{
             response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());
         }
         catch (IOException | InterruptedException e){
-            throw new RuntimeException("Could not make request to Chaos API. Root Cause: " + e);
+            throw new RuntimeException("Could not make request to CMail API. Root Cause: " + e);
         }
 
         // Parse the response as JSON
         JSONParser parser = new JSONParser(response.body());
-
+        System.out.println(response.body());
         //Parse the request
         ArrayList<Object> responseBody;
         try{
             responseBody = parser.parseArray();
         }
         catch (ParseException e){
-            throw new RuntimeException("Invalid response from Chaos API. Root Cause: " + e);
+            throw new RuntimeException("Invalid response from CMail API. Root Cause: " + e);
         }
 
         // Convert the returned JSOn into an array of message objects
