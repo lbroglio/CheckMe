@@ -661,4 +661,96 @@ public class MessageController {
     }
 
 
+    /**
+     * API endpoint to request Messages for a Grou[.
+     *
+     * @param groupName The group to get a the Messages for
+     * @param authHeader The requesting User's username and password using <a href="https://en.wikipedia.org/wiki/Basic_access_authentication">HTTP Basic Authentication</a>
+     * Info should be sent in the form of Basic: {username}:{password}
+     * @param sentAfter A time String which to use as a cutoff to only get recent Messages
+     * @return
+     * Status 200 - Returns the list of Messages
+     * Status 401 - If the username or password given as authorization is incorrect
+     * Status 404 - If the no user exists with the given username
+     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+     */
+    @GetMapping("/group/{groupName}/messages")
+    @Operation(description = "Get all Messages for a User", tags = "getMessages")
+    @Parameter(name = "username", description = "The name of the Group to get Messages for", in = ParameterIn.PATH, required = true, schema = @Schema(type = "string"), examples = {
+            @ExampleObject(name = "Example Username", value = "CubsFans")})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Success|OK", content = @Content(schema = @Schema(implementation = Message[].class),
+                    examples = @ExampleObject(description ="Success", value = "Message: {message}"))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="Incorrect Username or Password", value = "Incorrect Username or Password."))),
+            @ApiResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = String.class),
+                    examples = @ExampleObject(description ="No User exists with name {username}", value = "No User exists with name {username}")))
+    })
+    public Message[] getMessagesForGroups(@PathVariable String groupName, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
+        // Get the user to get Messages for
+        Group getFrom = groupRepository.findByName(groupName);
+
+        // Respond 404 if the User is null
+        if(getFrom == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No User exists with the name: " + groupName);
+        }
+
+        // Confirm that the user's authorization is correct
+        String b64String = ControllerUtils.parseBasicAuthHeader(authHeader);
+        if(!ControllerUtils.checkBasicAuth(b64String, ControllerUtils.getUsername(b64String, userRepository), userRepository)){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Incorrect Username or Password");
+        }
+
+        // Get the list of MessageRetrievers for the user
+        List<MessageRetriever> retrievers = getFrom.getMessageRetrievers();
+
+        //List to store the retrieved Messages
+        List<Message[]> retrievedLists =  new ArrayList<>();
+
+        //Get the Messages returned by all the retrievers
+        for (MessageRetriever currRetriever : retrievers) {
+            // If the sentAfter parameter is set
+            if (sentAfter != null) {
+                // Get all Messages sentAfter the time in sentAfter
+                retrievedLists.add(currRetriever.getAllAfterTime(LocalDateTime.parse(sentAfter)));
+            }
+            // If the sentAfter parameter is not set
+            else{
+                // Get all Messages without a cutoff being given
+                retrievedLists.add(currRetriever.getAll());
+            }
+        }
+
+        // Combine all the Retrieved lists into a single array
+
+        // Get first array if the list isn't empty
+        Message[] sorted = new Message[0];
+        if(retrievedLists.size() != 0){
+            sorted = retrievedLists.get(0);
+        }
+
+
+        // Loop through all retrieved arrays after the first
+        for(int i=1; i < retrievedLists.size(); i++){
+            // Get the next array to add in
+            Message[] nextArr = retrievedLists.get(i);
+
+
+            // Create an array to hold the previously sorted and the next arrays combined
+            Message[] mergeInto = new Message[sorted.length + nextArr.length];
+
+            // Merge the two arrays
+            Sorting.mergeSortedArrays(sorted, nextArr, mergeInto, new ControllerUtils.MessageDateComp());
+
+            // Set up the result as the first array for the next iteration (or the end of the loop)
+            sorted = mergeInto;
+        }
+
+        // Return the combined arrays
+        return sorted;
+
+    }
+
+
 }
