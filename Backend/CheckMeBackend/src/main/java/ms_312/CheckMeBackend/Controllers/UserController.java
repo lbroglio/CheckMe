@@ -443,7 +443,6 @@ public class UserController {
     @PostMapping("/user/login")
     // Unchecked casts are from interacting with the JSON API
     @SuppressWarnings("unchecked")
-    @GetMapping("/user/{username}/groups")
     @Operation(description  = "Verify if the login information for a User is correct. Returns true if the login was successful; false if it was not",  tags = "getUserGroups")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200" , description =  "Success|OK", content = @Content(schema = @Schema(implementation = Boolean.class),
