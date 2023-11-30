@@ -3,6 +3,7 @@ package ms_312.CheckMeBackend.ControllerTests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import ms_312.CheckMeBackend.CheckMeBackendApplication;
+import ms_312.CheckMeBackend.TestUtils.UserStorage;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,11 +13,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
+import static ms_312.CheckMeBackend.TestUtils.TestUtils.getTimeStamp;
+import static ms_312.CheckMeBackend.TestUtils.TestUtils.logToFile;
 import static org.junit.Assert.*;
 
 @RunWith(SpringRunner.class)
@@ -33,38 +37,36 @@ public class UserTests {
         RestAssured.baseURI = "http://localhost";
     }
 
-    public void createBaseballBob(){
-        // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "BaseballBob",
-                    "email_address": "cubsbob@yahoo.com",
-                    "password": "CubsGo123"
-                }
-                """;
+    public UserStorage createTestUser(){
+        return createUser("TestUser"+ getTimeStamp(), "testing@gmail.com", "TestPass");
+    }
 
+    public UserStorage createUser(String username, String email, String password) {
+        // Body to send for the request
+        String requestBody = "{\n" + "\t\"username\": \"" + username + "\",\n\t\"email_address\": \"" + email + "\",\n"
+                + "\t\"password\": \"" + password + "\"\n}";
 
         // Send request and receive response
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
-                header("charset","utf-8").
+                header("charset", "utf-8").
                 body(requestBody).
                 when().
                 post("/user");
+
+        return new UserStorage(username, password);
     }
 
 
 
     @Test
     public void testAddUser(){
-        // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "TestUser",
-                    "email_address": "test@yahoo.com",
-                    "password": "Test123"
-                }
-                """;
+        String username = "TestUser" + getTimeStamp();
+        String email = "testing@gmail.com";
+        String password = "TestPass";
+
+        String requestBody = "{\n" + "\t\"username\": \"" + username + "\",\n\t\"email_address\": \"" + email + "\",\n"
+                + "\t\"password\": \"" + password + "\"\n}";
 
 
         // Send request and receive response
@@ -76,14 +78,14 @@ public class UserTests {
                 post("/user");
 
         // Check that the response is correct
-        assertEquals("Created new user: TestUser", response.body().asString());
+        assertEquals("Created new user: " + username, response.body().asString());
  ;
         // Use dev endpoint to see the  User
          response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
                 when().
-                get("/dev/user/TestUser");
+                get("/dev/user/"+username);
 
         // Parse the response as JSON
         JSONParser responseParser = new JSONParser(response.body().asString());
@@ -97,21 +99,21 @@ public class UserTests {
 
 
         // Check that the username and email fields as expected
-        assertEquals("TestUser",  respJSON.get("name"));
-        assertEquals("test@yahoo.com",  respJSON.get("email"));
+        assertEquals(username,  respJSON.get("name"));
+        assertEquals(email,  respJSON.get("email"));
     }
 
     @Test
     public void testSeeUser(){
-        createBaseballBob();
+        UserStorage usr = createTestUser();
 
         // Use the see endpoint to see the  User
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","CubsGo123").
+                header("Authorization",usr.password).
                 when().
-                get("/user/BaseballBob");
+                get("/user/"+usr.username);
 
         // Parse the response as JSON
         JSONParser responseParser = new JSONParser(response.body().asString());
@@ -120,18 +122,18 @@ public class UserTests {
             respJSON = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /user/BaseballBob as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response  as valid JSON. Root Cause: " + e);
         }
 
 
         // Check that the username and email fields as expected
-        assertEquals("BaseballBob",  respJSON.get("name"));
-        assertEquals("cubsbob@yahoo.com",  respJSON.get("email"));
+        assertEquals(usr.username,  respJSON.get("name"));
+        assertEquals("testing@gmail.com",  respJSON.get("email"));
     }
 
     @Test
     public void testUserAccountSettings() {
-        createBaseballBob();
+        UserStorage usr = createTestUser();
 
         // --- TEST SET ENDPOINT ---
 
@@ -147,13 +149,13 @@ public class UserTests {
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","CubsGo123").
+                header("Authorization",usr.password).
                 when().
                 body(requestBody).
-                put("/user/BaseballBob/account_settings");
+                put("/user/"+usr.username+"/account_settings");
 
         // Check that the response is correct
-        assertEquals("Updated User: BaseballBob", response.body().asString());
+        assertEquals("Updated User: " + usr.username, response.body().asString());
 
         // --- TEST GET ENDPOINT ---
 
@@ -162,9 +164,9 @@ public class UserTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","CubsGo123").
+                header("Authorization",usr.password).
                 when().
-                get("/user/BaseballBob/account_settings");
+                get("/user/"+usr.username+"/account_settings");
 
         // Parse the response as JSON
         JSONParser responseParser = new JSONParser(response.body().asString());
@@ -173,7 +175,7 @@ public class UserTests {
             respJSON = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /user/BaseballBob/account_settings as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Check that the JSON returned as expected
@@ -182,34 +184,39 @@ public class UserTests {
 
     @Test
     public void testGetUserGroups() {
-        createBaseballBob();
+        UserStorage usr = createTestUser();
 
+        String name = "TestGroup" + getTimeStamp();
         // Body to send for the request
-        String requestBody = """
-                {
-                    "name": "CubsFans"
-                }
-                """;
-
-        //Authorization header to use for the group creating endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        String requestBody = "{\n\t \"name\": \"" + name + "\"\n}";
 
         // Send request to create a group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 body(requestBody).
                 when().
                 post("/group");
+
+        String joinCode = response.body().asString();
+        requestBody = "{\n" + "\t\"username\": \"" + usr.username + "\",\n" + "\t\"password\": \"" + usr.password + "\"\n}";
+
+        // Use the join endpoint to add the user to the group
+        response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset","utf-8").
+                body(requestBody).
+                when().
+                put("/group/join/"+joinCode);
 
         // Use endpoint to see groups
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","CubsGo123").
+                header("Authorization",usr.password).
                 when().
-                get("/user/BaseballBob/groups");
+                get("/user/" + usr.username + "/groups");
 
         // Parse the response as JSON
 
@@ -219,7 +226,7 @@ public class UserTests {
             respJSON = responseParser.parseArray();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /user/BaseballBob/groups as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the group from the parsed ArrayList
@@ -231,21 +238,16 @@ public class UserTests {
 
 
         // Check that the Group has expected fields
-        assertEquals("CubsFans",  group.get("name"));
-        assertEquals("BaseballBob",  member.get("name"));
+        assertEquals(name,  group.get("name"));
+        assertEquals(usr.username,  member.get("name"));
     }
 
     @Test
     public void testLoginSuccess() {
-        createBaseballBob();
+        UserStorage usr = createTestUser();
 
-        // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "BaseballBob",
-                    "password": "CubsGo123"
-                }
-                """;
+        //Create request body
+        String requestBody = "{\n" + "\t\"username\": \"" + usr.username + "\",\n" + "\t\"password\": \"" + usr.password + "\"\n}";
 
         // Send request to create a group
         Response response = RestAssured.given().
@@ -267,15 +269,11 @@ public class UserTests {
 
     @Test
     public void testLoginFailure() {
-        createBaseballBob();
+        UserStorage usr = createTestUser();
 
-        // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "BaseballBob",
-                    "password": "WrongPassword"
-                }
-                """;
+        //Create request body
+        String requestBody = "{\n" + "\t\"username\": \"" + usr.username + "\",\n" + "\t\"password\": \"" + "WrongPasswor"+ "\"\n}";
+
 
         // Send request to create a group
         Response response = RestAssured.given().

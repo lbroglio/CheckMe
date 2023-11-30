@@ -4,6 +4,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import ms_312.CheckMeBackend.CheckMeBackendApplication;
 import ms_312.CheckMeBackend.TestUtils.TestUtils;
+import ms_312.CheckMeBackend.TestUtils.UserStorage;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +14,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 
+import static ms_312.CheckMeBackend.TestUtils.TestUtils.getTimeStamp;
 import static ms_312.CheckMeBackend.TestUtils.TestUtils.logToFile;
 import static org.junit.Assert.*;
 
@@ -34,7 +37,7 @@ public class GroupTests {
         RestAssured.baseURI = "http://localhost";
     }
 
-    public void createUser(String username, String email, String password){
+    public UserStorage createUser(String username, String email, String password){
         // Body to send for the request
         String requestBody = "{\n" +  "\t\"username\": \"" + username +"\",\n\t\"email_address\": \"" + email + "\",\n"
                 + "\t\"password\": \"" + password + "\"\n}";
@@ -46,78 +49,67 @@ public class GroupTests {
                 body(requestBody).
                 when().
                 post("/user");
+
+        return new UserStorage(username,  password);
     }
 
-    public void createBaseballBob(){
-        createUser("BaseballBob", "cubsbob@yahoo.com","CubsGo123");
+
+    public UserStorage createTestUser(){
+        return createUser("TestUser"+getTimeStamp(), "testing@gmail.com", "TestPass");
     }
+    public String createTestGroup(UserStorage creatingUser){
 
-    public void createCubsFans(){
-        createBaseballBob();
-
+        String name = "TestGroup" + getTimeStamp();
         // Body to send for the request
-        String requestBody = """
-                {
-                    "name": "CubsFans"
-                }
-                """;
-
-        //Authorization header to use for the group creating endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        String requestBody = "{\n\t \"name\": \"" + name + "\"\n}";
 
         // Send request to create a group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + creatingUser.auth).
                 body(requestBody).
                 when().
                 post("/group");
+
+        return name;
     }
 
 
     @Test
     public void testCreateGroup(){
-        createBaseballBob();
+        UserStorage user =  createTestUser();
 
         // Body to send for the request
-        String requestBody = """
-                {
-                    "name": "TestGroup"
-                }
-                """;
-
-        //Authorization header to use for the group creating endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        String name = "TestGroup" + getTimeStamp();
+        String requestBody = "{\n\t \"name\": \"" + name + "\"\n}";
 
         // Send request to create a group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + user.auth).
                 body(requestBody).
                 when().
                 post("/group");
 
         // Check that the username and email fields as expected
-        assertEquals("Created Group: TestGroup",  response.body().asString());
+        assertEquals("Created Group: "+ name,  response.body().asString());
     }
 
     @Test
     public void testGetGroupByName(){
         // Create the group to test on
-        createCubsFans();
-
-        //Authorization header to use for the endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        UserStorage usr = createTestUser();
+        String groupName = createTestGroup(usr);
 
         // Use the see endpoint to get the Group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/" + groupName);
 
         // Parse the response as JSON
 
@@ -136,9 +128,8 @@ public class GroupTests {
 
 
         // Check that the Group has expected fields
-        assertEquals("CubsFans",  group.get("name"));
-        assertEquals("BaseballBob",  member.get("name"));
-
+        assertEquals(groupName,  group.get("name"));
+        assertEquals(usr.username,  member.get("name"));
 
     }
 
@@ -147,10 +138,8 @@ public class GroupTests {
     @Test
     public void testGetGroupByJoinCode(){
         // Create the group to test on
-        createCubsFans();
-
-        //Authorization header to use for the endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        UserStorage usr = createTestUser();
+        String groupName = createTestGroup(usr);
 
         // --- GET THE JOIN CODE BY GETTING THE GROUP BY NAME ---
 
@@ -158,9 +147,9 @@ public class GroupTests {
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/" + groupName);
 
         // Parse the response as JSON
 
@@ -170,7 +159,7 @@ public class GroupTests {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the join code from the Group
@@ -183,7 +172,7 @@ public class GroupTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
                 get("/group/code/" + joinCode);
 
@@ -194,7 +183,7 @@ public class GroupTests {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /user/BaseballBob/groups as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the first member from the Group
@@ -202,31 +191,30 @@ public class GroupTests {
         LinkedHashMap<Object, Object> member = (LinkedHashMap<Object, Object>) members.get(0);
 
         // Check that the Group has expected fields
-        assertEquals("CubsFans",  group.get("name"));
-        assertEquals("BaseballBob",  member.get("name"));
+        assertEquals(groupName,  group.get("name"));
+        assertEquals(usr.username,  member.get("name"));
         assertEquals(joinCode, group.get("joinCode"));
 
     }
 
     @Test
     public void testJoinGroup(){
-        createCubsFans();
-        createUser("HockeySteve", "wildsteve@gmail.com","WildGo123");
+        // Create the group to test on
+        UserStorage usr = createTestUser();
+        String groupName = createTestGroup(usr);
+        UserStorage joiner = createUser("JoinTestUser"+getTimeStamp(), "joining@gmail.com","JT123");
 
 
 
         // --- GET THE JOIN CODE  ---
 
-        //Authorization header to use for the endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
-
         // Use the see endpoint to get the Group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/" + groupName);
 
         // Parse the response as JSON
 
@@ -236,7 +224,7 @@ public class GroupTests {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the join code from the Group
@@ -246,12 +234,8 @@ public class GroupTests {
         // --- JOIN THE GROUP AS STEVE  ---
 
         // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "HockeySteve",
-                    "password": "WildGo123"
-                }
-                """;
+        String requestBody = "{\n" + "\t\"username\": \"" + joiner.username + "\",\n" + "\t\"password\": \"" + joiner.password + "\"\n}";
+
 
         // Use the join endpoint
         response = RestAssured.given().
@@ -270,9 +254,9 @@ public class GroupTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/"+groupName);
 
         // Parse the response as JSON
 
@@ -287,17 +271,17 @@ public class GroupTests {
 
         //Verify there is a User in the group named HockeySteve
         ArrayList<Object> members = (ArrayList<Object>) group.get("members");
-        boolean steveFound = false;
+        boolean memFound = false;
         for(int i=0; i < members.size(); i++){
             LinkedHashMap<Object, Object> currMember = (LinkedHashMap<Object, Object>) members.get(i);
-            if(currMember.get("name").equals("HockeySteve")){
-                steveFound =  true;
+            if(currMember.get("name").equals(joiner.username)){
+                memFound =  true;
                 i += members.size();
             }
         }
 
         // Confirm the steve was found as a member
-        assertTrue(steveFound);
+        assertTrue(memFound);
 
         // --- CONFIRM GROUP WAS ADDED TO HOCKEYSTEVE'S ACCOUNT
 
@@ -305,9 +289,9 @@ public class GroupTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","WildGo123").
+                header("Authorization",joiner.password).
                 when().
-                get("/user/HockeySteve/groups");
+                get("/user/" + joiner.username + "/groups");
 
         // Parse the response as JSON
 
@@ -317,34 +301,33 @@ public class GroupTests {
             respJSON = responseParser.parseArray();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /user/HockeySteve/groups as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the group from the parsed ArrayList
        group = (LinkedHashMap<Object, Object>) respJSON.get(0);
 
         // Check that the Group has expected fields
-        assertEquals("CubsFans",  group.get("name"));
+        assertEquals(groupName,  group.get("name"));
     }
 
     @Test
     public void testPromoteMember() {
-        createCubsFans();
-        createUser("PROMOTE_TEST", "default@gmail.com", "Pass123");
+        UserStorage creator = createTestUser();
+        String name = createTestGroup(creator);
+        UserStorage toPromote = createUser("PROMOTE_TEST"+getTimeStamp(), "default@gmail.com", "Pass123");
 
 
         // --- GET THE JOIN CODE  ---
 
-        //Authorization header to use for the endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
 
         // Use the see endpoint to get the Group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + basicAuth).
+                header("Authorization", "Basic " + creator.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/" + name);
 
         // Parse the response as JSON
 
@@ -353,7 +336,7 @@ public class GroupTests {
         try {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         } catch (ParseException e) {
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the join code from the Group
@@ -363,12 +346,8 @@ public class GroupTests {
         // --- JOIN THE GROUP AS A TEST USER  ---
 
         // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "PROMOTE_TEST",
-                    "password": "Pass123"
-                }
-                """;
+        String requestBody = "{\n" + "\t\"username\": \"" + toPromote.username + "\",\n" + "\t\"password\": \"" + toPromote.password + "\"\n}";
+
 
         // Use the join endpoint
         response = RestAssured.given().
@@ -382,23 +361,19 @@ public class GroupTests {
         // --- PROMOTE THE TEST USER ---
 
         // Body to send for the request
-         requestBody = """
-                {
-                    "toPromote": "PROMOTE_TEST"
-                }
-                """;
+         requestBody = "{ \n\"toPromote\": \"" + toPromote.username + "\"\n}";
 
         // Use the promote endpoint
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + basicAuth).
+                header("Authorization", "Basic " + creator.auth).
                 body(requestBody).
                 when().
-                put("/group/promote/CubsFans");
+                put("/group/promote/"+name);
 
         // Test the response
-        assertEquals("User PROMOTE_TEST added to admins of group CubsFans", response.body().asString());
+        assertEquals("User " + toPromote.username + " added to admins of group " + name, response.body().asString());
 
 
 
@@ -408,9 +383,9 @@ public class GroupTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + creator.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/"+name);
 
         // Parse the response as JSON
 
@@ -419,7 +394,7 @@ public class GroupTests {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
 
@@ -427,34 +402,32 @@ public class GroupTests {
         ArrayList<Object> admins = (ArrayList<Object>) group.get("admins");
         boolean userFound = false;
         for(int i=0; i < admins.size(); i++){
-            if(admins.get(i).equals("PROMOTE_TEST")){
+            if(admins.get(i).equals(toPromote.username)){
                 userFound =  true;
                 i += admins.size();
             }
         }
 
-        // Confirm the steve was found as a member
+        // Confirm the steve was found as an admin
         assertTrue(userFound);
     }
 
     @Test
     public void testRemoveMember() {
-        createCubsFans();
-        createUser("REMOVE_TEST", "default@gmail.com", "Pass123");
+        UserStorage usr = createTestUser();
+        String name = createTestGroup(usr);
+        UserStorage toRemove = createUser("REMOVE_TEST"+getTimeStamp(), "default@gmail.com", "Pass123");
 
 
         // --- GET THE JOIN CODE  ---
-
-        //Authorization header to use for the endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
 
         // Use the see endpoint to get the Group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + basicAuth).
+                header("Authorization", "Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/"+name);
 
         // Parse the response as JSON
 
@@ -463,7 +436,7 @@ public class GroupTests {
         try {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         } catch (ParseException e) {
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response as valid JSON. Root Cause: " + e);
         }
 
         // Get the join code from the Group
@@ -473,12 +446,8 @@ public class GroupTests {
         // --- JOIN THE GROUP AS A TEST USER  ---
 
         // Body to send for the request
-        String requestBody = """
-                {
-                    "username": "REMOVE_TEST",
-                    "password": "Pass123"
-                }
-                """;
+        String requestBody = "{\n" + "\t\"username\": \"" + toRemove.username + "\",\n" + "\t\"password\": \"" + toRemove.password + "\"\n}";
+
 
         // Use the join endpoint
         response = RestAssured.given().
@@ -492,23 +461,20 @@ public class GroupTests {
         // --- PROMOTE THE TEST USER ---
 
         // Body to send for the request
-        requestBody = """
-                {
-                    "toRemove": "REMOVE_TEST"
-                }
-                """;
+        requestBody = "{ \n\"toRemove\": \"" + toRemove.username + "\"\n}";
 
-        // Use the promote endpoint
+
+        // Use the remove endpoint
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + basicAuth).
+                header("Authorization", "Basic " + usr.auth).
                 body(requestBody).
                 when().
-                delete("/group/remove/CubsFans");
+                delete("/group/remove/"+name);
 
         // Test the response
-        assertEquals("User REMOVE_TEST removed from the group CubsFans", response.body().asString());
+        assertEquals("User " + toRemove.username + " removed from the group " + name, response.body().asString());
 
 
 
@@ -518,9 +484,9 @@ public class GroupTests {
         response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset","utf-8").
-                header("Authorization","Basic " + basicAuth).
+                header("Authorization","Basic " + usr.auth).
                 when().
-                get("/group/name/CubsFans");
+                get("/group/name/"+name);
 
         // Parse the response as JSON
 
@@ -529,17 +495,17 @@ public class GroupTests {
             group = (LinkedHashMap<Object, Object>) responseParser.parse();
         }
         catch (ParseException e){
-            throw new RuntimeException("Could not parse response from /group/name/CubsFans as valid JSON. Root Cause: " + e);
+            throw new RuntimeException("Could not parse response  as valid JSON. Root Cause: " + e);
         }
 
 
         //Verify there is no User in the group named REMOVE_TEST
-        ArrayList<Object> admins = (ArrayList<Object>) group.get("admins");
+        ArrayList<Object> members = (ArrayList<Object>) group.get("members");
         boolean userFound = false;
-        for(int i=0; i < admins.size(); i++){
-            if(admins.get(i).equals("REMOVE_TEST")){
+        for(int i=0; i < members.size(); i++){
+            if(members.get(i).equals(toRemove.username)){
                 userFound =  true;
-                i += admins.size();
+                i += members.size();
             }
         }
 

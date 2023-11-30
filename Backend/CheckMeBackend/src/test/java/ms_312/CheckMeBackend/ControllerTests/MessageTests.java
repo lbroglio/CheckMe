@@ -3,6 +3,7 @@ package ms_312.CheckMeBackend.ControllerTests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import ms_312.CheckMeBackend.CheckMeBackendApplication;
+import ms_312.CheckMeBackend.TestUtils.UserStorage;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 
+import static ms_312.CheckMeBackend.TestUtils.TestUtils.getTimeStamp;
 import static ms_312.CheckMeBackend.TestUtils.TestUtils.logToFile;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -34,7 +36,7 @@ public class MessageTests {
         RestAssured.baseURI = "http://localhost";
     }
 
-    public void createUser(String username, String email, String password) {
+    public UserStorage createUser(String username, String email, String password) {
         // Body to send for the request
         String requestBody = "{\n" + "\t\"username\": \"" + username + "\",\n\t\"email_address\": \"" + email + "\",\n"
                 + "\t\"password\": \"" + password + "\"\n}";
@@ -46,33 +48,30 @@ public class MessageTests {
                 body(requestBody).
                 when().
                 post("/user");
+
+        return new UserStorage(username, password);
     }
 
-    public void createBaseballBob() {
-        createUser("BaseballBob", "cubsbob@yahoo.com", "CubsGo123");
+    public UserStorage createTestUser(){
+        return createUser("TestUser"+ getTimeStamp(), "testing@gmail.com", "TestPass");
     }
 
-    public void createCubsFans() {
-        createBaseballBob();
+    public String createTestGroup(UserStorage creatingUser){
 
+        String name = "TestGroup" + getTimeStamp();
         // Body to send for the request
-        String requestBody = """
-                {
-                    "name": "CubsFans"
-                }
-                """;
-
-        //Authorization header to use for the group creating endpoint
-        String basicAuth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        String requestBody = "{\n\t \"name\": \"" + name + "\"\n}";
 
         // Send request to create a group
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
-                header("charset", "utf-8").
-                header("Authorization", "Basic " + basicAuth).
+                header("charset","utf-8").
+                header("Authorization","Basic " + creatingUser.auth).
                 body(requestBody).
                 when().
                 post("/group");
+
+        return name;
     }
 
     public Response connectTSTACTChaos(String endpointStart, String auth){
@@ -145,11 +144,10 @@ public class MessageTests {
 
     @Test
     public void testConnectChaosUser(){
-        // Create BaseballBob and calculate his authn
-        createBaseballBob();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        // Create the test user
+        UserStorage usr = createTestUser();
 
-        Response resp = connectTSTACTChaos("/user/BaseballBob", auth);
+        Response resp = connectTSTACTChaos("/user/" + usr.username, usr.auth);
 
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
@@ -157,11 +155,10 @@ public class MessageTests {
 
     @Test
     public void testConnectCrewsUser(){
-        // Create BaseballBob and calculate his authn
-        createBaseballBob();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        // Create the test user
+        UserStorage usr = createTestUser();
 
-        Response resp = connectTSTACTCrews("/user/BaseballBob", auth);
+        Response resp = connectTSTACTCrews("/user/"+usr.username, usr.auth);
 
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
@@ -169,11 +166,10 @@ public class MessageTests {
 
     @Test
     public void testConnectCMailsUser(){
-        // Create BaseballBob and calculate his authn
-        createBaseballBob();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        // Create the test user
+        UserStorage usr = createTestUser();
 
-        Response resp = connectTSTACTCMail("/user/BaseballBob", auth);
+        Response resp = connectTSTACTCMail("/user/"+usr.username, usr.auth);
 
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
@@ -182,10 +178,10 @@ public class MessageTests {
     @Test
     public void testConnectChaosGroup(){
         // Create BaseballBob and calculate his authn
-        createCubsFans();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        UserStorage usr = createTestUser();
+        String group = createTestGroup(usr);
 
-        Response resp = connectTSTACTChaos("/group/CubsFans", auth);
+        Response resp = connectTSTACTChaos("/group/"+group, usr.auth);
 
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
@@ -194,10 +190,10 @@ public class MessageTests {
     @Test
     public void testConnectCrewsGroup(){
         // Create BaseballBob and calculate his authn
-        createBaseballBob();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        UserStorage usr = createTestUser();
+        String group = createTestGroup(usr);
 
-        Response resp = connectTSTACTCrews("/group/CubsFans", auth);
+        Response resp = connectTSTACTCrews("/group/"+group, usr.auth);
 
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
@@ -205,33 +201,32 @@ public class MessageTests {
 
     @Test
     public void testConnectCMailsGroup(){
-        // Create BaseballBob and calculate his auth
-        createBaseballBob();
-        String auth = Base64.getEncoder().encodeToString("BaseballBob:CubsGo123".getBytes());
+        // Create BaseballBob and calculate his authn
+        UserStorage usr = createTestUser();
+        String group = createTestGroup(usr);
 
-        Response resp = connectTSTACTCMail("/group/CubsFans", auth);
+        Response resp = connectTSTACTCMail("/group/"+group, usr.auth);
         //Assert that the response was as expected
         assertEquals("Retriever Added", resp.body().asString());
     }
 
     @Test
     public void testGetMessagesUser(){
-        // Create BaseballBob and calculate its auth
-        createUser("msgTest", "default@gmail.com", "TestPass");
-        String auth = Base64.getEncoder().encodeToString("msgTest:TestPass".getBytes());
+        // Create the TestUser
+        UserStorage usr = createTestUser();
 
         // Connect retrievers
-        connectTSTACTChaos("/user/msgTest", auth);
-        connectTSTACTCrews("/user/msgTest", auth);
-        connectTSTACTCMail("/user/msgTest", auth);
+        connectTSTACTChaos("/user/" + usr.username, usr.auth);
+        connectTSTACTCrews("/user/" + usr.username, usr.auth);
+        connectTSTACTCMail("/user/" + usr.username, usr.auth);
 
         // Get messages for the user
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + auth).
+                header("Authorization", "Basic " + usr.auth).
                 when().
-                get("/user/msgTest/messages");
+                get("/user/" + usr.username + "/messages");
 
         // Parse the response as JSON
         JSONParser parser = new JSONParser(response.body().asString());
@@ -270,30 +265,29 @@ public class MessageTests {
 
     @Test
     public void testClearRetrievers(){
-        // Create BaseballBob and calculate its auth
-        createUser("msgTest", "default@gmail.com", "TestPass");
-        String auth = Base64.getEncoder().encodeToString("msgTest:TestPass".getBytes());
+        // Create the TestUser
+        UserStorage usr = createTestUser();
 
         // Connect retrievers
-        connectTSTACTChaos("/user/msgTest", auth);
-        connectTSTACTCrews("/user/msgTest", auth);
-        connectTSTACTCMail("/user/msgTest", auth);
+        connectTSTACTChaos("/user/" + usr.username, usr.auth);
+        connectTSTACTCrews("/user/" + usr.username, usr.auth);
+        connectTSTACTCMail("/user/" + usr.username, usr.auth);
 
         // Clear the retrievers
         RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + auth).
+                header("Authorization", "Basic " + usr.auth).
                 when().
-                delete("/user/msgTest/clear-retrievers");
+                delete("/user/" + usr.username + "/clear-retrievers");
 
         // Get messages for the user
         Response response = RestAssured.given().
                 header("Content-Type", "text/plain").
                 header("charset", "utf-8").
-                header("Authorization", "Basic " + auth).
+                header("Authorization", "Basic " + usr.auth).
                 when().
-                get("/user/msgTest/messages");
+                get("/user/" + usr.username + "/messages");
 
         // Parse the response as JSON
         JSONParser parser = new JSONParser(response.body().asString());

@@ -3,6 +3,7 @@ package ms_312.CheckMeBackend.TestUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 public class TestUtils {
     static int logsMade = 0;
@@ -17,5 +18,10 @@ public class TestUtils {
         catch (IOException e){
             throw new RuntimeException("Could not log to file. Root Cause: " + e);
         }
+    }
+
+    public static String getTimeStamp(){
+        LocalDateTime now = LocalDateTime.now();
+        return now.toString().replace(":","").replace("-","").replace(".","");
     }
 }
