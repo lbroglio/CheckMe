@@ -262,6 +262,60 @@ public class MessageTests {
 
     }
 
+    @Test
+    public void testGetMessagesGroup(){
+        // Create the TestUser and group
+        UserStorage usr = createTestUser();
+        String group = createTestGroup(usr);
+
+
+        // Connect retrievers
+        connectTSTACTChaos("/group/" + group, usr.auth);
+        connectTSTACTCrews("/group/" + group, usr.auth);
+        connectTSTACTCMail("/group/" + group, usr.auth);
+
+        // Get messages for the group
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                get("/group/" + group + "/messages");
+
+        // Parse the response as JSON
+        JSONParser parser = new JSONParser(response.body().asString());
+        ArrayList<Object> msgList;
+        try {
+            msgList = parser.parseArray();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse list of messages as JSON. Root Cause: " + e);
+        }
+
+        // For every message
+        boolean hasChaosMsg = false;
+        boolean hasCrewsMsg = false;
+        boolean hasCmailMsg = false;
+
+        for (Object o : msgList) {
+            // Get the current message as a linked hash map
+            LinkedHashMap<Object, Object> currMsg = (LinkedHashMap<Object, Object>) o;
+
+            // Check if the body of the message is one of the expected three
+            String contents = (String) currMsg.get("contents");
+            switch (contents) {
+                case "TestingChaos" -> hasChaosMsg = true;
+                case "TestingCrews" -> hasCrewsMsg = true;
+                case "TestingCmail" -> hasCmailMsg = true;
+            }
+        }
+
+        //  Assert that all three messages were found
+        assertTrue(hasChaosMsg);
+        assertTrue(hasCrewsMsg);
+        assertTrue(hasCmailMsg);
+
+    }
+
 
     @Test
     public void testClearRetrievers(){
