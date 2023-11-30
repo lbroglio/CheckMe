@@ -574,23 +574,7 @@ public class ProxyApplication {
 		}
 
 		// Get the Message being replied to from the body
-		String msgAsString = (String) requestBody.get("reply-to");
-
-		//Return 400 if the reply-to field is null
-		if(msgAsString == null){
-			return new ResponseEntity<>("Missing Required Field: \"reply-to\"", HttpStatus.BAD_REQUEST);
-		}
-
-		// Try to parse the Message as JSON; If it can't be parsed respond 400
-		JSONParser msgParser = new JSONParser(msgAsString);
-		LinkedHashMap<Object, Object> msg;
-		try{
-			msg = (LinkedHashMap<Object, Object>) msgParser.parse();
-		} catch (ParseException e) {
-			return new ResponseEntity<>("Could not parse request values of \"reply-to\" as JSON", HttpStatus.BAD_REQUEST);
-
-		}
-
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
 
 		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
 		// a stand in program and many (if not most) user accounts will not exist
@@ -613,7 +597,7 @@ public class ProxyApplication {
 				replyMessage.put("subject", "RE: " + subject);
 				replyMessage.put("recipient", sender);
 				replyMessage.put("contents", replyContent);
-				replyMessage.put("sendTime", LocalDateTime.now());
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
 
 				// Add the message to the message provider
 				loadTokenBasedMessage(replyMessage, sender);
@@ -638,15 +622,14 @@ public class ProxyApplication {
 	 */
 	// Unchecked casts are from interacting with JSON API
 	@SuppressWarnings("unchecked")
-	@PostMapping("/cmail/reply")
+	@PostMapping("/crews/reply")
 	public ResponseEntity<String> sendMessageCustomHeader(@RequestHeader("X-Crews-API") String authString, @RequestBody String body){
 		// Get the CustomHeaderProvider
 		MessageProvider provider = providerRepository.findByID(CUSTOMHEADER_ID);
 
 		// Get the username and password from the authString
 		//Decode the string
-		String basicAuthStr = parseBasicAuthHeader(authString);
-		String decodedAuth = new String(Base64.getDecoder().decode(basicAuthStr));
+		String decodedAuth = new String(Base64.getDecoder().decode(authString));
 
 		//Find the username
 		int splitIndex = decodedAuth.lastIndexOf(':');
@@ -681,22 +664,7 @@ public class ProxyApplication {
 		}
 
 		// Get the Message being replied to from the body
-		String msgAsString = (String) requestBody.get("reply-to");
-
-		//Return 400 if the reply-to field is null
-		if(msgAsString == null){
-			return new ResponseEntity<>("Missing Required Field: \"reply-to\"", HttpStatus.BAD_REQUEST);
-		}
-
-		// Try to parse the Message as JSON; If it can't be parsed respond 400
-		JSONParser msgParser = new JSONParser(msgAsString);
-		LinkedHashMap<Object, Object> msg;
-		try{
-			msg = (LinkedHashMap<Object, Object>) msgParser.parse();
-		} catch (ParseException e) {
-			return new ResponseEntity<>("Could not parse request values of \"reply-to\" as JSON", HttpStatus.BAD_REQUEST);
-
-		}
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
 
 
 		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
@@ -720,10 +688,10 @@ public class ProxyApplication {
 				replyMessage.put("subject", "RE: " + subject);
 				replyMessage.put("recipient", sender);
 				replyMessage.put("contents", replyContent);
-				replyMessage.put("sendTime", LocalDateTime.now());
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
 
 				// Add the message to the message provider
-				loadTokenBasedMessage(replyMessage, sender);
+				loadCustomHeaderMessage(replyMessage, sender);
 
 			}
 		}
@@ -762,7 +730,7 @@ public class ProxyApplication {
 
 
 		// Authenticate as the given User
-		boolean auth =  provider.authenticate(username, authString);
+		boolean auth =  provider.authenticate(username, basicAuthStr);
 
 		//Respond 401 if the authentication fails
 		if(!auth){
@@ -788,22 +756,7 @@ public class ProxyApplication {
 		}
 
 		// Get the Message being replied to from the body
-		String msgAsString = (String) requestBody.get("reply-to");
-
-		//Return 400 if the reply-to field is null
-		if(msgAsString == null){
-			return new ResponseEntity<>("Missing Required Field: \"reply-to\"", HttpStatus.BAD_REQUEST);
-		}
-
-		// Try to parse the Message as JSON; If it can't be parsed respond 400
-		JSONParser msgParser = new JSONParser(msgAsString);
-		LinkedHashMap<Object, Object> msg;
-		try{
-			msg = (LinkedHashMap<Object, Object>) msgParser.parse();
-		} catch (ParseException e) {
-			return new ResponseEntity<>("Could not parse request values of \"reply-to\" as JSON", HttpStatus.BAD_REQUEST);
-
-		}
+		LinkedHashMap<Object, Object> msg = (LinkedHashMap<Object, Object>) requestBody.get("reply-to");
 
 
 		// Attempt to add the new message to this MessageProvider -- This is not an essential operation because this is
@@ -827,10 +780,10 @@ public class ProxyApplication {
 				replyMessage.put("subject", "RE: " + subject);
 				replyMessage.put("recipient", sender);
 				replyMessage.put("contents", replyContent);
-				replyMessage.put("sendTime", LocalDateTime.now());
+				replyMessage.put("sendTime", LocalDateTime.now().toString());
 
 				// Add the message to the message provider
-				loadTokenBasedMessage(replyMessage, sender);
+				loadBasicAuthMessage(replyMessage, sender);
 
 			}
 		}
