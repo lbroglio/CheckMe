@@ -73,4 +73,36 @@
         app:layout_constraintTop_toBottomOf="@+id/groupTitle"
         app:layout_constraintVertical_bias="0.974" />
 
+    <Button
+        android:id="@+id/groupChatButton"
+        android:layout_width="117dp"
+        android:layout_height="51dp"
+        android:text="@string/LiveChatButtonLabel"
+        app:layout_constraintBottom_toTopOf="@+id/addAccountGroups"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.047"
+        app:layout_constraintStart_toEndOf="@+id/divider"
+        app:layout_constraintTop_toBottomOf="@+id/groupTitle"
+        app:layout_constraintVertical_bias="0.973" />
+
+    <ScrollView
+        android:id="@+id/groupMessageScroll"
+        android:layout_width="301dp"
+        android:layout_height="469dp"
+        android:layout_marginEnd="3dp"
+        android:layout_marginBottom="2dp"
+        app:layout_constraintBottom_toTopOf="@+id/groupChatButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/groupButtonScroll"
+        app:layout_constraintTop_toBottomOf="@+id/groupTitle"
+        app:layout_constraintVertical_bias="0.875">
+
+        <LinearLayout
+            android:id="@+id/groupMessageLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
