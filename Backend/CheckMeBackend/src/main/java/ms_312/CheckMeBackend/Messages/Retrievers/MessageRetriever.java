@@ -156,7 +156,8 @@ public abstract class MessageRetriever {
         return source.toString();
     }
 
-
+    @JsonIgnore
+    public abstract boolean replyTo(String replyContents, Message msgReplyTo);
 
 
 
