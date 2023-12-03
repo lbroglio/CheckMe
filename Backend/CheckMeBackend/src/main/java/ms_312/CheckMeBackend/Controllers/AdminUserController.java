@@ -24,6 +24,19 @@ public class AdminUserController {
     @Autowired
     private UserRepository userRepository;
 
+
+    @GetMapping("/user/login/isAdmin")
+    public ResponseEntity<Boolean> isAdmin(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+
+        String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();
+
+        if (checkAdmin(username)) {
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     private boolean checkAdmin(String username) {
         User user = userRepository.findByName(username);
         return user.getUserType() == User.UserType.ADMIN;
@@ -147,7 +160,7 @@ public class AdminUserController {
 
                 //Store the hash and the salt
                 // Create the new User
-                User createdUser = new User(username, email, hashedPassword, salt, userType);
+                User createdUser = new User(username, email, hashedPassword, salt);
 
                 userRepository.save(createdUser);
 
@@ -156,6 +169,7 @@ public class AdminUserController {
                 return new ResponseEntity<>("User is not an admin", HttpStatus.UNAUTHORIZED);
             }
         }
+
 
         //TODO CREATE/DELETE GROUPS, EDIT USER GROUPS
 

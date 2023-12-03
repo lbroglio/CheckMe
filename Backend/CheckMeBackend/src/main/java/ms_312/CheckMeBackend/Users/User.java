@@ -73,13 +73,13 @@ public class User extends RetrieverOwner{
     }
 
 
-    public User(String username, String email, byte[] passwordHash, byte[] salt, UserType userType) {
+    public User(String username, String email, byte[] passwordHash, byte[] salt, String userType) {
         super(username);
         this.groups = new ArrayList<>();
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
-        this.userType = userType;
+        this.userType = UserType.valueOf(userType);
     }
 
 
