@@ -52,7 +52,7 @@ public class ProfileActivity extends AppCompatActivity {
     String passwordstring = LoginActivity.password;
     String usernamestring = LoginActivity.username;
 
-    private static final String URL_JSON_OBJECT = "http://coms-309-047.class.las.iastate.edu:8080/user/";
+    private static final String URL_JSON_OBJECT = "http://10.0.2.2:8080/user/";
     private String URL_STRING = URL_JSON_OBJECT + usernamestring;
             // http://data.jsontest.com/";
     //private RequestQueue requestQueue;

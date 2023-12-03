@@ -33,7 +33,7 @@ import java.util.Objects;
 public class AddAccountActivity extends AppCompatActivity{
     public static String targetGroup = null;
 
-    private final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/";
+    private final String API_URL = "http://10.0.2.2:8080/";
 
     private String targetService = "";
 

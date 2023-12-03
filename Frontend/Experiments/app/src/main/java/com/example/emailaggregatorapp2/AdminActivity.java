@@ -31,45 +31,46 @@ import java.util.Objects;
 public class AdminActivity extends AppCompatActivity{
     public static String targetGroup = null;
 
-    private final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/";
+    private final String API_URL = "http://10.0.2.2:8080/";
 
     private String targetService = "";
 
-    TextView errorText;
-    private boolean requestComplete = false;
+    TextView welcomeText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_acount);
+        setContentView(R.layout.activity_admin);
 
-        errorText = (TextView) findViewById(R.id.addActError);
+        Button btnCreateUser = findViewById(R.id.btnCreateUser);
+        Button btnDeleteUser = findViewById(R.id.btnDeleteUser);
+        Button btnGroupManagement = findViewById(R.id.btnGroupManagement);
+        Button btnBack = findViewById(R.id.btnBack);
 
-        // Vars for text boxes
-        EditText urlEnterTB = (EditText) findViewById(R.id.enterTargetURL);
-        EditText tokenEnterTB = (EditText) findViewById(R.id.enterTokenTB);
-        EditText usernameEnter = (EditText) findViewById(R.id.enterServiceUsernameTB);
-        EditText passwordEnter = (EditText) findViewById(R.id.enterServicePasswordTB);
+        btnCreateUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(AdminActivity.this, AdminCreateUserActivity.class));
+            }
+        });
 
+        btnDeleteUser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Implement user deletion logic here
+            }
+        });
 
-        // Groups used for information
-        Group urlEnter = (Group) findViewById(R.id.enterUrlGroup);
-        Group tokenEnter = (Group) findViewById(R.id.enterTokenGroup);
-        Group accountInfoEnter = (Group) findViewById(R.id.accountInfoGroup);
+        btnGroupManagement.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Implement group management logic here
+            }
+        });
 
-        // Setup the three Account type buttons
-        Button chaosButton = (Button) findViewById(R.id.chasoButton);
-        Button crewsButton = (Button) findViewById(R.id.crewsButton);
-        Button cmailButton = (Button) findViewById(R.id.cmailButton);
-
-
-
-
-        // Setup back button
-        Button backButton = (Button) findViewById(R.id.addActBackButton);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                // R return to correct page
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 if(targetGroup == null ){
                     Intent intent = new Intent(AdminActivity.this, MessagesActivity.class);
                     startActivity(intent);

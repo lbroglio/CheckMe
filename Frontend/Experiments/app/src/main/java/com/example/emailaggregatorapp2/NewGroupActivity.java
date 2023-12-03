@@ -32,9 +32,9 @@ import java.util.Map;
 
 public class NewGroupActivity extends AppCompatActivity {
 
-    private final String JOIN_GROUP_ENDPOINT = "http://coms-309-047.class.las.iastate.edu:8080/group/join/";
+    private final String JOIN_GROUP_ENDPOINT = "http://10.0.2.2:8080/group/join/";
 
-    private final String CREATE_GROUP_ENDPOINT = "http://coms-309-047.class.las.iastate.edu:8080/group";
+    private final String CREATE_GROUP_ENDPOINT = "http://10.0.2.2:8080/group";
 
     // Track if the join group request was successful
     private boolean joinGroupRequestSuccess = false;

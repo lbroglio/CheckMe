@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class MessagesActivity extends AppCompatActivity{
 
-    private final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/user/" +  UserLoginInfo.username + "/messages";
+    private final String API_URL = "http://10.0.2.2:8080/user/" +  UserLoginInfo.username + "/messages";
 
     private ArrayList<String> messages = new ArrayList<>();
 
@@ -71,6 +71,7 @@ public class MessagesActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages);
+        Log.d("UserLoginInfo", UserLoginInfo.username + " " + UserLoginInfo.password + " " + UserLoginInfo.isAdmin);
 
         // Get the User's messages from the API and add them to the screen
         makeMessageRequest();

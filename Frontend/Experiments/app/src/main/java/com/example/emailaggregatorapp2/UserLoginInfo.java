@@ -18,4 +18,6 @@ public abstract class UserLoginInfo {
      * password saved for making API requests
      */
     public static String password;
+
+    public static boolean isAdmin;
 }
