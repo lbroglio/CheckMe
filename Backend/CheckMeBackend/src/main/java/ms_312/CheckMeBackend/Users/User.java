@@ -69,6 +69,7 @@ public class User extends RetrieverOwner{
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
+        this.userType = UserType.DEFAULT;
     }
 
 
