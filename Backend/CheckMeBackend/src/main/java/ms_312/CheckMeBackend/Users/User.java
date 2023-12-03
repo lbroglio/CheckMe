@@ -174,6 +174,11 @@ public class User extends RetrieverOwner{
         return userType;
     }
 
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+
+
 }
 
 
