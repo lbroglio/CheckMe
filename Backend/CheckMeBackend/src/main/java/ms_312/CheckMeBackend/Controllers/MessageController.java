@@ -150,6 +150,7 @@ public class MessageController {
             return new ResponseEntity<>("Body is missing required field: service-url", HttpStatus.BAD_REQUEST);
         }
 
+        apiEndpoint = apiEndpoint.replace("\\/", "/");
 
         // Create the new Retriever depending on what service was indicated
 
@@ -342,6 +343,7 @@ public class MessageController {
             return new ResponseEntity<>("Body is missing required field: service-url", HttpStatus.BAD_REQUEST);
         }
 
+        apiEndpoint = apiEndpoint.replace("\\/", "/");
 
         // Create the new Retriever depending on what service was indicated
 
