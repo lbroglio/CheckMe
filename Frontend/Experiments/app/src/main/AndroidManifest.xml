@@ -38,6 +38,10 @@
         <activity
             android:name=".LiveChatActivity"
             android:exported="false" />
+        <activity android:name=".AdminActivity"
+            android:exported="false"/>
+        <activity android:name=".AdminCreateUserActivity"
+            android:exported="false"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

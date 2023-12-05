@@ -17,9 +17,11 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.HttpHeaderParser;
+import com.android.volley.toolbox.HttpResponse;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.JsonRequest;
+import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,7 +64,7 @@ public class LoginActivity extends AppCompatActivity {
                 username = usernameEditText.getText().toString();
                 password = passwordEditText.getText().toString();
                 makeJsonObjectRequest(username, password);
-
+                checkAdmin();
                 if(goToNext){
                     Intent intent = new Intent(LoginActivity.this, MessagesActivity.class);
                     startActivity(intent);
@@ -100,7 +102,6 @@ public class LoginActivity extends AppCompatActivity {
                         //  Set the flag to go to the next screen and save the login info
                         UserLoginInfo.username = username;
                         UserLoginInfo.password = password;
-                        checkAdmin();
                     }
                 },
                 new Response.ErrorListener() {
@@ -123,16 +124,21 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void checkAdmin(){
-        JsonRequest<Boolean> jsonObjectRequest = new JsonRequest<Boolean>(
+        StringRequest jsonObjectRequest = new StringRequest(
                 Request.Method.GET,
                 (API_URL + "/isAdmin"),
-                null,
 
-                new Response.Listener<Boolean>() {
+                new Response.Listener<String>() {
                     @Override
-                    public void onResponse(Boolean response) {
-                        //  Set the flag to go to the next screen and save the login info
-                        UserLoginInfo.isAdmin = response;
+                    public void onResponse(String response) {
+                        //  Set the flag to go to the next screen and save the login info'
+                        Log.d("IS ADMIN", response);
+                        if(response.equals("true")){
+                            UserLoginInfo.isAdmin = true;
+                        }
+                        else{
+                            UserLoginInfo.isAdmin = false;
+                        }
                         goToNext = true;
                         Intent intent = new Intent(LoginActivity.this, MessagesActivity.class);
                         startActivity(intent);
@@ -142,14 +148,12 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         // Handle any errors that occur
+                        UserLoginInfo.isAdmin = false;
                         Log.e("Volley Error", error.toString());
+
                     }
                 }
         ){
-            @Override
-            protected Response<Boolean> parseNetworkResponse(NetworkResponse response) {
-                return Response.success(Boolean.parseBoolean(response.toString()), HttpHeaderParser.parseCacheHeaders(response));
-            }
 
             @Override
             public Map<String, String> getHeaders() throws AuthFailureError {

@@ -86,14 +86,14 @@ public class SignupActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         // Handle the successful response here
-                        System.out.println(response.toString());
+                        Log.d("Response", response.toString());
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         // Handle any errors that occur
-                        System.out.println("Error: " + error.toString());
+                        Log.e("Error", error.toString());
                     }
                 }
         );

@@ -91,16 +91,21 @@ public class MessagesActivity extends AppCompatActivity{
         //Button for going to groups page
         Button groupsButton = (Button) findViewById(R.id.groupButton);
 
+        Button adminButton = (Button) findViewById(R.id.adminButton);
+
         // Toggle navbar visibility
         visButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(navBar.getVisibility() == View.GONE){
                     navBar.setVisibility(View.VISIBLE);
+                    Log.d("AdminStatus", UserLoginInfo.isAdmin + "");
+                    if(!UserLoginInfo.isAdmin){
+                        adminButton.setVisibility(View.GONE);
+                    }
                 }
                 else{
                     navBar.setVisibility(View.GONE);
-
                 }
             }
         });
@@ -121,6 +126,14 @@ public class MessagesActivity extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MessagesActivity.this, GroupActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        adminButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MessagesActivity.this, AdminActivity.class);
                 startActivity(intent);
             }
         });

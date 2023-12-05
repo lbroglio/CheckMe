@@ -38,4 +38,42 @@
         android:layout_marginBottom="16dp"
         android:layout_marginEnd="16dp"
         android:text="Back"/>
+
+    <LinearLayout
+        android:id="@+id/layoutUserInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="16dp"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User to delete"
+            android:textSize="16sp"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter username">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextUserToDelete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnConfirmDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/layoutUserInput"
+        android:layout_marginTop="16dp"
+        android:layout_centerHorizontal="true"
+        android:text="Confirm Delete"
+        android:visibility="gone"/>
+
 </RelativeLayout>

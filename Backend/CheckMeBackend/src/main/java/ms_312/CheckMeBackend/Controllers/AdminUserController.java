@@ -5,6 +5,7 @@ import ms_312.CheckMeBackend.Users.User;
 import ms_312.CheckMeBackend.Users.UserRepository;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,14 +27,23 @@ public class AdminUserController {
 
 
     @GetMapping("/user/login/isAdmin")
-    public ResponseEntity<Boolean> isAdmin(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+    public ResponseEntity<String> isAdmin(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+
+        System.out.println("Checking if user is admin");
 
         String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();
 
+
+
+        System.out.println("Username: " + username);
+        System.out.println("UserType: " + userRepository.findByName(username).getUserType());
+        System.out.println("Is admin: " + checkAdmin(username));
         if (checkAdmin(username)) {
-            return new ResponseEntity<>(true, HttpStatus.OK);
+            System.out.println("Returning true");
+            return new ResponseEntity<>("true", HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
+            System.out.println("Returning false");
+            return new ResponseEntity<>("false", HttpStatus.OK);
         }
     }
 
@@ -42,15 +52,13 @@ public class AdminUserController {
         return user.getUserType() == User.UserType.ADMIN;
     }
 
-    @DeleteMapping("/delete/{userToDelete}")
+    @DeleteMapping("/user/delete/{userToDelete}")
     public ResponseEntity<String> deleteUser(@PathVariable String userToDelete, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
         if(userRepository.findByName(userToDelete) == null){
             return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
         }
-
-        String decodedAuth = new String(Base64.getDecoder().decode(authHeader));
-        int authSplit = decodedAuth.lastIndexOf(':');
-        String username = decodedAuth.substring(0, authSplit);
+        System.out.println("Auth Header: " + authHeader);
+        String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();
 
         if (checkAdmin(username)) {
             userRepository.deleteByName(userToDelete);
