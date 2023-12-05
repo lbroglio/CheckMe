@@ -8,13 +8,16 @@ import ms_312.CheckMeBackend.Resources.Crypto;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 
 /**
@@ -101,10 +104,60 @@ public class ChaosRetriever extends MessageRetriever{
             // Cast the object parsed by the JSON to a linked hash map
             LinkedHashMap<Object, Object> JSONMap = (LinkedHashMap<Object, Object>) responseBody.get(i);
 
-            toReturn[i] = new Message(JSONMap);
+            toReturn[i] = new Message(JSONMap, this.id);
         }
 
         return toReturn;
     }
+
+    @Override
+    public boolean replyTo(String replyContents, Message msgReplyTo){
+        //Decrypt the API token for use in the request
+        String bearerToken = Crypto.decryptStringAES(APIToken, cipherReferenceName);
+        String authString = "Bearer " + bearerToken;
+
+        // Use the source to build the reply link
+        ArrayList<String> splitSrc = new ArrayList<>(List.of(source.split("/")));
+        int cutOffIndex = splitSrc.indexOf("messages");
+        String chaosActName = splitSrc.get(cutOffIndex + 1);
+        int strEndIndex = source.indexOf("messages");
+        String replyURL = source.substring(0, strEndIndex) + chaosActName + "/reply";
+
+        // Build the reply body
+        LinkedHashMap<Object, Object> msgMap = new LinkedHashMap<>();
+        msgMap.put("sender", msgReplyTo.getSender());
+        msgMap.put("recipient", chaosActName);
+        if(msgReplyTo.getSubject() != null){
+            msgMap.put("subject", msgReplyTo.getSubject());
+        }
+        else{
+            msgMap.put("subject", "None");
+        }
+        msgMap.put("contents", msgReplyTo.getContents());
+        msgMap.put("sendTime", msgReplyTo.getSendTime().toString());
+
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("content", replyContents);
+        requestBody.put("reply-to", msgMap);
+
+        //Build the request to the Chaos API
+        HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(requestBody.toString())).uri(URI.create(replyURL)).setHeader("Authorization",authString).build();
+
+        //Send the request and save the response
+        HttpResponse<String> response;
+        try{
+            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        }
+        catch (IOException | InterruptedException e){
+            throw new RuntimeException("Could not make request to Chaos API. Root Cause: " + e);
+        }
+
+       // Check if the response is as expected
+        // Return true on success
+        // Return false on failure
+        return response.body().equals("Reply sent: " + replyContents);
+    }
+
 
 }

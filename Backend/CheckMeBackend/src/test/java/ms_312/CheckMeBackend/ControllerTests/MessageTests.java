@@ -3,9 +3,11 @@ package ms_312.CheckMeBackend.ControllerTests;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import ms_312.CheckMeBackend.CheckMeBackendApplication;
+import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.TestUtils.UserStorage;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -354,6 +356,197 @@ public class MessageTests {
 
         // Assert that no messages were returned
         assertEquals(0, msgList.size());
+    }
+
+    @Test
+    public void testReplyChaos(){
+        // Create the TestUser
+        UserStorage usr = createTestUser();
+
+        // Connect retrievers
+        connectTSTACTChaos("/user/" + usr.username, usr.auth);
+
+        // Get messages for the user
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                get("/user/" + usr.username + "/messages");
+
+        // Parse the response as JSON
+        JSONParser parser = new JSONParser(response.body().asString());
+        ArrayList<Object> msgList;
+        try {
+            msgList = parser.parseArray();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse list of messages as JSON. Root Cause: " + e);
+        }
+
+
+        // Reply to the message sent by TEST_ACT\
+        JSONObject requestBody = new JSONObject();
+        for (Object o : msgList) {
+            LinkedHashMap<Object, Object> currMessageJSON = (LinkedHashMap<Object, Object>) o;
+            Message currMessage = new Message(currMessageJSON);
+
+            if (currMessage.getSender().equals("TEST_ACT")) {
+                // Build the reply
+                // Build the reply body
+                LinkedHashMap<Object, Object> msgMap = new LinkedHashMap<>();
+                msgMap.put("sender", currMessage.getSender());
+                if (currMessage.getSubject() != null) {
+                    msgMap.put("subject", currMessage.getSubject());
+                }
+                msgMap.put("contents", currMessage.getContents());
+                msgMap.put("sendTime", currMessage.getSendTime().toString());
+                msgMap.put("originID", currMessage.getOriginID());
+                msgMap.put("id", currMessage.getID());
+
+
+                requestBody.put("reply-contents", "TestReply");
+                requestBody.put("reply-to", msgMap);
+
+            }
+        }
+
+        // Send the reply
+         response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                 body(requestBody.toString()).
+                post("/user/" + usr.username + "/reply");
+
+        assertEquals(response.body().asString(), "Reply successful");
+    }
+    @Test
+    public void testReplyCrews(){
+        // Create the TestUser
+        UserStorage usr = createTestUser();
+
+        // Connect retrievers
+        connectTSTACTCrews("/user/" + usr.username, usr.auth);
+
+        // Get messages for the user
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                get("/user/" + usr.username + "/messages");
+
+        // Parse the response as JSON
+        JSONParser parser = new JSONParser(response.body().asString());
+        ArrayList<Object> msgList;
+        try {
+            msgList = parser.parseArray();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse list of messages as JSON. Root Cause: " + e);
+        }
+
+
+        // Reply to the message sent by TEST_ACT\
+        JSONObject requestBody = new JSONObject();
+        for (Object o : msgList) {
+            LinkedHashMap<Object, Object> currMessageJSON = (LinkedHashMap<Object, Object>) o;
+            Message currMessage = new Message(currMessageJSON);
+
+            if (currMessage.getSender().equals("TEST_ACT")) {
+                // Build the reply
+                // Build the reply body
+                LinkedHashMap<Object, Object> msgMap = new LinkedHashMap<>();
+                msgMap.put("sender", currMessage.getSender());
+                if (currMessage.getSubject() != null) {
+                    msgMap.put("subject", currMessage.getSubject());
+                }
+                msgMap.put("contents", currMessage.getContents());
+                msgMap.put("sendTime", currMessage.getSendTime().toString());
+                msgMap.put("originID", currMessage.getOriginID());
+                msgMap.put("id", currMessage.getID());
+
+
+                requestBody.put("reply-contents", "TestReply");
+                requestBody.put("reply-to", msgMap);
+
+            }
+        }
+
+        // Send the reply
+        response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                body(requestBody.toString()).
+                post("/user/" + usr.username + "/reply");
+
+        assertEquals(response.body().asString(), "Reply successful");
+    }
+
+    @Test
+    public void testReplyCMail(){
+        // Create the TestUser
+        UserStorage usr = createTestUser();
+
+        // Connect retrievers
+        connectTSTACTCMail("/user/" + usr.username, usr.auth);
+
+        // Get messages for the user
+        Response response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                get("/user/" + usr.username + "/messages");
+
+        // Parse the response as JSON
+        JSONParser parser = new JSONParser(response.body().asString());
+        ArrayList<Object> msgList;
+        try {
+            msgList = parser.parseArray();
+        } catch (ParseException e) {
+            throw new RuntimeException("Could not parse list of messages as JSON. Root Cause: " + e);
+        }
+
+
+        // Reply to the message sent by TEST_ACT\
+        JSONObject requestBody = new JSONObject();
+        for (Object o : msgList) {
+            LinkedHashMap<Object, Object> currMessageJSON = (LinkedHashMap<Object, Object>) o;
+            Message currMessage = new Message(currMessageJSON);
+
+            if (currMessage.getSender().equals("TEST_ACT")) {
+                // Build the reply
+                // Build the reply body
+                LinkedHashMap<Object, Object> msgMap = new LinkedHashMap<>();
+                msgMap.put("sender", currMessage.getSender());
+                if (currMessage.getSubject() != null) {
+                    msgMap.put("subject", currMessage.getSubject());
+                }
+                msgMap.put("contents", currMessage.getContents());
+                msgMap.put("sendTime", currMessage.getSendTime().toString());
+                msgMap.put("originID", currMessage.getOriginID());
+                msgMap.put("id", currMessage.getID());
+
+
+                requestBody.put("reply-contents", "TestReply");
+                requestBody.put("reply-to", msgMap);
+
+            }
+        }
+
+        // Send the reply
+        response = RestAssured.given().
+                header("Content-Type", "text/plain").
+                header("charset", "utf-8").
+                header("Authorization", "Basic " + usr.auth).
+                when().
+                body(requestBody.toString()).
+                post("/user/" + usr.username + "/reply");
+
+        assertEquals(response.body().asString(), "Reply successful");
     }
 
 

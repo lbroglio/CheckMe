@@ -43,6 +43,9 @@
         <activity android:name=".AdminCreateUserActivity"
             android:exported="false"/>
         <activity
+            android:name=".ReplyActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

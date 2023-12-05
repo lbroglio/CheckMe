@@ -34,6 +34,8 @@ public class MessagesActivity extends AppCompatActivity{
 
     private ArrayList<String> messages = new ArrayList<>();
 
+    private HashMap<String, JSONObject> msgMapping = new HashMap<>();
+
     // Used to assign created TextViews with ids
     private int numMessages =0;
 
@@ -63,6 +65,23 @@ public class MessagesActivity extends AppCompatActivity{
             newMessage.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             addTo.addView(newMessage);
 
+            // Add reply button to layout
+            Button replyButton = new Button(this);
+            replyButton.setText("Reply");
+
+            replyButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // Set the selected message
+                    SelectedMessageInfo.selectedMsg =  msgMapping.get(messageContent);
+                    Intent intent = new Intent(MessagesActivity.this, ReplyActivity.class);
+                    startActivity(intent);
+
+                }
+            });
+
+            replyButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            addTo.addView(replyButton);
 
         }
     }
@@ -171,6 +190,7 @@ public class MessagesActivity extends AppCompatActivity{
                             Log.d("HERE", msgStr);
                             // Add the Message to the list
                             messages.add(msgStr);
+                            msgMapping.put(msgStr, msg);
 
                         }
 
