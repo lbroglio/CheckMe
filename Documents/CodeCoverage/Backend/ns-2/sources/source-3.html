@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html id="htmlId">
 <head>
-  <title>Coverage Report > MessageController</title>
+  <title>Coverage Report > GroupController</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -21,7 +21,7 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">ms_312.CheckMeBackend.Controllers</a>
 </div>
 
-<h1>Coverage Summary for Class: MessageController (ms_312.CheckMeBackend.Controllers)</h1>
+<h1>Coverage Summary for Class: GroupController (ms_312.CheckMeBackend.Controllers)</h1>
 
 <table class="coverageStats">
 <tr>
@@ -40,7 +40,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">MessageController</td>
+  <td class="name">GroupController</td>
 <td class="coverageStat">
   <span class="percent">
     100%
@@ -59,10 +59,10 @@ Current scope:     <a href="../../index.html">all classes</a>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    74.2%
+    77.6%
   </span>
   <span class="absValue">
-    (132/178)
+    (104/134)
   </span>
 </td>
 </tr>
@@ -75,19 +75,16 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Controllers;
+&nbsp;
 &nbsp;import io.swagger.v3.oas.annotations.Operation;
 &nbsp;import io.swagger.v3.oas.annotations.Parameter;
-&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
-&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
-&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
 &nbsp;import io.swagger.v3.oas.annotations.enums.ParameterIn;
 &nbsp;import io.swagger.v3.oas.annotations.media.Content;
 &nbsp;import io.swagger.v3.oas.annotations.media.ExampleObject;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
 &nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
-&nbsp;import ms_312.CheckMeBackend.Messages.Message;
-&nbsp;import ms_312.CheckMeBackend.Messages.MessageRepository;
-&nbsp;import ms_312.CheckMeBackend.Messages.Retrievers.*;
-&nbsp;import ms_312.CheckMeBackend.Resources.Sorting;
 &nbsp;import ms_312.CheckMeBackend.Users.Group;
 &nbsp;import ms_312.CheckMeBackend.Users.GroupRepository;
 &nbsp;import ms_312.CheckMeBackend.Users.User;
@@ -101,820 +98,646 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;import org.springframework.http.ResponseEntity;
 &nbsp;import org.springframework.web.bind.annotation.*;
 &nbsp;import org.springframework.web.server.ResponseStatusException;
-&nbsp;import org.xml.sax.helpers.AttributesImpl;
 &nbsp;
-&nbsp;import javax.print.attribute.standard.Media;
+&nbsp;import java.nio.charset.StandardCharsets;
 &nbsp;import java.security.MessageDigest;
 &nbsp;import java.security.NoSuchAlgorithmException;
-&nbsp;import java.time.LocalDateTime;
-&nbsp;import java.util.*;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Base64;
+&nbsp;import java.util.LinkedHashMap;
 &nbsp;
-&nbsp;@Tag(name = &quot;MessageAPI&quot;, description = &quot;Rest API for Creating and managing messages and message retrievers within the service&quot;)
+&nbsp;@Tag(name = &quot;GroupAPI&quot;, description = &quot;Rest API used for Creating and managing Groups within the CheckMe service.&quot;)
 &nbsp;@RestController
-<b class="fc">&nbsp;public class MessageController {</b>
+<b class="fc">&nbsp;public class GroupController {</b>
 &nbsp;    @Autowired
 &nbsp;    UserRepository userRepository;
 &nbsp;
 &nbsp;    @Autowired
 &nbsp;    GroupRepository groupRepository;
 &nbsp;
-&nbsp;    @Autowired
-&nbsp;    MessageRepository messageRepository;
 &nbsp;
-&nbsp;    @Autowired
-&nbsp;    MessageRetrieverRepository retrieverRepositor;
 &nbsp;
 &nbsp;    /**
-&nbsp;     * Endpoint to add a new {@link MessageRetriever} to a specified User account.
+&nbsp;     * API endpoint to create a new Group. Will add a new {@link Group} object to the database corresponding to the
+&nbsp;     * created Group. The User making this request will be added to the Group as an admin.
 &nbsp;     *
-&nbsp;     * @param username Username for the CheckMe account to add the Retriever to.
-&nbsp;     * @param authHeader The User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
+&nbsp;     * @param groupInfo Request body in JSON form -- should include a field &quot;name&quot; with the name to give the newly
+&nbsp;     * created group.
+&nbsp;     * @param userAuth The requesting User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
 &nbsp;     * Info should be sent in the form of Basic: {username}:{password}
-&nbsp;     * @param body The body for the http request must contain the fields needed for adding the Retriever
 &nbsp;     *
 &nbsp;     * @return
-&nbsp;     * 200 status - If the retriever was successfully added &lt;br/&gt;
-&nbsp;     * 400 status - If the request body is missing a required field &lt;br/&gt;
-&nbsp;     * 401 status - If the login given in the Authorization header is incorrect &lt;br/&gt;
-&nbsp;     * 404 status - If the user to add the retriever to does not exists &lt;br/&gt;
+&nbsp;     * 201 Status If the group was succesfully created
+&nbsp;     * 400 Status If the request&#39;s body is invalid JSON or if the JSOn does not contain a &quot;name&quot; field
+&nbsp;     * 401 Status If the User making the request could not be properly authenticated
+&nbsp;     * 409 Status If a Group with the given name already exists
 &nbsp;     *
 &nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
 &nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
 &nbsp;     */
-&nbsp;    //Unchecked Casts come from interacting with JSON API
+&nbsp;    // Unchecked casts are from interacting with the JSON API
 &nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
-&nbsp;    @PutMapping(&quot;/user/{username}/connect-account&quot;)
-&nbsp;    @Operation(description = &quot;Add a new MessageRetriever to a User&#39;s account&quot;, tags = &quot;addMessageRetriever&quot;)
+&nbsp;    @PostMapping(&quot;/group&quot;)
+&nbsp;    @Operation(description  = &quot;Create a new Group.&quot;,  tags = &quot;createGroup&quot;)
 &nbsp;    @ApiResponses(value = {
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Retriever Added&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Bad Request&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Missing required field&quot;, value = &quot;Body is missing required field: message-service&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Incorrect Username or Password&quot;, value = &quot;Incorrect Username or Password.&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No User exists with name {username}&quot;, value = &quot;No User exists with name {username}&quot;)))
-&nbsp;    })
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;Created Group: Group 202&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;JSON in request body could not be parsed or is missing required fields&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;JSON in request body could not be parsed. OR Could not find {missing field} in request body&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect.&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;Username or Password was incorrect.&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot; , description =  &quot;A Group with the given name already exists&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;A Group with the given name already exists&quot;)))})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;HTTP Basic Authentication with the account information for an existing CheckMe account&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Basic VXNlcjEwMTpQYXNzd29yZDEyMw==&quot;)})
 &nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-&nbsp;            description = &quot;The body for the http request must contain the fields needed for adding the Retriever&quot;,
+&nbsp;            description = &quot;Information to create a group with&quot;,
 &nbsp;            required = true,
 &nbsp;            content = @Content(
 &nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
 &nbsp;                    examples = {
 &nbsp;                            @ExampleObject(
-&nbsp;                                    name = &quot;An example request describing each field&quot;,
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
 &nbsp;                                    value = &quot;&quot;&quot;
 &nbsp;                                            {
-&nbsp;                                                &quot;message-service&quot;: &quot;The name of the third party service to retrieve messages from&quot;,
-&nbsp;                                                &quot;service-url&quot;: &quot;The URL endpoint to retrieve messages from&quot;,
-&nbsp;                                                &quot;login-token&quot;: &quot;The authorization token for each unique service.&quot;
-&nbsp;                                            }
-&nbsp;                                            &quot;&quot;&quot;,
-&nbsp;                                    summary = &quot;Example of a request body for adding a Chaos Retriever&quot;),
+&nbsp;                                                &quot;name&quot;: &quot;The unique name for the created group&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to create a user&quot;),
 &nbsp;                            @ExampleObject(
-&nbsp;                                    name = &quot;Example request body for adding a Chaos Retriever&quot;,
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
 &nbsp;                                    value = &quot;&quot;&quot;
 &nbsp;                                            {
-&nbsp;                                                &quot;message-service&quot;: &quot;chaos&quot;,
-&nbsp;                                                &quot;service-url&quot;: &quot;http://coms-309-047.class.las.iastate.edu:8443/chaos/messages/BaseballBob&quot;,
-&nbsp;                                                &quot;chaos-token&quot;: &quot;6583000229007365&quot;
-&nbsp;                                            }
-&nbsp;                                            &quot;&quot;&quot;,
-&nbsp;                                    summary = &quot;Example of a request body for adding a Chaos Retriever&quot;)
+&nbsp;                                                &quot;name&quot;: &quot;Group202&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for creating a Group&quot;)
 &nbsp;                    }))
-&nbsp;    public ResponseEntity&lt;String&gt; setupServiceAccount(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
-&nbsp;        // Get the user to add the retriever for
-<b class="fc">&nbsp;        User toAdd = userRepository.findByName(username);</b>
+&nbsp;    public ResponseEntity&lt;String&gt; createGroup(@RequestBody String groupInfo, @RequestHeader(HttpHeaders.AUTHORIZATION) String userAuth) throws NoSuchAlgorithmException{
+&nbsp;        //Authorize that the request to create this group comes from a valid user and they are authenticated
+<b class="fc">&nbsp;        String authString = ControllerUtils.parseBasicAuthHeader(userAuth);</b>
+<b class="fc">&nbsp;        boolean authenticated = ControllerUtils.checkBasicAuth(authString, userRepository);</b>
 &nbsp;
-&nbsp;        // Return 404 if the User to add is null
-<b class="fc">&nbsp;        if(toAdd == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No User exists with name &quot; + username, HttpStatus.NOT_FOUND);</b>
+&nbsp;        //Return 401  if the User could not be  authenticated
+<b class="fc">&nbsp;        if(!authenticated){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Username or Password was incorrect.&quot;, HttpStatus.UNAUTHORIZED);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        // Confirm that the proper authentication was passed to make changes for the indicate user
-&nbsp;        // Parse the encoded Base64 String from the Authorization Header and verify it&#39;s accurate for the given user
-<b class="fc">&nbsp;        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader),toAdd, userRepository)){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Incorrect Username or Password.&quot;, HttpStatus.UNAUTHORIZED);</b>
-&nbsp;        }
+&nbsp;        //Get the User making the request
+&nbsp;        //Decode the authorization header
+<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(authString);</b>
+<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;        //Separate the Username and password
+<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
+<b class="fc">&nbsp;        User requestUser = userRepository.findByName(username);</b>
 &nbsp;
-&nbsp;        // Parse the request body as JSON
-<b class="fc">&nbsp;        JSONParser parser = new JSONParser(body);</b>
-&nbsp;        LinkedHashMap&lt;String, String&gt; bodyJSON;
+&nbsp;        //Read the name of the  Group from the request body
+<b class="fc">&nbsp;        JSONParser parser = new JSONParser(groupInfo);</b>
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; requestBody;
 &nbsp;
-&nbsp;        // If the body can&#39;t be parsed as JSON return 400
+&nbsp;        //Attempt to Parse body returning 400 if Invalid JSON was given
 &nbsp;        try{
-<b class="fc">&nbsp;            bodyJSON = (LinkedHashMap&lt;String, String&gt;) parser.parse();</b>
-&nbsp;        }
-<b class="nc">&nbsp;        catch (ParseException e){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Request Body could not be parsed as JSON&quot;, HttpStatus.BAD_REQUEST);</b>
-<b class="fc">&nbsp;        }</b>
-&nbsp;
-&nbsp;        // Get the message service to create a retriever for
-<b class="fc">&nbsp;        String msgService = bodyJSON.get(&quot;message-service&quot;);</b>
-&nbsp;
-&nbsp;        // If the service is missing return 400
-<b class="fc">&nbsp;        if(msgService == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: message-service&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;            requestBody = (LinkedHashMap&lt;Object, Object&gt;) parser.parse();</b>
 &nbsp;
 &nbsp;        }
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse JSON included in request body&quot;,HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;        }</b>
 &nbsp;
-&nbsp;        // Get the URL endpoint to Retrieve Messages from the request body
-<b class="fc">&nbsp;        String apiEndpoint = bodyJSON.get(&quot;service-url&quot;);</b>
+<b class="fc">&nbsp;        String name = (String) requestBody.get(&quot;name&quot;);</b>
 &nbsp;
-&nbsp;        // Return 400 if the endpoint is missing
-<b class="fc">&nbsp;        if(apiEndpoint == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: service-url&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;        if(name == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No Group name included in request body&quot;,HttpStatus.BAD_REQUEST);</b>
 &nbsp;        }
 &nbsp;
-<b class="fc">&nbsp;        apiEndpoint = apiEndpoint.replace(&quot;\\/&quot;, &quot;/&quot;);</b>
-&nbsp;
-&nbsp;        // Create the new Retriever depending on what service was indicated
-&nbsp;
-&nbsp;        // Chaos service
-<b class="fc">&nbsp;        if(msgService.equalsIgnoreCase(&quot;chaos&quot;)){</b>
-&nbsp;            // Get the API token for the Chaos service from request body
-<b class="fc">&nbsp;            String chaosToken = bodyJSON.get(&quot;chaos-token&quot;);</b>
-&nbsp;
-&nbsp;            // Return 400 if the API token is missing
-<b class="fc">&nbsp;            if(chaosToken == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: chaos-token&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new ChaosRetriever(apiEndpoint, chaosToken, toAdd));</b>
-&nbsp;
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Crews Service
-<b class="fc">&nbsp;        else if(msgService.equalsIgnoreCase(&quot;crews&quot;)){</b>
-&nbsp;            // Get the username and password used for the crews account from the request body
-<b class="fc">&nbsp;            String crewsUsername = bodyJSON.get(&quot;crews-username&quot;);</b>
-<b class="fc">&nbsp;            String crewsPassword = bodyJSON.get(&quot;crews-password&quot;);</b>
-&nbsp;
-&nbsp;            // If the username or password if missing return 400
-<b class="fc">&nbsp;            if(crewsUsername == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: crews-username&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-<b class="fc">&nbsp;            else if(crewsPassword == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: crews-password&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new CrewsRetriever(apiEndpoint, crewsUsername, crewsPassword, toAdd));</b>
-&nbsp;
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Cmail service
-<b class="fc">&nbsp;        else if(msgService.equalsIgnoreCase(&quot;cmail&quot;)){</b>
-&nbsp;            // Get the username and password used for the Cmail account from the request body
-<b class="fc">&nbsp;            String cmailUsername = bodyJSON.get(&quot;cmail-username&quot;);</b>
-<b class="fc">&nbsp;            String cmailPassword = bodyJSON.get(&quot;cmail-password&quot;);</b>
-&nbsp;
-&nbsp;            // If the username or password if missing return 400
-<b class="fc">&nbsp;            if(cmailUsername == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: cmail-username&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-<b class="fc">&nbsp;            else if(cmailPassword == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: cmail-password&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new CmailRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));</b>
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Invalid service name
-&nbsp;        else{
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Invalid message service must included in the following list{chaos, crews, cmail}&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
+&nbsp;        //Confirm no group with the  given name exists
+<b class="fc">&nbsp;        if(groupRepository.findByName(name) != null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Group name &quot; + name + &quot; is taken.&quot; ,HttpStatus.CONFLICT);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        //Save the user
-<b class="fc">&nbsp;        userRepository.save(toAdd);</b>
+&nbsp;        //Create the group
+<b class="fc">&nbsp;        Group createdGroup = new Group(name, requestUser);</b>
+&nbsp;        //Add the group to the creator
+<b class="fc">&nbsp;        requestUser.joinGroup(createdGroup);</b>
 &nbsp;
-&nbsp;        // Return 200 to indicate success
-<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Retriever Added&quot;, HttpStatus.OK);</b>
+&nbsp;        //Save
+<b class="fc">&nbsp;        userRepository.save(requestUser);</b>
+<b class="fc">&nbsp;        groupRepository.save(createdGroup);</b>
+&nbsp;
+&nbsp;        //Return success indicator
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Created Group: &quot;+name,HttpStatus.CREATED);</b>
+&nbsp;
 &nbsp;    }
 &nbsp;
 &nbsp;
-&nbsp;
 &nbsp;    /**
-&nbsp;     * Endpoint to add a new {@link MessageRetriever} to a specified {@link Group}.
+&nbsp;     * API Endpoint for retrieving a {@link Group} object using the randomly generated name of the group.
 &nbsp;     *
-&nbsp;     * @param groupname Name of the Group to add the Retriever to.
-&nbsp;     * @param authHeader The requesting User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
+&nbsp;     * @param name A string holding the assigned name of this group
+&nbsp;     * @param authorization The requesting User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
 &nbsp;     * Info should be sent in the form of Basic: {username}:{password}
-&nbsp;     * @param body The body for the http request must contain the fields needed for adding the Retriever
 &nbsp;     *
-&nbsp;     * @return
-&nbsp;     * 200 status - If the retriever was successfully added &lt;br/&gt;
-&nbsp;     * 400 status - If the request body is missing a required field &lt;br/&gt;
-&nbsp;     * 401 status - If the login given in the Authorization header is incorrect &lt;br/&gt;
-&nbsp;     * 403 status - If the requesting User is not an admin of the Group to add a Retriever for &lt;br/&gt;
-&nbsp;     * 404 status - If the group to add the retriever to does not exist &lt;br/&gt;
+&nbsp;     * @return The {@link  Group} object requested
 &nbsp;     *
+&nbsp;     * @throws ResponseStatusException
+&nbsp;     * 401 If a User&#39;s account could not be signed in to with the given Authentication info.
+&nbsp;     * 403 If the requesting User is not a member of the requested Group
+&nbsp;     * 404 If no group with the given name exists
 &nbsp;     *
 &nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
 &nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
 &nbsp;     */
-&nbsp;    //Unchecked Casts come from interacting with JSON API
-&nbsp;    @PutMapping(&quot;/group/{groupname}/connect-account&quot;)
-&nbsp;    @Operation(description = &quot;Add a new MessageRetriever to a Group&quot;, tags = &quot;addMessageRetriever&quot;)
-&nbsp;    @Parameter(name = &quot;groupname&quot;, description = &quot;Name of the Group to add the Retriever to.&quot;, in = ParameterIn.PATH, required = true, schema = @Schema(type = &quot;string&quot;), examples = {
-&nbsp;            @ExampleObject(name = &quot;Example Group Name&quot;, value = &quot;Group1&quot;)})
-&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;The requesting User&#39;s username and password using HTTP Basic Authentication.&quot;, required = true, schema = @Schema(type = &quot;string&quot;))
+&nbsp;    @GetMapping(&quot;/group/name/{name}&quot;)
+&nbsp;    @Operation(description  = &quot;Get the information for a Group from its name&quot;,  tags = &quot;getGroupByName&quot;)
+&nbsp;    @Parameter(name = &quot;name&quot;, in = ParameterIn.PATH, description = &quot;The name of the Group to retrieve the information for&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Group202&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;HTTP Basic Authentication with the account information for an existing CheckMe account that is a member of the target Group&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Basic VXNlcjEwMTpQYXNzd29yZDEyMw==&quot;)})
 &nbsp;    @ApiResponses(value = {
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Retriever Added&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Bad Request&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Missing required field&quot;, value = &quot;Body is missing required field: message-service&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Incorrect Username or Password&quot;, value = &quot;Incorrect Username or Password.&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;403&quot;, description = &quot;Forbidden&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;User is not an admin of Group {groupname}&quot;, value = &quot;User is not an admin of Group {groupname}&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No Group exists with name {groupname}&quot;, value = &quot;No Group exists with name {groupname}&quot;)))
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;403&quot; , description =  &quot;User does not have access to this group&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No Group exists with the given name&quot;, content = @Content),})
+&nbsp;    public Group getGroupByName(@PathVariable String name, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws NoSuchAlgorithmException, ResponseStatusException {
+&nbsp;        //Separate the Base64 string from the rest of the authentication header
+<b class="fc">&nbsp;        authorization =  ControllerUtils.parseBasicAuthHeader(authorization);</b>
+&nbsp;
+&nbsp;        //Check if the User&#39;s authentication is correct
+<b class="fc">&nbsp;        boolean checkAuth =  ControllerUtils.checkBasicAuth(authorization, userRepository);</b>
+&nbsp;
+<b class="fc">&nbsp;        if(!checkAuth){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Username or Password was incorrect&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get a group with the requested name
+<b class="fc">&nbsp;        Group requested = groupRepository.findByName(name);</b>
+&nbsp;
+&nbsp;        // Return 404 if the requested group doesn&#39;t exist
+<b class="fc">&nbsp;        if(requested == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;There is no group with the given name&quot;);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get the user making the request
+&nbsp;        //Decode the authorization header
+<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(authorization);</b>
+<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;
+&nbsp;        //Separate the Username and password
+<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
+&nbsp;
+<b class="fc">&nbsp;        User requestUser = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        //Check if the User is a member of the group and return 403 if they are not
+<b class="fc">&nbsp;        if(!requested.getMembers().contains(requestUser)){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;User does not have access to this group&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return requested;</b>
 &nbsp;    }
-&nbsp;    )
+&nbsp;
+&nbsp;    /**
+&nbsp;     * API Endpoint for retrieving a {@link Group} object using the randomly generated Join code of the group.
+&nbsp;     *
+&nbsp;     * @param joinCode The 8 character randomly generated String used for joining this Group.
+&nbsp;     * @param authorization The requesting User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
+&nbsp;     * Info should be sent in the form of Basic: {username}:{password}
+&nbsp;     *
+&nbsp;     * @return The {@link  Group} object requested
+&nbsp;     *
+&nbsp;     * @throws ResponseStatusException
+&nbsp;     * 401 If a User&#39;s account could not be signed in to with the given Authentication info.
+&nbsp;     * 403 If the requesting User is not a member of the requested Group
+&nbsp;     * 404 If no group with the Given join code exists
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/group/code/{joinCode}&quot;)
+&nbsp;    @Operation(description  = &quot;Get the information for a Group from the code used for joining it&quot;,  tags = &quot;getGroupByJoinCode&quot;)
+&nbsp;    @Parameter(name = &quot;joinCode&quot;, in = ParameterIn.PATH, description = &quot;The join code for the Group to retrieve the information for&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;ESDCACOY&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;HTTP Basic Authentication with the account information for an existing CheckMe account that is a member of the target Group&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Basic VXNlcjEwMTpQYXNzd29yZDEyMw==&quot;)})
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;403&quot; , description =  &quot;User does not have access to this group&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No Group exists with the given name&quot;, content = @Content),})
+&nbsp;    public Group getGroupByJoinCode(@PathVariable String joinCode, @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) throws NoSuchAlgorithmException, ResponseStatusException {
+&nbsp;        //Separate the Base64 string from the rest of the authentication header
+<b class="fc">&nbsp;        authorization =  ControllerUtils.parseBasicAuthHeader(authorization);</b>
+&nbsp;
+&nbsp;        //Check if the User&#39;s authentication is correct
+<b class="fc">&nbsp;        boolean checkAuth =  ControllerUtils.checkBasicAuth(authorization, userRepository);</b>
+&nbsp;
+<b class="fc">&nbsp;        if(!checkAuth){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Username or Password was incorrect&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get a group with the requested join code
+<b class="fc">&nbsp;        Group requested = groupRepository.findByJoinCode(joinCode);</b>
+&nbsp;
+&nbsp;        // Return 404 if the requested group doesn&#39;t exist
+<b class="fc">&nbsp;        if(requested == null) {</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;There is no group with the given join code&quot;);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get the user making the request
+&nbsp;        //Decode the authorization header
+<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(authorization);</b>
+<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;
+&nbsp;        //Separate the Username and password
+<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
+&nbsp;
+<b class="fc">&nbsp;        User requestUser = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        //Check if the User is a member of the group and return 403 if they are not
+<b class="fc">&nbsp;        if(!requested.getMembers().contains(requestUser)){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.FORBIDDEN, &quot;User does not have access to this group&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return requested;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Adds a member to a Group
+&nbsp;     *
+&nbsp;     * @param joinCode The join code of the Group to join
+&nbsp;     * @param body JSON body containing the login of the User to add to the Group
+&nbsp;
+&nbsp;     * @return
+&nbsp;     * 200 Status If the Group joins the member
+&nbsp;     * 400 Status If the request&#39;s body is invalid JSON
+&nbsp;     * 401 Status If the User making the request could not be properly authenticated
+&nbsp;     * 404 Status If either the member making the request does not exist or there is no Group with the given join code
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    // Unchecked casts are from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @PutMapping(&quot;/group/join/{joinCode}&quot;)
+&nbsp;    @Operation(description  = &quot;Add a User to a group&quot;,  tags = &quot;createGroup&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;Group Joined&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;JSON in request body could not be parsed&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;JSON in request body could not be parsed.&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect.&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;Incorrect Password&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;There is no User with the given username&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 404&quot;, value = &quot;There is no User with the given username&quot;)))})
+&nbsp;    @Parameter(name = &quot;joinCode&quot;, in = ParameterIn.HEADER, description = &quot;The join code for the group to join&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;ESDCACOY&quot;)})
 &nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-&nbsp;            description = &quot;JSON String to store the information needed to create the new Retriever&quot;,
+&nbsp;            description = &quot;Information to create a group with&quot;,
 &nbsp;            required = true,
 &nbsp;            content = @Content(
 &nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
 &nbsp;                    examples = {
 &nbsp;                            @ExampleObject(
-&nbsp;                                    name = &quot;An example request describing each field&quot;,
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
 &nbsp;                                    value = &quot;&quot;&quot;
 &nbsp;                                            {
-&nbsp;                                            &quot;message-service&quot;: &quot;The name of the third party service to retrieve messages from&quot;,
-&nbsp;                                            &quot;service-url&quot;: &quot;The URL endpoint to retrieve messages from&quot;,
-&nbsp;                                            }
-&nbsp;                                            &quot;&quot;&quot;
-&nbsp;                            )
+&nbsp;                                                &quot;username&quot;: &quot;The username of the account to add to the  Group&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;The password for the account&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to join a Group&quot;),
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;User101&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;Password123&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for joining a group&quot;)
+&nbsp;                    }))
+&nbsp;    public ResponseEntity&lt;String&gt; joinGroup(@PathVariable String joinCode, @RequestBody String body) throws NoSuchAlgorithmException {
+&nbsp;        // Get the group to join
+<b class="fc">&nbsp;        Group toJoin = groupRepository.findByJoinCode(joinCode);</b>
 &nbsp;
-&nbsp;                    }
-&nbsp;            )
-&nbsp;    )
-&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
-&nbsp;    public ResponseEntity&lt;String&gt; setupServiceAccountGroup(@PathVariable String groupname, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body) throws NoSuchAlgorithmException{
-&nbsp;        // Get the Group to add the retriever for
-<b class="fc">&nbsp;        Group toAdd = groupRepository.findByName(groupname);</b>
-&nbsp;
-&nbsp;        // Return 404 if the User to add is null
-<b class="fc">&nbsp;        if(toAdd == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No Group exists with name &quot; + groupname, HttpStatus.NOT_FOUND);</b>
+&nbsp;        //Return 404 if the Group doesn&#39;t exist
+<b class="fc">&nbsp;        if(toJoin == null){</b>
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;There is no Group with the given join code&quot;, HttpStatus.NOT_FOUND);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        // Confirm that the proper authentication was passed to make changes for the indicate user
-&nbsp;        // Parse the encoded Base64 String from the Authorization Header and confirm its accurate
-<b class="fc">&nbsp;        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository)){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Incorrect Username or Password.&quot;, HttpStatus.UNAUTHORIZED);</b>
-&nbsp;        }
 &nbsp;
-&nbsp;        // Confirm the user making the request has admin privileges for the Group
-&nbsp;
-&nbsp;        // Get user from authorization header
-&nbsp;
-&nbsp;        // Get and decode the Base64 String
-<b class="fc">&nbsp;        String authString = ControllerUtils.parseBasicAuthHeader(authHeader);</b>
-<b class="fc">&nbsp;        String decodedAuthStr = new String(Base64.getDecoder().decode(authString));</b>
-&nbsp;
-&nbsp;        // Find the location of the Username in the string
-<b class="fc">&nbsp;        int usernameLoc = decodedAuthStr.lastIndexOf(&#39;:&#39;);</b>
-&nbsp;
-&nbsp;        //Get the User object from the username
-<b class="fc">&nbsp;        String requesterName = decodedAuthStr.substring(0, usernameLoc);</b>
-&nbsp;
-&nbsp;        // If the requesting User is not an admin of the target group return 403
-<b class="fc">&nbsp;        if(!toAdd.getAdmins().contains(requesterName)){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User is not an admin of Group &quot; + groupname, HttpStatus.FORBIDDEN);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Parse the request body as JSON
+&nbsp;        // Create object to parse the body of the request
 <b class="fc">&nbsp;        JSONParser parser = new JSONParser(body);</b>
-&nbsp;        LinkedHashMap&lt;String, String&gt; bodyJSON;
 &nbsp;
-&nbsp;        // If the body can&#39;t be parsed as JSON return 400
+&nbsp;        //Attempt to parse the JSON -- Return 400 if it cannot be parsed
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; requestBody;
 &nbsp;        try{
-<b class="fc">&nbsp;            bodyJSON = (LinkedHashMap&lt;String, String&gt;) parser.parse();</b>
+&nbsp;            //Parse the JSON
+<b class="fc">&nbsp;            requestBody = (LinkedHashMap&lt;Object, Object&gt;) parser.parse();</b>
 &nbsp;        }
-<b class="nc">&nbsp;        catch (ParseException e){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Request Body could not be parsed as JSON&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse JSON included in request body&quot;, HttpStatus.BAD_REQUEST);</b>
 <b class="fc">&nbsp;        }</b>
 &nbsp;
-&nbsp;        // Get the message service to create a retriever for
-<b class="fc">&nbsp;        String msgService = bodyJSON.get(&quot;message-service&quot;);</b>
+&nbsp;        //Get the username and password from the request body
+<b class="fc">&nbsp;        String username = (String) requestBody.get(&quot;username&quot;);</b>
+<b class="fc">&nbsp;        String password = (String) requestBody.get(&quot;password&quot;);</b>
 &nbsp;
-&nbsp;        // If the service is missing return 400
-<b class="fc">&nbsp;        if(msgService == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: message-service&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        //Retrieve the User object for the given Username
+<b class="fc">&nbsp;        User toPut = userRepository.findByName(username);</b>
 &nbsp;
-&nbsp;        }
-&nbsp;
-&nbsp;        // Get the URL endpoint to Retrieve Messages from the request body
-<b class="fc">&nbsp;        String apiEndpoint = bodyJSON.get(&quot;service-url&quot;);</b>
-&nbsp;
-&nbsp;        // Return 400 if the endpoint is missing
-<b class="fc">&nbsp;        if(apiEndpoint == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: service-url&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        //Return 404 if the given User does not exist
+<b class="fc">&nbsp;        if(toPut == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;There is no User with the given username&quot;, HttpStatus.NOT_FOUND);</b>
 &nbsp;        }
 &nbsp;
-<b class="fc">&nbsp;        apiEndpoint = apiEndpoint.replace(&quot;\\/&quot;, &quot;/&quot;);</b>
+&nbsp;        //Verify that the User&#39;s login (password) is correct
+<b class="fc">&nbsp;        boolean loggedIn =  ControllerUtils.checkPassword(toPut, password);</b>
 &nbsp;
-&nbsp;        // Create the new Retriever depending on what service was indicated
-&nbsp;
-&nbsp;        // Chaos service
-<b class="fc">&nbsp;        if(msgService.equalsIgnoreCase(&quot;chaos&quot;)){</b>
-&nbsp;            // Get the API token for the Chaos service from request body
-<b class="fc">&nbsp;            String chaosToken = bodyJSON.get(&quot;chaos-token&quot;);</b>
-&nbsp;
-&nbsp;            // Return 400 if the API token is missing
-<b class="fc">&nbsp;            if(chaosToken == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: chaos-token&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new ChaosRetriever(apiEndpoint, chaosToken, toAdd));</b>
-&nbsp;
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Crews Service
-<b class="fc">&nbsp;        else if(msgService.equalsIgnoreCase(&quot;crews&quot;)){</b>
-&nbsp;            // Get the username and password used for the crews account from the request body
-<b class="fc">&nbsp;            String crewsUsername = bodyJSON.get(&quot;crews-username&quot;);</b>
-<b class="fc">&nbsp;            String crewsPassword = bodyJSON.get(&quot;crews-password&quot;);</b>
-&nbsp;
-&nbsp;            // If the username or password if missing return 400
-<b class="fc">&nbsp;            if(crewsUsername == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: crews-username&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-<b class="fc">&nbsp;            else if(crewsPassword == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: crews-password&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new CrewsRetriever(apiEndpoint, crewsUsername, crewsPassword, toAdd));</b>
-&nbsp;
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Cmail service
-<b class="fc">&nbsp;        else if(msgService.equalsIgnoreCase(&quot;cmail&quot;)){</b>
-&nbsp;            // Get the username and password used for the Cmail account from the request body
-<b class="fc">&nbsp;            String cmailUsername = bodyJSON.get(&quot;cmail-username&quot;);</b>
-<b class="fc">&nbsp;            String cmailPassword = bodyJSON.get(&quot;cmail-password&quot;);</b>
-&nbsp;
-&nbsp;            // If the username or password if missing return 400
-<b class="fc">&nbsp;            if(cmailUsername == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: cmail-username&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-<b class="fc">&nbsp;            else if(cmailPassword == null){</b>
-<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Body is missing required field: cmail-password&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;
-&nbsp;            }
-&nbsp;
-&nbsp;            // Add the new retriever to the User
-<b class="fc">&nbsp;            toAdd.newMessageSource(new CmailRetriever(apiEndpoint, cmailUsername, cmailPassword, toAdd));</b>
-<b class="fc">&nbsp;        }</b>
-&nbsp;        // Invalid service name
-&nbsp;        else{
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Invalid message service must included in the following list{chaos, crews, cmail}&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        // Return 401 if the login is incorrect
+<b class="fc">&nbsp;        if(!loggedIn){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Incorrect Password&quot;, HttpStatus.UNAUTHORIZED);</b>
 &nbsp;
 &nbsp;        }
 &nbsp;
-&nbsp;        //Save the user
-<b class="fc">&nbsp;        groupRepository.save(toAdd);</b>
+&nbsp;        //Add the User to the group and vice versa
+<b class="fc">&nbsp;        toPut.joinGroup(toJoin);</b>
+<b class="fc">&nbsp;        toJoin.addMember(toPut);</b>
 &nbsp;
-&nbsp;        // Return 200 to indicate success
-<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Retriever Added&quot;, HttpStatus.OK);</b>
+<b class="fc">&nbsp;        userRepository.save(toPut);</b>
+<b class="fc">&nbsp;        groupRepository.save(toJoin);</b>
+&nbsp;
+&nbsp;        //Return 200
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Group Joined&quot;, HttpStatus.OK);</b>
+&nbsp;
 &nbsp;    }
 &nbsp;
-&nbsp;    /*
 &nbsp;    /**
+&nbsp;     * Promotes a member of a Group to have admin powers
 &nbsp;     *
-&nbsp;     * @param messageInfo
-&nbsp;     * @return
-&nbsp;     * 200 status - If the message was successfully created &lt;br/&gt;
-&nbsp;     * 400 status - If the request body is missing a required field &lt;br/&gt;
-&nbsp;     * @throws NoSuchAlgorithmException
+&nbsp;     * @param groupName The name of the Group to operate on
+&nbsp;     * @param body JSON body containing the Username of the User to promote
 &nbsp;
-&nbsp;    @PostMapping(&quot;/message&quot;)
-&nbsp;    @Operation(description = &quot;Create a new Message&quot;, tags = &quot;createMessage&quot;)
+&nbsp;     * @return
+&nbsp;     * 200 Status If the member was successfully promoted
+&nbsp;     * 400 Status If the request&#39;s body is invalid JSON or the member to promote is not a member of the group
+&nbsp;     * 401 Status If the User making the request could not be properly authenticated
+&nbsp;     * 403 Status If the User making the request is not an admin of the Group the being operated on
+&nbsp;     * 404 Status If the member to promote or the group to operate on
+&nbsp;     * do not exist
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    // Unchecked casts are from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @PutMapping(&quot;/group/promote/{groupName}&quot;)
+&nbsp;    @Operation(description  = &quot;Promote a member of a Group to admin&quot;,  tags = &quot;promoteMember&quot;)
 &nbsp;    @ApiResponses(value = {
-&nbsp;        @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Saved message: {messageID}&quot;))),
-&nbsp;        @ApiResponse(responseCode = &quot;400&quot;, description = &quot;Bad Request&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                examples = @ExampleObject(description =&quot;Missing required field&quot;, value = &quot;Body is missing required field: {field}&quot;))),
-&nbsp;    })
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;User User102 added to admins of group Group202&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;The request&#39;s body is invalid JSON or the member to promote is not a member of the group&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;The request&#39;s body is invalid JSON OR User User102 is not a member of Group202&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect.&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;Username or Password was incorrect&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;403&quot; , description =  &quot;User does not have permission to perform this action&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 403&quot;, value = &quot;User does not have permission to perform this action&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;The member to promote or the Group to operate on does not exist&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 404&quot;, value = &quot;There is no Group with the given group name OR User to promote does not exist&quot;)))})
+&nbsp;    @Parameter(name = &quot;groupName&quot;, in = ParameterIn.PATH, description = &quot;The name of the Group to promote a member of&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Group202&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;HTTP Basic Authentication with the account information for an existing CheckMe account that is an admin member of the target Group&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Basic VXNlcjEwMTpQYXNzd29yZDEyMw==&quot;)})
 &nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
-&nbsp;            description = &quot;Information to create a message with&quot;,
+&nbsp;            description = &quot;Information for promoting a member&quot;,
 &nbsp;            required = true,
 &nbsp;            content = @Content(
-&nbsp;                mediaType = MediaType.APPLICATION_JSON_VALUE,
+&nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
 &nbsp;                    examples = {
-&nbsp;                        @ExampleObject(
-&nbsp;                                name = &quot;An example request describing each field&quot;,
-&nbsp;                                value = &quot;&quot;&quot;
-&nbsp;                                        {
-&nbsp;                                            &quot;sender&quot;: &quot;The username of the User who sent the message&quot;,
-&nbsp;                                            &quot;recipient&quot;: &quot;The username of the User who will receive the message&quot;,
-&nbsp;                                            &quot;contents&quot;: &quot;The contents of the message&quot;,
-&nbsp;                                            &quot;subject&quot;: &quot;The subject of the message&quot;,
-&nbsp;                                            &quot;sendTime&quot;: &quot;The time the message should be sent at&quot;
-&nbsp;                                        }
-&nbsp;                                        &quot;&quot;&quot;
-&nbsp;                        )
-&nbsp;                    }
-&nbsp;                )
-&nbsp;    )
-&nbsp;    public ResponseEntity&lt;String&gt; createMessage(@RequestBody String messageInfo) throws NoSuchAlgorithmException {
-&nbsp;        // Parse the JSON body of the post request
-&nbsp;        JSONParser parseBody = new JSONParser(messageInfo);
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;The username of the member of the Group to promote to an admin&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to promote a member&quot;),
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;User102&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for promoting a member&quot;)
+&nbsp;                    }))
+&nbsp;    public ResponseEntity&lt;String&gt; promoteMember(@PathVariable String groupName,  @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @RequestBody String body) throws NoSuchAlgorithmException {
+&nbsp;        // Get the group to join
+<b class="fc">&nbsp;        Group group = groupRepository.findByName(groupName);</b>
 &nbsp;
-&nbsp;        LinkedHashMap&lt;Object, Object&gt; messageJSON;
-&nbsp;
-&nbsp;        // Catch the exception if the JSON can not be parsed and return a bad request response
-&nbsp;        try{
-&nbsp;            // Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
-&nbsp;            messageJSON = (LinkedHashMap&lt;Object, Object&gt;) parseBody.parse();
-&nbsp;        }
-&nbsp;        catch(ParseException e){
-&nbsp;            return new ResponseEntity&lt;&gt;(&quot;JSON in request body could not be parsed.&quot;, HttpStatus.BAD_REQUEST);
+&nbsp;        //Return 404 if the Group doesn&#39;t exist
+<b class="fc">&nbsp;        if(group == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;There is no Group with the given group name&quot;, HttpStatus.NOT_FOUND);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        String sender = (String) messageJSON.get(&quot;sender&quot;);
-&nbsp;        String recipient = (String) messageJSON.get(&quot;recipient&quot;);
-&nbsp;        String contents = (String) messageJSON.get(&quot;contents&quot;);
-&nbsp;        String subject = (String) messageJSON.get(&quot;subject&quot;);
-&nbsp;//		String platform = (String) messageJSON.get(&quot;platform&quot;);
-&nbsp;        LocalDateTime sendTime = LocalDateTime.parse((String) messageJSON.get(&quot;sendTime&quot;));
+&nbsp;        //Separate the Base64 string from the rest of the authentication header
+<b class="fc">&nbsp;        authorization =  ControllerUtils.parseBasicAuthHeader(authorization);</b>
 &nbsp;
+&nbsp;        //Check if the User&#39;s authentication is correct
+<b class="fc">&nbsp;        boolean checkAuth =  ControllerUtils.checkBasicAuth(authorization, userRepository);</b>
 &nbsp;
-&nbsp;        Message createdMessage = new Message(sender, recipient, contents, subject, sendTime);
-&nbsp;        messageRepository.save(createdMessage);
-&nbsp;
-&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Saved message: &quot; + createdMessage.getID(),HttpStatus.OK );
-&nbsp;    }
-&nbsp;
-&nbsp;    @GetMapping(&quot;/message/id/{id}&quot;)
-&nbsp;    @Operation(description = &quot;Get the message with the given ID&quot;, tags = &quot;getMessage&quot;)
-&nbsp;    @Parameter(name = &quot;id&quot;, description = &quot;The ID of the message to get&quot;, in = ParameterIn.PATH, required = true, schema = @Schema(type = &quot;integer&quot;), examples = {
-&nbsp;            @ExampleObject(name = &quot;Example Message ID&quot;, value = &quot;1&quot;)})
-&nbsp;    @ApiResponses(value = {
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Message: {message}&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No message exists with the given ID&quot;, value = &quot;There is no message with the given ID&quot;)))
-&nbsp;    })
-&nbsp;    public String seeMessage(@PathVariable int id){
-&nbsp;        Message requested = messageRepository.findByID(id);
-&nbsp;
-&nbsp;        // Return 404 if the requested user doesn&#39;t exist
-&nbsp;        if(requested == null){
-&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;There is no message with the given ID&quot;);
-&nbsp;
+<b class="fc">&nbsp;        if(!checkAuth){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Username or Password was incorrect&quot;);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        return requested.toString();
+&nbsp;        //Get the User making the request
+&nbsp;        //Decode the authorization header
+<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(authorization);</b>
+<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;        //Separate the Username and password
+<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
 &nbsp;
-&nbsp;    }
-&nbsp;
-&nbsp;    //TODO No usages??
-&nbsp;
-&nbsp;    @GetMapping(&quot;/message/user/{user}&quot;)
-&nbsp;    @Operation(hidden=true)
-&nbsp;    public String userMessages(@PathVariable String user){
-&nbsp;        Message requested = messageRepository.findByRecipient(user);
-&nbsp;
-&nbsp;        // Return 404 if the requested user doesn&#39;t exist
-&nbsp;        if(requested == null){
-&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;There is no message with the given ID&quot;);
-&nbsp;
+&nbsp;        //Check that the requesting User is an admin
+<b class="fc">&nbsp;        if(!group.getAdmins().contains(username)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User does not have permission to perform this action&quot;, HttpStatus.FORBIDDEN);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        return requested.toString();
-&nbsp;
-&nbsp;    }
-&nbsp;     */
-&nbsp;
-&nbsp;    /**
-&nbsp;     * Remove all MessageRetrievers owned by a given user
-&nbsp;     *
-&nbsp;     * @param username The name of the User to remove Retrievers for
-&nbsp;     * @param authHeader The target User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
-&nbsp;     * Info should be sent in the form of Basic: {username}:{password}
-&nbsp;     * @return
-&nbsp;     * Status 200 - If the removal was successful
-&nbsp;     * Status 401 - If the username or password given as authorization is incorrect
-&nbsp;     * Status 404 - If the no user exists with the given username
-&nbsp;     *
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    @DeleteMapping(&quot;/user/{username}/clear-retrievers&quot;)
-&nbsp;    @Operation(description = &quot;Remove all MessageRetrievers owned by a given user&quot;, tags = &quot;clearRetrievers&quot;)
-&nbsp;    @Parameter(name = &quot;username&quot;, description = &quot;The name of the User to remove Retrievers for&quot;, in = ParameterIn.PATH, required = true, schema = @Schema(type = &quot;string&quot;), examples = {
-&nbsp;            @ExampleObject(name = &quot;Example Username&quot;, value = &quot;BaseballBob&quot;)})
-&nbsp;    @ApiResponses(value ={
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Retrievers Cleared&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Incorrect Username or Password&quot;, value = &quot;Incorrect Username or Password.&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No User exists with name {username}&quot;, value = &quot;No User exists with name {username}&quot;)))
-&nbsp;    })
-&nbsp;    public ResponseEntity&lt;String&gt; clearRetrieversUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException {
-&nbsp;        // Get the user to add the retriever for
-<b class="fc">&nbsp;        User clearFrom = userRepository.findByName(username);</b>
-&nbsp;
-&nbsp;        // Return 404 if the User to add is null
-<b class="fc">&nbsp;        if (clearFrom == null) {</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No User exists with name &quot; + username, HttpStatus.NOT_FOUND);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Confirm that the proper authentication was passed to make changes for the indicate user
-&nbsp;        // Parse the encoded Base64 String from the Authorization Header and verify it&#39;s accurate for the given user
-<b class="fc">&nbsp;        if (!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader), clearFrom, userRepository)) {</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Incorrect Username or Password.&quot;, HttpStatus.UNAUTHORIZED);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Remove all  the User&#39;s retriever
-<b class="fc">&nbsp;        clearFrom.clearRetrievers();</b>
-&nbsp;
-&nbsp;        //Save the user
-<b class="fc">&nbsp;        userRepository.save(clearFrom);</b>
-&nbsp;
-&nbsp;        // Return 200 to indicate success
-<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Retrievers Cleared&quot;, HttpStatus.OK);</b>
-&nbsp;    }
-&nbsp;
-&nbsp;    /**
-&nbsp;     * API endpoint to request Messages for a User. 
-&nbsp;     *
-&nbsp;     * @param username The user to get a the Messages for
-&nbsp;     * @param authHeader The target User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
-&nbsp;     * Info should be sent in the form of Basic: {username}:{password}
-&nbsp;     * @param sentAfter A time String which to use as a cutoff to only get recent Messages
-&nbsp;     * @return
-&nbsp;     * Status 200 - Returns the list of Messages
-&nbsp;     * Status 401 - If the username or password given as authorization is incorrect
-&nbsp;     * Status 404 - If the no user exists with the given username
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    @GetMapping(&quot;/user/{username}/messages&quot;)
-&nbsp;    @Operation(description = &quot;Get all Messages for a User&quot;, tags = &quot;getMessages&quot;)
-&nbsp;    @Parameter(name = &quot;username&quot;, description = &quot;The name of the User to get Messages for&quot;, in = ParameterIn.PATH, required = true, schema = @Schema(type = &quot;string&quot;), examples = {
-&nbsp;            @ExampleObject(name = &quot;Example Username&quot;, value = &quot;BaseballBob&quot;)})
-&nbsp;    @ApiResponses(value = {
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = Message[].class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Message: {message}&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Incorrect Username or Password&quot;, value = &quot;Incorrect Username or Password.&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No User exists with name {username}&quot;, value = &quot;No User exists with name {username}&quot;)))
-&nbsp;    })
-&nbsp;    public Message[] getMessagesForUsers(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
-&nbsp;        // Get the user to get Messages for
-<b class="fc">&nbsp;        User getFrom = userRepository.findByName(username);</b>
-&nbsp;
-&nbsp;        // Respond 404 if the User is null
-<b class="fc">&nbsp;        if(getFrom == null){</b>
-<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;No User exists with the name: &quot; + username);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Confirm that the user&#39;s authorization is correct
-<b class="fc">&nbsp;        if(!ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader), getFrom, userRepository)){</b>
-<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Incorrect Username or Password&quot;);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Get the list of MessageRetrievers for the user
-<b class="fc">&nbsp;        List&lt;MessageRetriever&gt; retrievers = getFrom.getMessageRetrievers();</b>
-&nbsp;
-&nbsp;        //List to store the retrieved Messages
-<b class="fc">&nbsp;        List&lt;Message[]&gt; retrievedLists =  new ArrayList&lt;&gt;();</b>
-&nbsp;
-&nbsp;        //Get the Messages returned by all the retrievers
-<b class="fc">&nbsp;        for (MessageRetriever currRetriever : retrievers) {</b>
-&nbsp;            // If the sentAfter parameter is set
-<b class="fc">&nbsp;            if (sentAfter != null) {</b>
-&nbsp;                // Get all Messages sentAfter the time in sentAfter
-<b class="nc">&nbsp;                retrievedLists.add(currRetriever.getAllAfterTime(LocalDateTime.parse(sentAfter)));</b>
-&nbsp;            }
-&nbsp;            // If the sentAfter parameter is not set
-&nbsp;            else{
-&nbsp;                // Get all Messages without a cutoff being given
-<b class="fc">&nbsp;                retrievedLists.add(currRetriever.getAll());</b>
-&nbsp;            }
-<b class="fc">&nbsp;        }</b>
-&nbsp;
-&nbsp;        // Combine all the Retrieved lists into a single array
-&nbsp;
-&nbsp;        // Get first array if the list isn&#39;t empty
-<b class="fc">&nbsp;        Message[] sorted = new Message[0];</b>
-<b class="fc">&nbsp;        if(retrievedLists.size() != 0){</b>
-<b class="fc">&nbsp;            sorted = retrievedLists.get(0);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;
-&nbsp;        // Loop through all retrieved arrays after the first
-<b class="fc">&nbsp;        for(int i=1; i &lt; retrievedLists.size(); i++){</b>
-&nbsp;            // Get the next array to add in
-<b class="fc">&nbsp;            Message[] nextArr = retrievedLists.get(i);</b>
-&nbsp;
-&nbsp;
-&nbsp;            // Create an array to hold the previously sorted and the next arrays combined
-<b class="fc">&nbsp;            Message[] mergeInto = new Message[sorted.length + nextArr.length];</b>
-&nbsp;
-&nbsp;            // Merge the two arrays
-<b class="fc">&nbsp;            Sorting.mergeSortedArrays(sorted, nextArr, mergeInto, new ControllerUtils.MessageDateComp());</b>
-&nbsp;
-&nbsp;            // Set up the result as the first array for the next iteration (or the end of the loop)
-<b class="fc">&nbsp;            sorted = mergeInto;</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Return the combined arrays
-<b class="fc">&nbsp;        return sorted;</b>
-&nbsp;
-&nbsp;    }
-&nbsp;
-&nbsp;
-&nbsp;    /**
-&nbsp;     * API endpoint to request Messages for a Grou[.
-&nbsp;     *
-&nbsp;     * @param groupName The group to get a the Messages for
-&nbsp;     * @param authHeader The requesting User&#39;s username and password using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentication&lt;/a&gt;
-&nbsp;     * Info should be sent in the form of Basic: {username}:{password}
-&nbsp;     * @param sentAfter A time String which to use as a cutoff to only get recent Messages
-&nbsp;     * @return
-&nbsp;     * Status 200 - Returns the list of Messages
-&nbsp;     * Status 401 - If the username or password given as authorization is incorrect
-&nbsp;     * Status 404 - If the no user exists with the given username
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    @GetMapping(&quot;/group/{groupName}/messages&quot;)
-&nbsp;    @Operation(description = &quot;Get all Messages for a User&quot;, tags = &quot;getMessages&quot;)
-&nbsp;    @Parameter(name = &quot;username&quot;, description = &quot;The name of the Group to get Messages for&quot;, in = ParameterIn.PATH, required = true, schema = @Schema(type = &quot;string&quot;), examples = {
-&nbsp;            @ExampleObject(name = &quot;Example Username&quot;, value = &quot;CubsFans&quot;)})
-&nbsp;    @ApiResponses(value = {
-&nbsp;            @ApiResponse(responseCode = &quot;200&quot;, description = &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = Message[].class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Success&quot;, value = &quot;Message: {message}&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;401&quot;, description = &quot;Unauthorized&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;Incorrect Username or Password&quot;, value = &quot;Incorrect Username or Password.&quot;))),
-&nbsp;            @ApiResponse(responseCode = &quot;404&quot;, description = &quot;Not Found&quot;, content = @Content(schema = @Schema(implementation = String.class),
-&nbsp;                    examples = @ExampleObject(description =&quot;No User exists with name {username}&quot;, value = &quot;No User exists with name {username}&quot;)))
-&nbsp;    })
-&nbsp;    public Message[] getMessagesForGroups(@PathVariable String groupName, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader,@RequestParam(required = false) String sentAfter) throws NoSuchAlgorithmException {
-&nbsp;        // Get the user to get Messages for
-<b class="fc">&nbsp;        Group getFrom = groupRepository.findByName(groupName);</b>
-&nbsp;
-&nbsp;        // Respond 404 if the User is null
-<b class="fc">&nbsp;        if(getFrom == null){</b>
-<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND, &quot;No User exists with the name: &quot; + groupName);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Confirm that the user&#39;s authorization is correct
-<b class="fc">&nbsp;        String b64String = ControllerUtils.parseBasicAuthHeader(authHeader);</b>
-<b class="fc">&nbsp;        if(!ControllerUtils.checkBasicAuth(b64String, ControllerUtils.getUsername(b64String, userRepository), userRepository)){</b>
-<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Incorrect Username or Password&quot;);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Get the list of MessageRetrievers for the user
-<b class="fc">&nbsp;        List&lt;MessageRetriever&gt; retrievers = getFrom.getMessageRetrievers();</b>
-&nbsp;
-&nbsp;        //List to store the retrieved Messages
-<b class="fc">&nbsp;        List&lt;Message[]&gt; retrievedLists =  new ArrayList&lt;&gt;();</b>
-&nbsp;
-&nbsp;        //Get the Messages returned by all the retrievers
-<b class="fc">&nbsp;        for (MessageRetriever currRetriever : retrievers) {</b>
-&nbsp;            // If the sentAfter parameter is set
-<b class="fc">&nbsp;            if (sentAfter != null) {</b>
-&nbsp;                // Get all Messages sentAfter the time in sentAfter
-<b class="nc">&nbsp;                retrievedLists.add(currRetriever.getAllAfterTime(LocalDateTime.parse(sentAfter)));</b>
-&nbsp;            }
-&nbsp;            // If the sentAfter parameter is not set
-&nbsp;            else{
-&nbsp;                // Get all Messages without a cutoff being given
-<b class="fc">&nbsp;                retrievedLists.add(currRetriever.getAll());</b>
-&nbsp;            }
-<b class="fc">&nbsp;        }</b>
-&nbsp;
-&nbsp;        // Combine all the Retrieved lists into a single array
-&nbsp;
-&nbsp;        // Get first array if the list isn&#39;t empty
-<b class="fc">&nbsp;        Message[] sorted = new Message[0];</b>
-<b class="fc">&nbsp;        if(retrievedLists.size() != 0){</b>
-<b class="fc">&nbsp;            sorted = retrievedLists.get(0);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;
-&nbsp;        // Loop through all retrieved arrays after the first
-<b class="fc">&nbsp;        for(int i=1; i &lt; retrievedLists.size(); i++){</b>
-&nbsp;            // Get the next array to add in
-<b class="fc">&nbsp;            Message[] nextArr = retrievedLists.get(i);</b>
-&nbsp;
-&nbsp;
-&nbsp;            // Create an array to hold the previously sorted and the next arrays combined
-<b class="fc">&nbsp;            Message[] mergeInto = new Message[sorted.length + nextArr.length];</b>
-&nbsp;
-&nbsp;            // Merge the two arrays
-<b class="fc">&nbsp;            Sorting.mergeSortedArrays(sorted, nextArr, mergeInto, new ControllerUtils.MessageDateComp());</b>
-&nbsp;
-&nbsp;            // Set up the result as the first array for the next iteration (or the end of the loop)
-<b class="fc">&nbsp;            sorted = mergeInto;</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Return the combined arrays
-<b class="fc">&nbsp;        return sorted;</b>
-&nbsp;
-&nbsp;    }
-&nbsp;
-&nbsp;    @PostMapping(&quot;/user/{username}/reply&quot;)
-&nbsp;    // Unchecked casts are from interacting with JSON API
-&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
-&nbsp;    public ResponseEntity&lt;String&gt; replyToMessage(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body){
-&nbsp;        // Get the user object from the Username
-<b class="fc">&nbsp;        User replyAs = userRepository.findByName(username);</b>
-&nbsp;
-&nbsp;        // Respond 400 if the user does not exist
-<b class="fc">&nbsp;        if(replyAs == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User &quot; + username +&quot; does not exist&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Check the users authentication
-<b class="fc">&nbsp;        boolean authorized = false;</b>
-&nbsp;
-&nbsp;        try{
-<b class="fc">&nbsp;            authorized = ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader),replyAs, userRepository);</b>
-&nbsp;
-<b class="nc">&nbsp;        } catch (NoSuchAlgorithmException e) {</b>
-<b class="nc">&nbsp;            throw new RuntimeException(&quot;Failed to verify authentication. Root Cause: &quot; + e);</b>
-<b class="fc">&nbsp;        }</b>
-&nbsp;
-&nbsp;        // Return 401 if the authentication is incorrect
-<b class="fc">&nbsp;        if(!authorized){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Username or password was incorrect.&quot;, HttpStatus.UNAUTHORIZED);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Parse the body as JSON
+&nbsp;        // Create object to parse the body of the request
 <b class="fc">&nbsp;        JSONParser parser = new JSONParser(body);</b>
-&nbsp;        LinkedHashMap&lt;Object, Object&gt; bodyJson;
-&nbsp;        try {
-<b class="fc">&nbsp;            bodyJson = (LinkedHashMap&lt;Object, Object&gt;) parser.parse();</b>
-<b class="nc">&nbsp;        } catch (ParseException e) {</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse request body as json&quot;, HttpStatus.BAD_REQUEST);</b>
-<b class="fc">&nbsp;        }</b>
 &nbsp;
-&nbsp;        // Parse the message from the response body
-&nbsp;       Message replyTo;
+&nbsp;        //Attempt to parse the JSON -- Return 400 if it cannot be parsed
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; requestBody;
 &nbsp;        try{
-<b class="fc">&nbsp;            replyTo = new Message((LinkedHashMap&lt;Object, Object&gt;) bodyJson.get(&quot;reply-to&quot;));</b>
+&nbsp;            //Parse the JSON
+<b class="fc">&nbsp;            requestBody = (LinkedHashMap&lt;Object, Object&gt;) parser.parse();</b>
 &nbsp;        }
-<b class="nc">&nbsp;        catch (Exception e){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse the message to reply to&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse JSON included in request body&quot;, HttpStatus.BAD_REQUEST);</b>
 <b class="fc">&nbsp;        }</b>
 &nbsp;
-&nbsp;        // Get the Message Retriever this message was retrieved from
-<b class="fc">&nbsp;        MessageRetriever replySender = retrieverRepositor.findById(replyTo.getOriginID());</b>
-&nbsp;
-&nbsp;        // If the message is null return 400
-<b class="fc">&nbsp;        if(replySender == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No valid Message origin&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;        }
-&nbsp;
-&nbsp;        // Get the contents of the reply to send
-&nbsp;        String replyContents;
-&nbsp;        try{
-<b class="fc">&nbsp;            replyContents = (String) bodyJson.get(&quot;reply-contents&quot;);</b>
-&nbsp;        }
-<b class="nc">&nbsp;        catch (Exception e){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse the reply contents&quot;, HttpStatus.BAD_REQUEST);</b>
-<b class="fc">&nbsp;        }</b>
-&nbsp;
-<b class="fc">&nbsp;        if(replyContents == null){</b>
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse the reply contents&quot;, HttpStatus.BAD_REQUEST);</b>
-&nbsp;        }
 &nbsp;
 &nbsp;
-&nbsp;        // Send the reply
-<b class="fc">&nbsp;        boolean replySuccess = replySender.replyTo(replyContents, replyTo);</b>
+&nbsp;        // Get the Username of the member to promote
+<b class="fc">&nbsp;        String toPromoteName = (String) requestBody.get(&quot;toPromote&quot;);</b>
+<b class="fc">&nbsp;        User toPromote = userRepository.findByName(toPromoteName);</b>
 &nbsp;
-<b class="fc">&nbsp;        if(replySuccess){</b>
-<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Reply successful&quot;, HttpStatus.OK);</b>
-&nbsp;
-&nbsp;        }
-&nbsp;        else{
-<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not send reply&quot;, HttpStatus.INTERNAL_SERVER_ERROR);</b>
+&nbsp;        //Return 404 if the user to promote does not exist
+<b class="fc">&nbsp;        if(toPromote == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User to promote does not exist&quot;, HttpStatus.NOT_FOUND);</b>
 &nbsp;
 &nbsp;        }
 &nbsp;
+&nbsp;        //Return 400 if the User to promote is not a member of thr group
+<b class="fc">&nbsp;        if(!group.getMembers().contains(toPromote)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User &quot; + toPromote.getName() + &quot; is not a member of group &quot; + group.getName(), HttpStatus.BAD_REQUEST);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Add the member to the group
+<b class="fc">&nbsp;        group.addAdmin(toPromote);</b>
+&nbsp;
+<b class="fc">&nbsp;        groupRepository.save(group);</b>
+&nbsp;
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;User &quot; + toPromote.getName() + &quot; added to admins of group &quot; + group.getName(), HttpStatus.OK);</b>
 &nbsp;
 &nbsp;    }
 &nbsp;
+&nbsp;    /**
+&nbsp;     * Remove a member from a Group
+&nbsp;     *
+&nbsp;     * @param groupName The name of the Group to operate on
+&nbsp;     * @param body JSON body containing the username of the User to remove
+&nbsp;
+&nbsp;     * @return
+&nbsp;     * 200 Status If the member was successfully removed
+&nbsp;     * 400 Status If the request&#39;s body is invalid JSON or the member to remove is not a member of the group
+&nbsp;     * 401 Status If the User making the request could not be properly authenticated
+&nbsp;     * 403 Status If the User making the request is not an admin of the Group the being operated on
+&nbsp;     * 404 Status If the member to remove or the group to operate on
+&nbsp;     * do not exist
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    // Unchecked casts are from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @DeleteMapping(&quot;/group/remove/{groupName}&quot;)
+&nbsp;    @Operation(description  = &quot;Remove a member of a Group&quot;,  tags = &quot;removeMember&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;User User102 removed from the group Group202&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;The request&#39;s body is invalid JSON or the member to remove is not a member of the group&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;The request&#39;s body is invalid JSON OR User User102 is not a member of Group202&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Username or Password was incorrect.&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;Username or Password was incorrect&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;403&quot; , description =  &quot;User does not have permission to perform this action&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 403&quot;, value = &quot;User does not have permission to perform this action OR User User102 is a group admin and cannot be removed.&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;The member to promote or the Group to operate on does not exist&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 404&quot;, value = &quot;There is no Group with the given group name OR User to remove does not exist&quot;)))})
+&nbsp;    @Parameter(name = &quot;groupName&quot;, in = ParameterIn.PATH, description = &quot;The name of the Group to remove a member from,&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Group202&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;HTTP Basic Authentication with the account information for an existing CheckMe account that is an admin member of the target Group&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Basic VXNlcjEwMTpQYXNzd29yZDEyMw==&quot;)})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+&nbsp;            description = &quot;Information for promoting a member&quot;,
+&nbsp;            required = true,
+&nbsp;            content = @Content(
+&nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+&nbsp;                    examples = {
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;The username of the member of the Group to remove from the group&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to promote a member&quot;),
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;User102&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for removing a member&quot;)
+&nbsp;                    }))
+&nbsp;    public ResponseEntity&lt;String&gt; removeMember(@PathVariable String groupName,  @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization, @RequestBody String body) throws NoSuchAlgorithmException {
+&nbsp;        // Get the group to join
+<b class="fc">&nbsp;        Group group = groupRepository.findByName(groupName);</b>
+&nbsp;
+&nbsp;        //Return 404 if the Group doesn&#39;t exist
+<b class="fc">&nbsp;        if(group == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;There is no Group with the given name&quot;, HttpStatus.NOT_FOUND);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Separate the Base64 string from the rest of the authentication header
+<b class="fc">&nbsp;        authorization =  ControllerUtils.parseBasicAuthHeader(authorization);</b>
+&nbsp;
+&nbsp;        //Check if the User&#39;s authentication is correct
+<b class="fc">&nbsp;        boolean checkAuth =  ControllerUtils.checkBasicAuth(authorization, userRepository);</b>
+&nbsp;
+<b class="fc">&nbsp;        if(!checkAuth){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Username or Password was incorrect&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get the User making the request
+&nbsp;        //Decode the authorization header
+<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(authorization);</b>
+<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;        //Separate the Username and password
+<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
+&nbsp;
+&nbsp;        //Check that the requesting User is an admin
+<b class="fc">&nbsp;        if(!group.getAdmins().contains(username)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User does not have permission to perform this action&quot;, HttpStatus.FORBIDDEN);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Create object to parse the body of the request
+<b class="fc">&nbsp;        JSONParser parser = new JSONParser(body);</b>
+&nbsp;
+&nbsp;        //Attempt to parse the JSON -- Return 400 if it cannot be parsed
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; requestBody;
+&nbsp;        try{
+&nbsp;            //Parse the JSON
+<b class="fc">&nbsp;            requestBody = (LinkedHashMap&lt;Object, Object&gt;) parser.parse();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not parse JSON included in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;        }</b>
 &nbsp;
 &nbsp;
 &nbsp;
+&nbsp;        // Get the Username of the member to promote
+<b class="fc">&nbsp;        String toRemoveName = (String) requestBody.get(&quot;toRemove&quot;);</b>
+<b class="fc">&nbsp;        User toRemove = userRepository.findByName(toRemoveName);</b>
+&nbsp;
+&nbsp;        //Return 404 if the user to promote does not exist
+<b class="fc">&nbsp;        if(toRemove == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User to remove does not exist&quot;, HttpStatus.NOT_FOUND);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        //Return 400 if the User to remove is not a member of the group
+<b class="fc">&nbsp;        if(!group.getMembers().contains(toRemove)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User &quot; + toRemove.getName() + &quot; is not a member of group &quot; + group.getName(), HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Return 403 if the member to remove is an admin
+<b class="fc">&nbsp;        if(group.getAdmins().contains((toRemoveName))){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User &quot; + toRemove.getName() + &quot; is a group admin and cannot be removed.&quot;, HttpStatus.FORBIDDEN);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Remove the member from the Group
+<b class="fc">&nbsp;        group.removeMember(toRemove);</b>
+&nbsp;
+&nbsp;        //Remove the group from the User
+<b class="fc">&nbsp;        toRemove.removeGroup(group);</b>
+&nbsp;
+<b class="fc">&nbsp;        userRepository.save(toRemove);</b>
+<b class="fc">&nbsp;        groupRepository.save(group);</b>
+&nbsp;
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;User &quot; + toRemove.getName() + &quot; removed from the group &quot; + group.getName(), HttpStatus.OK);</b>
+&nbsp;
+&nbsp;    }
 &nbsp;}
 </code>
 </pre>
@@ -939,7 +762,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-12-05 13:23</div>
+    <div style="float:right;">generated on 2023-12-05 14:47</div>
 </div>
 </body>
 </html>

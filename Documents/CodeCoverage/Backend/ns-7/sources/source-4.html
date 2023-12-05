@@ -40,6 +40,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Users;
 &nbsp;
+&nbsp;import jakarta.transaction.Transactional;
 &nbsp;import org.springframework.data.jpa.repository.JpaRepository;
 &nbsp;import org.springframework.stereotype.Repository;
 &nbsp;
@@ -49,6 +50,9 @@ Current scope:     <a href="../../index.html">all classes</a>
 &nbsp;@Repository
 &nbsp;public interface UserRepository extends JpaRepository&lt;User, String&gt; {
 &nbsp;    User findByName(String name);
+&nbsp;
+&nbsp;    @Transactional
+&nbsp;    void deleteByName(String name);
 &nbsp;}
 &nbsp;
 </code>
@@ -74,7 +78,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-12-05 13:23</div>
+    <div style="float:right;">generated on 2023-12-05 14:47</div>
 </div>
 </body>
 </html>
