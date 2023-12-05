@@ -1,0 +1,328 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Crypto</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.Resources</a>
+</div>
+
+<h1>Coverage Summary for Class: Crypto (ms_312.CheckMeBackend.Resources)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Crypto</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76.7%
+  </span>
+  <span class="absValue">
+    (56/73)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Resources;
+&nbsp;
+&nbsp;import org.apache.tomcat.util.json.JSONParser;
+&nbsp;import org.apache.tomcat.util.json.ParseException;
+&nbsp;import org.json.JSONObject;
+&nbsp;
+&nbsp;import javax.crypto.*;
+&nbsp;import javax.crypto.spec.IvParameterSpec;
+&nbsp;import javax.crypto.spec.SecretKeySpec;
+&nbsp;import java.io.*;
+&nbsp;import java.math.BigInteger;
+&nbsp;import java.security.InvalidAlgorithmParameterException;
+&nbsp;import java.security.InvalidKeyException;
+&nbsp;import java.security.NoSuchAlgorithmException;
+&nbsp;import java.security.SecureRandom;
+&nbsp;import java.util.*;
+&nbsp;
+&nbsp;/**
+&nbsp; * Class which holds static method for performing cryptographic operations (Encryption and Decryption).
+&nbsp; * Handles encrypting a string and storing / retrieving keys and other related info.
+&nbsp; */
+<b class="nc">&nbsp;public class Crypto {</b>
+&nbsp;    /**
+&nbsp;     * Read in the contents of the JSON file used for storing keys and ivs &lt;br/&gt;
+&nbsp;     * !! THIS METHOD OF KEY STORAGE IS NOT SECURE BUT IS NECESSARY WHILE IN DEVELOPMENT (FOR CLASS)
+&nbsp;     *
+&nbsp;     * @return A {@link LinkedHashMap} containing the JSON data parsed from the file
+&nbsp;     */
+&nbsp;    //Unchecked casts are from interacting with unchecked casts
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    private static LinkedHashMap&lt;String, LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt;&gt; readKeysJSON(){
+&nbsp;        // Get the file for the keys JSON
+<b class="fc">&nbsp;        File keysFile = new File(&quot;/CheckMe/keys.json&quot;);</b>
+&nbsp;
+&nbsp;        //Scan in the file
+&nbsp;        String fileContents;
+&nbsp;        try{
+<b class="fc">&nbsp;            Scanner readFile = new Scanner(keysFile);</b>
+<b class="fc">&nbsp;            fileContents = readFile.useDelimiter(&quot;\\Z&quot;).next();</b>
+<b class="nc">&nbsp;        } catch (FileNotFoundException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not read contents of keys.json file. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Parse the file contents as JSON and cast it
+<b class="fc">&nbsp;        JSONParser parser = new JSONParser(fileContents);</b>
+&nbsp;        LinkedHashMap&lt;String, LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt;&gt; keysJSON;
+&nbsp;        try{
+<b class="fc">&nbsp;            keysJSON = (LinkedHashMap&lt;String, LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt;&gt;) parser.parse();</b>
+<b class="nc">&nbsp;        } catch (ParseException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not parse contents of keys.json. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        //Return the parsed JSON
+<b class="fc">&nbsp;        return keysJSON;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Stores a key and iv for a cipher associated with a given reference name in the keys.json file.
+&nbsp;     * byte arrays are stored as a string representation
+&nbsp;     *
+&nbsp;     * @param referenceName The name to store the cipher info associated with. Must be unqiuq compared to the reference
+&nbsp;     * name of other key info
+&nbsp;     * @param key The key for the cipher -- will be stored as a String representation
+&nbsp;     * @param iv The initialization vector for the cipher -- will be stored as a String representation
+&nbsp;     */
+&nbsp;    private static void storeKey(String referenceName, byte[] key, byte[] iv){
+&nbsp;        // Get the existing keys.json information
+<b class="fc">&nbsp;        LinkedHashMap&lt;String, LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt;&gt; existing = readKeysJSON();</b>
+&nbsp;
+&nbsp;        //Create an object storing the new key info
+<b class="fc">&nbsp;        LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt; newInfo = new LinkedHashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // Convert the byte arrays to lists for storage
+<b class="fc">&nbsp;        ArrayList&lt;BigInteger&gt; keyList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        ArrayList&lt;BigInteger&gt; ivList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (byte b : key) {</b>
+<b class="fc">&nbsp;            keyList.add(new BigInteger(new byte[]{b}));</b>
+&nbsp;        }
+<b class="fc">&nbsp;        for (byte b : iv) {</b>
+<b class="fc">&nbsp;            ivList.add(new BigInteger(new byte[]{b}));</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        //Associate the new info with there type (key or iv) in the map
+<b class="fc">&nbsp;        newInfo.put(&quot;key&quot;, keyList);</b>
+<b class="fc">&nbsp;        newInfo.put(&quot;iv&quot;, ivList);</b>
+&nbsp;
+&nbsp;        //Associate the new map with its reference name in the new map
+<b class="fc">&nbsp;        existing.put(referenceName, newInfo);</b>
+&nbsp;
+&nbsp;        // Create a JSONObject from the map
+<b class="fc">&nbsp;        JSONObject toSave = new JSONObject(existing);</b>
+&nbsp;
+&nbsp;        //Save the JSON to the keys.json file
+<b class="fc">&nbsp;        File keysFile = new File(&quot;/CheckMe/keys.json&quot;);</b>
+&nbsp;
+&nbsp;        // Write the JSON to the file
+&nbsp;        try{
+<b class="fc">&nbsp;            BufferedWriter writer = new BufferedWriter(new FileWriter(keysFile));</b>
+<b class="fc">&nbsp;            writer.write(toSave.toString());</b>
+<b class="fc">&nbsp;            writer.close();</b>
+<b class="nc">&nbsp;        } catch (IOException e) {</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not write to keys.json. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Encrypt a String using AES (Advanced Encryption Standard). Also handles storing the Key and IV associated with
+&nbsp;     * a given reference name
+&nbsp;     *
+&nbsp;     * @param plaintext The string to encrypt
+&nbsp;     * @param referenceName The string to be used for retrieving the key and Initialization Vector used to encrypt the
+&nbsp;     * string.
+&nbsp;     *
+&nbsp;     */
+&nbsp;    public static byte[] encryptStringAES(String plaintext, String referenceName)  {
+&nbsp;        //Generate an encryption key
+&nbsp;        KeyGenerator keyGen;
+&nbsp;        try {
+&nbsp;            // Create and Initialize and AES Cipher Object
+<b class="fc">&nbsp;            keyGen = KeyGenerator.getInstance(&quot;AES&quot;);</b>
+&nbsp;        }
+&nbsp;        //Not expected to ever occur since algorithm is hardcode
+<b class="nc">&nbsp;        catch (Exception e){</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Failed to create KeyGenerator Object. Root Cause: &quot; + e.getMessage());</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        SecretKey key = keyGen.generateKey();</b>
+&nbsp;
+&nbsp;        //Generate an initialization vector
+<b class="fc">&nbsp;        SecureRandom secRan = new SecureRandom();</b>
+<b class="fc">&nbsp;        byte[] ivArray = new byte[16];</b>
+<b class="fc">&nbsp;        secRan.nextBytes(ivArray);</b>
+<b class="fc">&nbsp;        IvParameterSpec iv = new IvParameterSpec(ivArray);</b>
+&nbsp;
+&nbsp;        Cipher c;
+&nbsp;        try {
+&nbsp;            // Create and Initialize and AES Cipher Object
+<b class="fc">&nbsp;            c = Cipher.getInstance(&quot;AES/CBC/PKCS5Padding&quot;);</b>
+<b class="fc">&nbsp;            c.init(Cipher.ENCRYPT_MODE, key, iv);</b>
+&nbsp;        }
+&nbsp;        //Not expected to ever occur since algorithm is hardcode
+<b class="nc">&nbsp;        catch (Exception e){</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Failed to create or initialize cipher object. Root Cause: &quot; + e.getMessage());</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        //Encrypt the String
+&nbsp;        byte[] cipherText;
+&nbsp;        try{
+<b class="fc">&nbsp;            cipherText = c.doFinal(plaintext.getBytes());</b>
+&nbsp;
+&nbsp;        }
+&nbsp;        // The exceptions thrown do not apply in this context so this should never occur
+<b class="nc">&nbsp;        catch (Exception e){</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Failed to encrypt string&quot;);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        /*
+&nbsp;        Store the encryption key and IV in a file
+&nbsp;        ## THIS METHOD OF STORAGE IS INSECURE BUT NECESSARY WHILE IN DEVELOPMENT(For class) ##
+&nbsp;         */
+<b class="fc">&nbsp;        storeKey(referenceName, key.getEncoded(),  ivArray);</b>
+&nbsp;
+<b class="fc">&nbsp;        return cipherText;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Decrypt a given ciphertext (Stored as a byte array) using AES (Advanced Encryption standard)
+&nbsp;     * Handles retrieving the key and IV stored associated with the given reference name.
+&nbsp;     *
+&nbsp;     * @param ciphertext The cipher to decrypt
+&nbsp;     * @param referenceName The name used to retrieve the key and IV for the cipher.
+&nbsp;     *
+&nbsp;     * @return The decrypted cipher as a String
+&nbsp;     */
+&nbsp;    public static String decryptStringAES(byte[] ciphertext, String referenceName){
+&nbsp;        // Retrieve the IV and keys for decryption from the keys.JSON file
+<b class="fc">&nbsp;        LinkedHashMap&lt;String, ArrayList&lt;BigInteger&gt;&gt; cipherInfo = readKeysJSON().get(referenceName);</b>
+&nbsp;
+&nbsp;       //Unbox the values of the key and iv and convert them to bytes
+<b class="fc">&nbsp;        ArrayList&lt;BigInteger&gt; keyList = cipherInfo.get(&quot;key&quot;);</b>
+<b class="fc">&nbsp;        ArrayList&lt;BigInteger&gt; ivList = cipherInfo.get(&quot;iv&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        byte[] keyArray = new byte[keyList.size()];</b>
+<b class="fc">&nbsp;        byte[] ivArray = new byte[ivList.size()];</b>
+&nbsp;
+<b class="fc">&nbsp;        for(int i=0; i&lt;keyList.size(); i++){</b>
+<b class="fc">&nbsp;            keyArray[i] = keyList.get(i).byteValue();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        for(int i=0; i&lt;ivList.size(); i++){</b>
+<b class="fc">&nbsp;            ivArray[i] = ivList.get(i).byteValue();</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        // Set up the key and the IV
+<b class="fc">&nbsp;        SecretKey key = new SecretKeySpec(keyArray, &quot;AES&quot;);</b>
+<b class="fc">&nbsp;        IvParameterSpec iv = new IvParameterSpec(ivArray);</b>
+&nbsp;
+&nbsp;        // Create and Initialize and AES Cipher Object
+&nbsp;        Cipher c;
+&nbsp;        try {
+&nbsp;            // Create and Initialize and AES Cipher Object
+<b class="fc">&nbsp;            c = Cipher.getInstance(&quot;AES/CBC/PKCS5Padding&quot;);</b>
+<b class="fc">&nbsp;            c.init(Cipher.DECRYPT_MODE, key, iv);</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not setup AES cipher object. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Decrypt the cipher
+&nbsp;        String plaintext;
+&nbsp;        try{
+<b class="fc">&nbsp;            plaintext = new String(c.doFinal(ciphertext));</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (IllegalBlockSizeException | BadPaddingException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not decrypt ciphertext. Root Cause: &quot; +  e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        return plaintext;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 13:23</div>
+</div>
+</body>
+</html>

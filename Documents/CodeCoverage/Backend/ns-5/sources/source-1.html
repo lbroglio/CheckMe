@@ -1,0 +1,276 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > ChaosRetriever</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.Messages.Retrievers</a>
+</div>
+
+<h1>Coverage Summary for Class: ChaosRetriever (ms_312.CheckMeBackend.Messages.Retrievers)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ChaosRetriever</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.4%
+  </span>
+  <span class="absValue">
+    (38/45)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ChaosRetriever$HibernateProxy$7J5z2KjF</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    84.4%
+  </span>
+  <span class="absValue">
+    (38/45)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Messages.Retrievers;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonIgnore;
+&nbsp;import jakarta.persistence.Entity;
+&nbsp;import jakarta.persistence.Transient;
+&nbsp;import ms_312.CheckMeBackend.Messages.Message;
+&nbsp;import ms_312.CheckMeBackend.Resources.Crypto;
+&nbsp;import ms_312.CheckMeBackend.Users.RetrieverOwner;
+&nbsp;import org.apache.tomcat.util.json.JSONParser;
+&nbsp;import org.apache.tomcat.util.json.ParseException;
+&nbsp;import org.json.JSONObject;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URI;
+&nbsp;import java.net.http.HttpRequest;
+&nbsp;import java.net.http.HttpResponse;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.HashMap;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * A MessageRetriever which retrieves information from the Chaos Service within the Proxy Applications
+&nbsp; */
+&nbsp;@Entity
+&nbsp;public class ChaosRetriever extends MessageRetriever{
+&nbsp;    /**
+&nbsp;     * The API token used by this retriever to get Messages from the Chaos service
+&nbsp;     */
+&nbsp;    private byte[] APIToken;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Store the reference name used for retrieving the cipher keys for this Retriever. &lt;br/&gt;
+&nbsp;     * Found by combining the username of the owner with the current number of Retrievers owned by the user
+&nbsp;     */
+&nbsp;    private String cipherReferenceName;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a new ChaosRetriever for a specific User.
+&nbsp;     *
+&nbsp;     * @param source The URL of the endpoint to retrieve messages.
+&nbsp;     * @param chaosAPIToken The API token needed to authenticate with the Chaos service
+&nbsp;     * @param owner The {@link RetrieverOwner} object which owns this Retriever
+&nbsp;     *
+&nbsp;     */
+&nbsp;    public ChaosRetriever(String source, String chaosAPIToken, RetrieverOwner owner) {
+<b class="fc">&nbsp;        super(source, owner);</b>
+&nbsp;
+&nbsp;        // Set the reference name for used to store the cipher key (and iv) for this retriever
+<b class="fc">&nbsp;        cipherReferenceName = owner.getName() + &quot;_&quot; + owner.getMessageRetrievers().size();</b>
+&nbsp;
+&nbsp;        //Encrypt the BearerToken using AES and save it
+<b class="fc">&nbsp;        this.APIToken = Crypto.encryptStringAES(chaosAPIToken, cipherReferenceName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Default Constructor used by the JPA
+&nbsp;     */
+&nbsp;    private ChaosRetriever(){
+<b class="fc">&nbsp;        super();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @inheritDoc
+&nbsp;     */
+&nbsp;    //Uncheck casts come from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @Override
+&nbsp;    public Message[] getAll() {
+&nbsp;        //Decrypt the API token for use in the request
+<b class="fc">&nbsp;        String bearerToken = Crypto.decryptStringAES(APIToken, cipherReferenceName);</b>
+<b class="fc">&nbsp;        String authString = &quot;Bearer &quot; + bearerToken;</b>
+&nbsp;
+&nbsp;        //Build the request to the Chaos API
+<b class="fc">&nbsp;        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(source+&quot;?sortBy=date&quot;)).setHeader(&quot;Authorization&quot;,authString).build();</b>
+&nbsp;
+&nbsp;        //Send the request and save the response
+&nbsp;        HttpResponse&lt;String&gt; response;
+&nbsp;        try{
+<b class="fc">&nbsp;            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (IOException | InterruptedException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not make request to Chaos API. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Parse the response as JSON
+<b class="fc">&nbsp;        JSONParser parser = new JSONParser(response.body());</b>
+&nbsp;
+&nbsp;        //Parse the request
+&nbsp;        ArrayList&lt;Object&gt; responseBody;
+&nbsp;        try{
+<b class="fc">&nbsp;            responseBody = parser.parseArray();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (ParseException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Invalid response from Chaos API. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Convert the returned JSOn into an array of message objects
+&nbsp;        //Create the Array
+<b class="fc">&nbsp;        Message[] toReturn =  new Message[responseBody.size()];</b>
+<b class="fc">&nbsp;        for(int i=0; i &lt; toReturn.length; i++){</b>
+&nbsp;            // Cast the object parsed by the JSON to a linked hash map
+<b class="fc">&nbsp;            LinkedHashMap&lt;Object, Object&gt; JSONMap = (LinkedHashMap&lt;Object, Object&gt;) responseBody.get(i);</b>
+&nbsp;
+<b class="fc">&nbsp;            toReturn[i] = new Message(JSONMap, this.id);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return toReturn;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean replyTo(String replyContents, Message msgReplyTo){
+&nbsp;        //Decrypt the API token for use in the request
+<b class="fc">&nbsp;        String bearerToken = Crypto.decryptStringAES(APIToken, cipherReferenceName);</b>
+<b class="fc">&nbsp;        String authString = &quot;Bearer &quot; + bearerToken;</b>
+&nbsp;
+&nbsp;        // Use the source to build the reply link
+<b class="fc">&nbsp;        ArrayList&lt;String&gt; splitSrc = new ArrayList&lt;&gt;(List.of(source.split(&quot;/&quot;)));</b>
+<b class="fc">&nbsp;        int cutOffIndex = splitSrc.indexOf(&quot;messages&quot;);</b>
+<b class="fc">&nbsp;        String chaosActName = splitSrc.get(cutOffIndex + 1);</b>
+<b class="fc">&nbsp;        int strEndIndex = source.indexOf(&quot;messages&quot;);</b>
+<b class="fc">&nbsp;        String replyURL = source.substring(0, strEndIndex) + chaosActName + &quot;/reply&quot;;</b>
+&nbsp;
+&nbsp;        // Build the reply body
+<b class="fc">&nbsp;        LinkedHashMap&lt;Object, Object&gt; msgMap = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;        msgMap.put(&quot;sender&quot;, msgReplyTo.getSender());</b>
+<b class="fc">&nbsp;        msgMap.put(&quot;recipient&quot;, chaosActName);</b>
+<b class="fc">&nbsp;        if(msgReplyTo.getSubject() != null){</b>
+<b class="fc">&nbsp;            msgMap.put(&quot;subject&quot;, msgReplyTo.getSubject());</b>
+&nbsp;        }
+&nbsp;        else{
+<b class="nc">&nbsp;            msgMap.put(&quot;subject&quot;, &quot;None&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        msgMap.put(&quot;contents&quot;, msgReplyTo.getContents());</b>
+<b class="fc">&nbsp;        msgMap.put(&quot;sendTime&quot;, msgReplyTo.getSendTime().toString());</b>
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        JSONObject requestBody = new JSONObject();</b>
+<b class="fc">&nbsp;        requestBody.put(&quot;content&quot;, replyContents);</b>
+<b class="fc">&nbsp;        requestBody.put(&quot;reply-to&quot;, msgMap);</b>
+&nbsp;
+&nbsp;        //Build the request to the Chaos API
+<b class="fc">&nbsp;        HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(requestBody.toString())).uri(URI.create(replyURL)).setHeader(&quot;Authorization&quot;,authString).build();</b>
+&nbsp;
+&nbsp;        //Send the request and save the response
+&nbsp;        HttpResponse&lt;String&gt; response;
+&nbsp;        try{
+<b class="fc">&nbsp;            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (IOException | InterruptedException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not make request to Chaos API. Root Cause: &quot; + e);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;       // Check if the response is as expected
+&nbsp;        // Return true on success
+&nbsp;        // Return false on failure
+<b class="fc">&nbsp;        return response.body().equals(&quot;Reply sent: &quot; + replyContents);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 13:23</div>
+</div>
+</body>
+</html>

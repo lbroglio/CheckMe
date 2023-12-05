@@ -1,0 +1,267 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > ChatRoomWebSocketServer</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.LiveChat</a>
+</div>
+
+<h1>Coverage Summary for Class: ChatRoomWebSocketServer (ms_312.CheckMeBackend.LiveChat)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ChatRoomWebSocketServer</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22.2%
+  </span>
+  <span class="absValue">
+    (2/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6.1%
+  </span>
+  <span class="absValue">
+    (3/49)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.LiveChat;
+&nbsp;
+&nbsp;import jakarta.websocket.*;
+&nbsp;import jakarta.websocket.server.PathParam;
+&nbsp;import jakarta.websocket.server.ServerEndpoint;
+&nbsp;import org.slf4j.Logger;
+&nbsp;import org.slf4j.LoggerFactory;
+&nbsp;import org.springframework.context.annotation.ComponentScan;
+&nbsp;import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.stereotype.Component;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.net.URI;
+&nbsp;import java.net.http.HttpClient;
+&nbsp;import java.net.http.HttpRequest;
+&nbsp;import java.net.http.HttpResponse;
+&nbsp;import java.security.NoSuchAlgorithmException;
+&nbsp;import java.util.*;
+&nbsp;import java.util.concurrent.ConcurrentHashMap;
+&nbsp;
+&nbsp;
+&nbsp;//TODO add comments to functions
+&nbsp;
+&nbsp;@ServerEndpoint(&quot;/livechat/{auth}/{group}&quot;)
+&nbsp;@Component
+&nbsp;@EnableJpaRepositories(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
+&nbsp;@ComponentScan(basePackageClasses = ms_312.CheckMeBackend.CheckMeBackendApplication.class)
+<b class="fc">&nbsp;public class ChatRoomWebSocketServer {</b>
+&nbsp;
+<b class="fc">&nbsp;    private final Logger logger = LoggerFactory.getLogger(ChatRoomWebSocketServer.class);</b>
+&nbsp;
+<b class="fc">&nbsp;    private static Map&lt;String, ChatRoom&gt; chatRooms = new ConcurrentHashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;
+&nbsp;//TODO fix autowiring to allow chats to be saved to the database
+&nbsp;
+&nbsp;//    @Autowired
+&nbsp;//    ChatRepository chatRepository;
+&nbsp;//
+&nbsp;//    @Autowired
+&nbsp;//    UserRepository userRepository;
+&nbsp;//
+&nbsp;//    @Autowired
+&nbsp;//    GroupRepository groupRepository;
+&nbsp;
+&nbsp;    /**
+&nbsp;     *
+&nbsp;     * @param session
+&nbsp;     * @param authorization
+&nbsp;     * @throws NoSuchAlgorithmException
+&nbsp;     * @throws ResponseStatusException
+&nbsp;     */
+&nbsp;    @OnOpen
+&nbsp;    public void onOpen(Session session, @PathParam(&quot;auth&quot;) String authorization, @PathParam(&quot;group&quot;) String group) throws NoSuchAlgorithmException, ResponseStatusException {
+<b class="nc">&nbsp;        System.out.println(&quot;Entered into open&quot;);</b>
+&nbsp;
+&nbsp;        // Get the username from the auth string
+<b class="nc">&nbsp;        String decodedAuth = new String(Base64.getDecoder().decode(authorization));</b>
+<b class="nc">&nbsp;        int authSplit = decodedAuth.lastIndexOf(&#39;:&#39;);</b>
+<b class="nc">&nbsp;        String username = decodedAuth.substring(0, authSplit);</b>
+&nbsp;        // Get the password from the auth string
+<b class="nc">&nbsp;        String password = decodedAuth.substring(authSplit +1);</b>
+&nbsp;
+&nbsp;//        System.out.println(&quot;Got user&quot;);
+&nbsp;//        System.out.println(&quot;Opening for user: &quot; + username);
+&nbsp;
+&nbsp;        // Request to the Login endpoint
+&nbsp;        // Body for the request
+<b class="nc">&nbsp;        String body = &quot;{\n\&quot;username\&quot;: \&quot;&quot; + username + &quot;\&quot;,\n\&quot;password\&quot;: \&quot;&quot; + password + &quot;\&quot;\n}&quot;;</b>
+&nbsp;
+&nbsp;        //Build a request to the login endpoint
+<b class="nc">&nbsp;        HttpClient HTTPCLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();</b>
+<b class="nc">&nbsp;        HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(body)).uri(URI.create(&quot;http://coms-309-047.class.las.iastate.edu:8080/user/login&quot;)).build();</b>
+&nbsp;
+&nbsp;        //Send the request and save the response
+&nbsp;        HttpResponse&lt;String&gt; response;
+&nbsp;        //TODO change thrown exceptions to reflect the actual error
+&nbsp;        try{
+<b class="nc">&nbsp;            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch (IOException | InterruptedException e){</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Could not make request to Chaos API. Root Cause: &quot; + e);</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Parse the response as a boolean
+<b class="nc">&nbsp;        boolean checkAuth = Boolean.parseBoolean(response.body());</b>
+&nbsp;
+<b class="nc">&nbsp;        if(!checkAuth){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Username or Password was incorrect&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;        ChatRoom chatRoom = chatRooms.computeIfAbsent(group, k -&gt; new ChatRoom(group));</b>
+<b class="nc">&nbsp;        chatRoom.addSession(session);</b>
+<b class="nc">&nbsp;        session.getUserProperties().put(&quot;username&quot;, username);</b>
+<b class="nc">&nbsp;        session.getUserProperties().put(&quot;group&quot;, group);</b>
+&nbsp;
+<b class="nc">&nbsp;        String message = &quot;User:&quot; + username + &quot; has Joined the Chat&quot;;</b>
+<b class="nc">&nbsp;        broadcastToRoom(group, message);</b>
+&nbsp;//        System.out.println(&quot;Opened&quot;);
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     *
+&nbsp;     * @param session
+&nbsp;     * @throws IOException
+&nbsp;     */
+&nbsp;    @OnClose
+&nbsp;    public void onClose(Session session) throws IOException {
+<b class="nc">&nbsp;        logger.info(&quot;Entered into Close&quot;);</b>
+<b class="nc">&nbsp;        String username = getUserName(session);</b>
+<b class="nc">&nbsp;        String group = getGroupName(session);</b>
+<b class="nc">&nbsp;        String message = username + &quot; has disconnected&quot;;</b>
+<b class="nc">&nbsp;        chatRooms.get(group).removeSession(session);</b>
+<b class="nc">&nbsp;        broadcastToRoom(group, message);</b>
+<b class="nc">&nbsp;        session.getUserProperties().remove(&quot;username&quot;, username);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @OnMessage
+&nbsp;    public void onMessage(Session session, String message, @PathParam(&quot;group&quot;) String group) {
+<b class="nc">&nbsp;        logger.info(&quot;Got Message:&quot; + message);</b>
+<b class="nc">&nbsp;        String username = getUserName(session);</b>
+<b class="nc">&nbsp;        message = username + &quot;: &quot; + message;</b>
+<b class="nc">&nbsp;        broadcastToRoom(group, message);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    @OnError
+&nbsp;    public void onError(Session session, Throwable throwable) {
+&nbsp;        // Do error handling here
+&nbsp;        //TODO implement error handling
+<b class="nc">&nbsp;        logger.info(&quot;Entered into Error&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void broadcastToRoom(String groupName, String message) {
+<b class="nc">&nbsp;        ChatRoom chatRoom = chatRooms.get(groupName);</b>
+<b class="nc">&nbsp;        logger.info(&quot;Sending message: &quot; + message + &quot; to room: &quot; + groupName);</b>
+<b class="nc">&nbsp;        if (chatRoom != null) {</b>
+<b class="nc">&nbsp;            List&lt;Session&gt; sessions = chatRoom.getSessions();</b>
+<b class="nc">&nbsp;            logger.info(&quot;Sending message: &quot; + message + &quot; to &quot; + sessions.size() + &quot; sessions&quot;);</b>
+<b class="nc">&nbsp;            for (Session session : sessions) {</b>
+&nbsp;                try {
+<b class="nc">&nbsp;                    session.getBasicRemote().sendText(message);</b>
+<b class="nc">&nbsp;                } catch (IOException e) {</b>
+<b class="nc">&nbsp;                    e.printStackTrace();</b>
+<b class="nc">&nbsp;                }</b>
+<b class="nc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private String getUserName(Session session){
+<b class="nc">&nbsp;        return session.getUserProperties().get(&quot;username&quot;).toString();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private String getGroupName(Session session){
+<b class="nc">&nbsp;        return session.getUserProperties().get(&quot;group&quot;).toString();</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 13:23</div>
+</div>
+</body>
+</html>
