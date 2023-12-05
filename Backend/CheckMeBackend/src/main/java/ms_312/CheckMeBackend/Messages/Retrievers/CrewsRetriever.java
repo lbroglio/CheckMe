@@ -6,6 +6,7 @@ import ms_312.CheckMeBackend.Resources.Crypto;
 import ms_312.CheckMeBackend.Users.RetrieverOwner;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URI;
@@ -113,10 +114,61 @@ public class CrewsRetriever extends MessageRetriever{
             // Cast the object parsed by the JSON to a linked hash map
             LinkedHashMap<Object, Object> JSONMap = (LinkedHashMap<Object, Object>) responseBody.get(i);
 
-            toReturn[i] = new Message(JSONMap);
+            toReturn[i] = new Message(JSONMap, this.id);
         }
 
         return toReturn;
+    }
+
+    @Override
+    public boolean replyTo(String replyContents, Message msgReplyTo){
+        //Decrypt the Password for use in the request
+        String unencryptedPassword = Crypto.decryptStringAES(password, cipherReferenceName);
+
+        // Put the username and password into
+        String unencodedAuthString = username + ":" + unencryptedPassword;
+
+        //Encode the auth string in Base64
+        String authString = Base64.getEncoder().encodeToString(unencodedAuthString.getBytes());
+
+        // Use the source to build the reply link
+        int strEndIndex = source.indexOf("messages");
+        String replyURL = source.substring(0, strEndIndex) + "reply";
+
+        // Build the reply body
+        LinkedHashMap<Object, Object> msgMap = new LinkedHashMap<>();
+        msgMap.put("sender", msgReplyTo.getSender());
+        msgMap.put("recipient", username);
+        if(msgReplyTo.getSubject() != null){
+            msgMap.put("subject", msgReplyTo.getSubject());
+        }
+        else{
+            msgMap.put("subject", "None");
+        }
+        msgMap.put("contents", msgReplyTo.getContents());
+        msgMap.put("sendTime", msgReplyTo.getSendTime().toString());
+
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("content", replyContents);
+        requestBody.put("reply-to", msgMap);
+
+
+        //Build the request to the Chaos API
+        HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(requestBody.toString())).uri(URI.create(replyURL)).setHeader("X-Crews-API",authString).build();
+
+        //Send the request and save the response
+        HttpResponse<String> response;
+        try{
+            response = HTTPCLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+        }
+        catch (IOException | InterruptedException e){
+            throw new RuntimeException("Could not make request to Cmail API. Root Cause: " + e);
+        }
+
+        // Check if the response is as expected
+        // Return true on success
+        // Return false on failure
+        return response.body().equals("Reply sent: " + replyContents);
     }
 
 }

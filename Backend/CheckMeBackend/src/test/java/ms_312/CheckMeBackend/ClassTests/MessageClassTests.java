@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MessageClassTests {
     private Message createTestMessage(){
-        return new Message("BaseballBob", "UnitTest", "Hello, World!", "Testing",LocalDateTime.parse("2000-01-01T00:00:00"));
+        return new Message("BaseballBob", "UnitTest", "Hello, World!", "Testing",LocalDateTime.parse("2000-01-01T00:00:00"), 0);
     }
 
     @Test
@@ -42,7 +42,7 @@ public class MessageClassTests {
 
     @Test
     public void testNullSubjectMessage(){
-        Message testOn = new Message("BaseballBob", "UnitTest", "Hello, World!", LocalDateTime.parse("2000-01-01T00:00:00"));
+        Message testOn = new Message("BaseballBob", "UnitTest", "Hello, World!", LocalDateTime.parse("2000-01-01T00:00:00"), 0);
 
         //Check that the message was successfully created by checking sender
         assertEquals("BaseballBob", testOn.getSender());

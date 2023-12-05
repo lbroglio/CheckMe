@@ -54,6 +54,8 @@
     <string name="type_your_message">Type your message</string>
     <string name="send">Send</string>
     <string name="LiveChatButtonLabel">Live Chat</string>
+    <string name="ReplyHeader">Reply to Message</string>
+    <string name="ReplyButton">Reply</string>
 
 
 </resources>

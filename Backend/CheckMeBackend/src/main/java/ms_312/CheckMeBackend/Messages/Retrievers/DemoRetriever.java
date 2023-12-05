@@ -34,4 +34,8 @@ public class DemoRetriever extends MessageRetriever {
         return new Message[0];
     }
 
+    @Override
+    public boolean replyTo(String contents, Message msgReplyTo){
+        return false;
+    }
 }

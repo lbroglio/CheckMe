@@ -10,10 +10,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ms_312.CheckMeBackend.Messages.Message;
 import ms_312.CheckMeBackend.Messages.MessageRepository;
-import ms_312.CheckMeBackend.Messages.Retrievers.ChaosRetriever;
-import ms_312.CheckMeBackend.Messages.Retrievers.CmailRetriever;
-import ms_312.CheckMeBackend.Messages.Retrievers.CrewsRetriever;
-import ms_312.CheckMeBackend.Messages.Retrievers.MessageRetriever;
+import ms_312.CheckMeBackend.Messages.Retrievers.*;
 import ms_312.CheckMeBackend.Resources.Sorting;
 import ms_312.CheckMeBackend.Users.Group;
 import ms_312.CheckMeBackend.Users.GroupRepository;
@@ -47,6 +44,9 @@ public class MessageController {
 
     @Autowired
     MessageRepository messageRepository;
+
+    @Autowired
+    MessageRetrieverRepository retrieverRepositor;
 
     /**
      * Endpoint to add a new {@link MessageRetriever} to a specified User account.
@@ -150,6 +150,7 @@ public class MessageController {
             return new ResponseEntity<>("Body is missing required field: service-url", HttpStatus.BAD_REQUEST);
         }
 
+        apiEndpoint = apiEndpoint.replace("\\/", "/");
 
         // Create the new Retriever depending on what service was indicated
 
@@ -342,6 +343,7 @@ public class MessageController {
             return new ResponseEntity<>("Body is missing required field: service-url", HttpStatus.BAD_REQUEST);
         }
 
+        apiEndpoint = apiEndpoint.replace("\\/", "/");
 
         // Create the new Retriever depending on what service was indicated
 
@@ -751,6 +753,90 @@ public class MessageController {
         return sorted;
 
     }
+
+    @PostMapping("/user/{username}/reply")
+    // Unchecked casts are from interacting with JSON API
+    @SuppressWarnings("unchecked")
+    public ResponseEntity<String> replyToMessage(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader, @RequestBody String body){
+        // Get the user object from the Username
+        User replyAs = userRepository.findByName(username);
+
+        // Respond 400 if the user does not exist
+        if(replyAs == null){
+            return new ResponseEntity<>("User " + username +" does not exist", HttpStatus.BAD_REQUEST);
+        }
+
+        // Check the users authentication
+        boolean authorized = false;
+
+        try{
+            authorized = ControllerUtils.checkBasicAuth(ControllerUtils.parseBasicAuthHeader(authHeader),replyAs, userRepository);
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to verify authentication. Root Cause: " + e);
+        }
+
+        // Return 401 if the authentication is incorrect
+        if(!authorized){
+            return new ResponseEntity<>("Username or password was incorrect.", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Parse the body as JSON
+        JSONParser parser = new JSONParser(body);
+        LinkedHashMap<Object, Object> bodyJson;
+        try {
+            bodyJson = (LinkedHashMap<Object, Object>) parser.parse();
+        } catch (ParseException e) {
+            return new ResponseEntity<>("Could not parse request body as json", HttpStatus.BAD_REQUEST);
+        }
+
+        // Parse the message from the response body
+       Message replyTo;
+        try{
+            replyTo = new Message((LinkedHashMap<Object, Object>) bodyJson.get("reply-to"));
+        }
+        catch (Exception e){
+            return new ResponseEntity<>("Could not parse the message to reply to", HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the Message Retriever this message was retrieved from
+        MessageRetriever replySender = retrieverRepositor.findById(replyTo.getOriginID());
+
+        // If the message is null return 400
+        if(replySender == null){
+            return new ResponseEntity<>("No valid Message origin", HttpStatus.BAD_REQUEST);
+        }
+
+        // Get the contents of the reply to send
+        String replyContents;
+        try{
+            replyContents = (String) bodyJson.get("reply-contents");
+        }
+        catch (Exception e){
+            return new ResponseEntity<>("Could not parse the reply contents", HttpStatus.BAD_REQUEST);
+        }
+
+        if(replyContents == null){
+            return new ResponseEntity<>("Could not parse the reply contents", HttpStatus.BAD_REQUEST);
+        }
+
+
+        // Send the reply
+        boolean replySuccess = replySender.replyTo(replyContents, replyTo);
+
+        if(replySuccess){
+            return new ResponseEntity<>("Reply successful", HttpStatus.OK);
+
+        }
+        else{
+            return new ResponseEntity<>("Could not send reply", HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+
+
+    }
+
+
 
 
 }
