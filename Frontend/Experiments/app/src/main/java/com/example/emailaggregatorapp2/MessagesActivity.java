@@ -1,13 +1,11 @@
 package com.example.emailaggregatorapp2;
 
 import android.content.Intent;
-import android.opengl.Visibility;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
@@ -21,8 +19,6 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -94,6 +90,7 @@ public class MessagesActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_messages);
+        Log.d("UserLoginInfo", UserLoginInfo.username + " " + UserLoginInfo.password + " " + UserLoginInfo.isAdmin);
 
         // Get the User's messages from the API and add them to the screen
         makeMessageRequest();
@@ -113,16 +110,21 @@ public class MessagesActivity extends AppCompatActivity{
         //Button for going to groups page
         Button groupsButton = (Button) findViewById(R.id.groupButton);
 
+        Button adminButton = (Button) findViewById(R.id.adminButton);
+
         // Toggle navbar visibility
         visButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(navBar.getVisibility() == View.GONE){
                     navBar.setVisibility(View.VISIBLE);
+                    Log.d("AdminStatus", UserLoginInfo.isAdmin + "");
+                    if(!UserLoginInfo.isAdmin){
+                        adminButton.setVisibility(View.GONE);
+                    }
                 }
                 else{
                     navBar.setVisibility(View.GONE);
-
                 }
             }
         });
@@ -143,6 +145,14 @@ public class MessagesActivity extends AppCompatActivity{
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MessagesActivity.this, GroupActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        adminButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MessagesActivity.this, AdminActivity.class);
                 startActivity(intent);
             }
         });
