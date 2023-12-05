@@ -59,7 +59,6 @@ public class AdminUserController {
         }
         System.out.println("Auth Header: " + authHeader);
         String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();
-
         if (checkAdmin(username)) {
             userRepository.deleteByName(userToDelete);
             return new ResponseEntity<>("User deleted", HttpStatus.OK);
