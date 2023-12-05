@@ -1,5 +1,6 @@
 package com.example.emailaggregatorapp2;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -47,6 +48,17 @@ public class SignupActivity extends AppCompatActivity {
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(!passwordInput.getText().toString().equals(passwordConfirm.getText().toString())){
+                    Log.e("Password Mismatch", "Passwords do not match");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(SignupActivity.this);
+                    builder.setMessage("Passwords do not match")
+                            .setPositiveButton("OK", null); // You can add additional buttons if needed
+                    AlertDialog alertDialog = builder.create();
+                    alertDialog.show();
+                    return;
+                }
+
+
                 String email = emailInput.getText().toString();
                 String username = usernameInput.getText().toString();
                 String password = passwordInput.getText().toString();
