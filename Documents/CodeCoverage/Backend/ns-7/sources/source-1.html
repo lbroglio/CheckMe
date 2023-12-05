@@ -1,0 +1,324 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > Group</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.Users</a>
+</div>
+
+<h1>Coverage Summary for Class: Group (ms_312.CheckMeBackend.Users)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Group</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (9/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.9%
+  </span>
+  <span class="absValue">
+    (29/33)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">Group$HibernateProxy$nLz6Y60K</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (9/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.9%
+  </span>
+  <span class="absValue">
+    (29/33)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Users;
+&nbsp;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.media.ArraySchema;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import jakarta.persistence.*;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Random;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Object which represents a Group of Users which can all be served messages from a set of Retrievers served by the
+&nbsp; * group.
+&nbsp; */
+&nbsp;@Entity
+&nbsp;//@Table(name=&quot;GROUPS&quot;)
+&nbsp;public class Group extends RetrieverOwner{
+<b class="fc">&nbsp;    @Schema(type = &quot;string&quot;, example = &quot;Group202&quot;)</b>
+<b class="fc">&nbsp;    private String name = super.getName();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Holds all the codes currently in use by groups to prevent two groups being assigned the same code.
+&nbsp;     */
+<b class="fc">&nbsp;    private static final ArrayList&lt;String&gt; codesInUse = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return An ArrayList with all the join codes currently used by groups
+&nbsp;     */
+&nbsp;    public static ArrayList&lt;String&gt; getCodesInUse(){
+<b class="nc">&nbsp;        return codesInUse;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * A list every User who is a members of this Group.
+&nbsp;     * User&#39;s with  admin powers are still included in this list
+&nbsp;     */
+&nbsp;    @ManyToMany
+&nbsp;    //@JoinColumn(name = &quot;user_id&quot;)
+&nbsp;    private List&lt;User&gt; members;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * A list of the String username&#39;s of th is Group&#39;s members who have Admin privileges over the Group --
+&nbsp;     * This list is in addition to the member&#39;s list. All admins will also be listed as members as well
+&nbsp;     */
+&nbsp;    @ArraySchema(schema = @Schema(type = &quot;string&quot;, example = &quot;User101&quot;))
+&nbsp;    private List&lt;String&gt; admins;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * An 8 character code used to join this group
+&nbsp;     */
+&nbsp;    @Schema(type = &quot;int&quot;, example = &quot;ESDCACOY&quot;)
+&nbsp;    private String joinCode;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a new Group.
+&nbsp;     *
+&nbsp;     * @param name The name for this group. Must be unique
+&nbsp;     * @param creator The {@link User} creating this group. Will be set as the first member and admin
+&nbsp;     */
+&nbsp;    public Group(String name, User creator){
+<b class="fc">&nbsp;        super(name);</b>
+&nbsp;
+&nbsp;        //Instantiate member ArrayLists
+<b class="fc">&nbsp;        members = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        admins  = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        //Set the add the creator to members and admins
+<b class="fc">&nbsp;        members.add(creator);</b>
+<b class="fc">&nbsp;        admins.add(creator.getName());</b>
+&nbsp;
+&nbsp;        //Generate a Join code
+<b class="fc">&nbsp;        StringBuilder codeBuild = null;</b>
+&nbsp;        //If this is true the program can exit the code creation loop
+<b class="fc">&nbsp;        boolean codeApproved = false;</b>
+&nbsp;        //Random
+<b class="fc">&nbsp;        Random rand = new Random();</b>
+&nbsp;
+&nbsp;        //Repeat until the code is approved (an unqiue code is generated)
+&nbsp;        //The collision check is included just in case -- The space is large enough that a collision should never occur
+<b class="fc">&nbsp;        while (!codeApproved){</b>
+<b class="fc">&nbsp;            codeBuild = new StringBuilder();</b>
+&nbsp;            //Repeat for 8 characters
+<b class="fc">&nbsp;            for (int i=0; i &lt; 8; i++){</b>
+&nbsp;                // Generate a random integer with an ASCII value corresponding to A-Z
+<b class="fc">&nbsp;                int charCode = rand.nextInt(65,91);</b>
+&nbsp;
+&nbsp;                // Add the randomly generated char (Converted from the int) to the code string
+<b class="fc">&nbsp;                codeBuild.append((char) charCode);</b>
+&nbsp;            }
+&nbsp;            // If the code is unqiue(The code isn&#39;t included in the list of in use codes) exit the loop
+<b class="fc">&nbsp;            if(!codesInUse.contains(String.valueOf(codeBuild))){</b>
+<b class="fc">&nbsp;                codeApproved = true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Set the JoinCode
+<b class="fc">&nbsp;        joinCode = String.valueOf(codeBuild);</b>
+&nbsp;
+&nbsp;        //Add the JoinCode to the list of code&#39;s in use
+<b class="fc">&nbsp;        codesInUse.add(joinCode);</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Default constructor for JPA
+&nbsp;     */
+<b class="fc">&nbsp;    private Group(){}</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * This ensures that the static {@link #codesInUse} is rebuilt when Groups are loaded by the JPA
+&nbsp;     */
+&nbsp;    public void fillCodeList(){
+<b class="nc">&nbsp;        codesInUse.add(this.joinCode);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return The String representing the code for joining this group
+&nbsp;     */
+&nbsp;    public String getJoinCode(){
+<b class="fc">&nbsp;        return joinCode;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return An ArrayList of the {@link User} objects for the members of this group
+&nbsp;     */
+&nbsp;    public List&lt;User&gt; getMembers() {
+<b class="fc">&nbsp;        return members;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add a member to this group
+&nbsp;     * @param newMember {@link User} object for the user to add to the group
+&nbsp;     */
+&nbsp;    public void addMember(User newMember) {
+<b class="fc">&nbsp;        this.members.add(newMember);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /*
+&nbsp;    /**
+&nbsp;     * Method to set the list of Members used by the JPA
+&nbsp;     *
+&nbsp;     * @param members ArrayList to set members to
+&nbsp;
+&nbsp;    private void setMembers(List&lt;User&gt; members){
+&nbsp;        this.members = members;
+&nbsp;    }
+&nbsp;    */
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return A list of the usernames of this Group&#39;s admins
+&nbsp;     */
+&nbsp;    public List&lt;String&gt; getAdmins() {
+<b class="fc">&nbsp;        return admins;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Promote of member of this group to have Admin powers
+&nbsp;     * @param newAdmin {@link User} object for the user to add to the group
+&nbsp;     *
+&nbsp;     * @throws IllegalArgumentException If the User to make an admin isn&#39;t a member of the group
+&nbsp;     */
+&nbsp;    public void addAdmin(User newAdmin) {
+&nbsp;        //Check if the User to give admin powers is in the group
+<b class="fc">&nbsp;        if(!members.contains(newAdmin)){</b>
+&nbsp;            // If the new Admin isn&#39;t a member throw an exception
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;New admins must be member&#39;s of the group&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        this.admins.add(newAdmin.getName());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove a member of this group from the Group
+&nbsp;     * @param toRemove {@link User} object for the user to remove from the group
+&nbsp;     *
+&nbsp;     * @throws IllegalArgumentException If the User to remove isn&#39;t a member of the group
+&nbsp;     */
+&nbsp;    public void removeMember(User toRemove) {
+&nbsp;        //Check if the User to give admin powers is in the group
+<b class="fc">&nbsp;        if(!members.contains(toRemove)){</b>
+&nbsp;            // If the new Admin isn&#39;t a member throw an exception
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;The User to remove must be a member of the Group&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        this.members.remove(toRemove);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /*
+&nbsp;    /**
+&nbsp;     * Remove a member of this group from the Group&#39;s list of admins
+&nbsp;     * @param toRemove {@link User} object for the user to remove from the group&#39;s admins
+&nbsp;     *
+&nbsp;     * @throws IllegalArgumentException If the User to remove isn&#39;t a member of the group
+&nbsp;    public void removeAdmin(User toRemove) {
+&nbsp;        //Check if the User to give admin powers is in the group
+&nbsp;        if(!members.contains(toRemove)){
+&nbsp;            // If the new Admin isn&#39;t a member throw an exception
+&nbsp;            throw new IllegalArgumentException(&quot;The User to remove must be a member of the Group&quot;);
+&nbsp;        }
+&nbsp;
+&nbsp;        this.admins.remove(toRemove.getName());
+&nbsp;    }
+&nbsp;    */
+&nbsp;
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 13:23</div>
+</div>
+</body>
+</html>

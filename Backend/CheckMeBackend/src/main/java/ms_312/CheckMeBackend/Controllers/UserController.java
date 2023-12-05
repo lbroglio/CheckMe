@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -129,11 +130,13 @@ public class UserController {
             return new ResponseEntity<>("JSON in request body could not be parsed.", HttpStatus.BAD_REQUEST);
         }
 
+        System.out.println("STRING JSON: " + userJSON.toString());
+
         // Get the Username given in the request
         String username = (String) userJSON.get("username");
 
         //  Return 400 if the username wasn't included
-        if(username == null){
+        if(username == null || username.trim().equals("")){
             return new ResponseEntity<>("Could not find username in request body", HttpStatus.BAD_REQUEST);
         }
 
@@ -152,7 +155,7 @@ public class UserController {
         String password = (String) userJSON.get("password");
 
         // Return 400 if the password was not included
-        if(password == null){
+        if(password == null || password.trim().equals("")){
             return new ResponseEntity<>("Could not find password in request body", HttpStatus.BAD_REQUEST);
         }
 
@@ -176,13 +179,22 @@ public class UserController {
         String email = (String) userJSON.get("email_address");
 
         //Return 400 if the email address wasn't included
-        if(email == null){
+        if(email == null || email.trim().equals("")){
             return new ResponseEntity<>("Could not find email_address in request body", HttpStatus.BAD_REQUEST);
         }
 
+        String userType = (String) userJSON.get("user_type");
+        System.out.println("USER TYPE: " + userType);
+
         //Store the hash and the salt
         // Create the new User
-        User createdUser = new User(username, email, hashedPassword, salt);
+        User createdUser;
+        if(userType != null){
+            createdUser = new User(username, email, hashedPassword, salt, userType);
+        }else{
+            createdUser = new User(username, email, hashedPassword, salt);
+
+        }
 
         userRepository.save(createdUser);
 

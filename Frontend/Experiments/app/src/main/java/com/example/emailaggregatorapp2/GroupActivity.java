@@ -2,6 +2,7 @@ package com.example.emailaggregatorapp2;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -14,27 +15,22 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
-import android.util.Base64;
 import android.widget.TextView;
 
 public class GroupActivity extends AppCompatActivity {
 
     private final String USER_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/user/"+UserLoginInfo.username+"/groups";
 
-    private final String GROUP_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/group/";
+    private final String GROUP_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/group/name/";
 
     private String selectedGroup = null;
 

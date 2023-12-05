@@ -1,5 +1,6 @@
 package ms_312.CheckMeBackend.Users;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
@@ -14,6 +15,14 @@ import java.util.List;
 @Entity
 //@Table(name="USERS")
 public class User extends RetrieverOwner{
+
+    public enum UserType{
+        @JsonEnumDefaultValue
+        DEFAULT,
+        ADMIN
+    }
+
+
     @Schema(type = "string", example = "User101")
     private String name = super.getName();
     /**
@@ -40,6 +49,8 @@ public class User extends RetrieverOwner{
     @Schema(type = "string", example = "{'ExampleSetting': 'on'}")
     private String profileSettings;
 
+    private UserType userType;
+
     @ManyToMany(cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Group> groups;
@@ -58,6 +69,17 @@ public class User extends RetrieverOwner{
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
+        this.userType = UserType.DEFAULT;
+    }
+
+
+    public User(String username, String email, byte[] passwordHash, byte[] salt, String userType) {
+        super(username);
+        this.groups = new ArrayList<>();
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+        this.userType = UserType.valueOf(userType);
     }
 
 
@@ -149,4 +171,15 @@ public class User extends RetrieverOwner{
         return super.equals(o);
     }
 
+    public UserType getUserType() {
+        return userType;
+    }
+
+    public void setUserType(UserType userType) {
+        this.userType = userType;
+    }
+
+
 }
+
+

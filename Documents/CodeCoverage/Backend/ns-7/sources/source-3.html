@@ -1,0 +1,265 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > User</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.Users</a>
+</div>
+
+<h1>Coverage Summary for Class: User (ms_312.CheckMeBackend.Users)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">User</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.7%
+  </span>
+  <span class="absValue">
+    (11/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (20/21)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">User$HibernateProxy$iKHiHMTI</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    91.7%
+  </span>
+  <span class="absValue">
+    (11/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (20/21)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Users;
+&nbsp;
+&nbsp;import com.fasterxml.jackson.annotation.JsonIgnore;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import jakarta.persistence.*;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;
+&nbsp;/**
+&nbsp; * Class for a User of the application. Users own Retrievers which serve them Messages.
+&nbsp; */
+&nbsp;@Entity
+&nbsp;//@Table(name=&quot;USERS&quot;)
+&nbsp;public class User extends RetrieverOwner{
+<b class="fc">&nbsp;    @Schema(type = &quot;string&quot;, example = &quot;User101&quot;)</b>
+<b class="fc">&nbsp;    private String name = super.getName();</b>
+&nbsp;    /**
+&nbsp;     * The email address associated with the user&#39;s account
+&nbsp;     */
+&nbsp;    @Schema(type = &quot;string&quot;, example = &quot;example@gmail.com&quot;)
+&nbsp;    private String email;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * A cryptographic hash of this account&#39;s password.
+&nbsp;     */
+&nbsp;    @JsonIgnore
+&nbsp;    private byte[] passwordHash;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Randomly generated salt applied to this user&#39;s password.
+&nbsp;     */
+&nbsp;    @JsonIgnore
+&nbsp;    private byte[] salt;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * JSON which represents any previously configured settings set by this user related to their account.
+&nbsp;     */
+&nbsp;    @Schema(type = &quot;string&quot;, example = &quot;{&#39;ExampleSetting&#39;: &#39;on&#39;}&quot;)
+&nbsp;    private String profileSettings;
+&nbsp;
+&nbsp;    @ManyToMany(cascade = CascadeType.ALL)
+&nbsp;    @JsonIgnore
+&nbsp;    private List&lt;Group&gt; groups;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Construct a new empty user with the given username and password hash.
+&nbsp;     *
+&nbsp;     * @param username A string storing the username to identify this account by.
+&nbsp;     * @param email The email address to be associated with this User&#39;s account
+&nbsp;     * @param passwordHash A cryptographic hash of this account&#39;s password.
+&nbsp;     * @param salt         The salt used to hash this user&#39;s password
+&nbsp;     */
+&nbsp;    public User(String username, String email, byte[] passwordHash, byte[] salt) {
+<b class="fc">&nbsp;        super(username);</b>
+<b class="fc">&nbsp;        this.groups = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.email = email;</b>
+<b class="fc">&nbsp;        this.passwordHash = passwordHash;</b>
+<b class="fc">&nbsp;        this.salt = salt;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Default constructor used by the persistence API
+&nbsp;     */
+&nbsp;    private User(){
+<b class="fc">&nbsp;        super();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return A cryptographic hash of this account&#39;s password
+&nbsp;     */
+&nbsp;    public byte[] getPasswordHash() {
+<b class="fc">&nbsp;        return passwordHash;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return Any configured preferences/settings this user has set stored as a JSON  String.
+&nbsp;     */
+&nbsp;    public String getProfileSettings() {
+<b class="fc">&nbsp;        return profileSettings;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update the saved profile settings of a user to a new JSON String
+&nbsp;     *
+&nbsp;     * @param profileSettings The JSON String to save as the new profile settings.
+&nbsp;     */
+&nbsp;    public void setProfileSettings(String profileSettings) {
+<b class="fc">&nbsp;        this.profileSettings = profileSettings;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return The salt used for this user&#39;s password hash
+&nbsp;     */
+&nbsp;    public byte[] getSalt() {
+<b class="fc">&nbsp;        return salt;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return The email address associated with this account
+&nbsp;     */
+&nbsp;    public String getEmail() {
+<b class="fc">&nbsp;        return email;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @return An ArrayList containing all the {@link Group} objects for the groups this User is a member of.
+&nbsp;     */
+&nbsp;    public List&lt;Group&gt; getGroups(){
+<b class="fc">&nbsp;        return groups;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Function to update the List of {@link Group}s used by the persistence API
+&nbsp;     *
+&nbsp;     * @param groups The {@link ArrayList} of {@link Group] objects represneitng groups this User is a member of
+&nbsp;     */
+&nbsp;    private void setGroups(List&lt;Group&gt; groups) {
+<b class="nc">&nbsp;        this.groups = groups;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add a new Group that this User is a member of to the stored list of this User&#39;s groups
+&nbsp;     *
+&nbsp;     * @param group The {@link Group} object for the Group this User is joining
+&nbsp;     */
+&nbsp;    public void joinGroup(Group group){
+<b class="fc">&nbsp;        groups.add(group);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove a Group that this User is a member of from the stored list of this User&#39;s groups
+&nbsp;     *
+&nbsp;     * @param group The {@link Group} object for the Group this User is leaving
+&nbsp;     */
+&nbsp;    public void removeGroup(Group group){
+<b class="fc">&nbsp;        groups.remove(group);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean equals(Object o) {
+<b class="fc">&nbsp;        if (this == o) return true;</b>
+<b class="fc">&nbsp;        if (!(o instanceof User user)) return false;</b>
+<b class="fc">&nbsp;        if (!super.equals(o)) return false;</b>
+&nbsp;
+<b class="fc">&nbsp;        return super.equals(o);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 13:23</div>
+</div>
+</body>
+</html>
