@@ -7,7 +7,7 @@
     tools:context=".SignupActivity">
 
     <EditText
-        android:id="@+id/editTextText2"
+        android:id="@+id/usernameInp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
@@ -21,7 +21,7 @@
         app:layout_constraintVertical_bias="0.332" />
 
     <EditText
-        android:id="@+id/editTextTextPassword"
+        android:id="@+id/passConfirmInp"
         android:layout_width="216dp"
         android:layout_height="64dp"
         android:ems="10"
@@ -35,7 +35,7 @@
         app:layout_constraintVertical_bias="0.638" />
 
     <EditText
-        android:id="@+id/editTextTextPassword2"
+        android:id="@+id/passInp"
         android:layout_width="213dp"
         android:layout_height="64dp"
         android:ems="10"
@@ -49,7 +49,7 @@
         app:layout_constraintVertical_bias="0.481" />
 
     <EditText
-        android:id="@+id/editTextText7"
+        android:id="@+id/emailInp"
         android:layout_width="219dp"
         android:layout_height="49dp"
         android:ems="10"

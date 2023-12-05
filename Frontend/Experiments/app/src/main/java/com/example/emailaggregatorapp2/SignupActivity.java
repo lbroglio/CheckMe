@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -38,10 +37,10 @@ public class SignupActivity extends AppCompatActivity {
         signUpButton = (Button) findViewById(R.id.loginbut2);
         backbutton = (Button) findViewById(R.id.backbutton2);
 
-        emailInput = (EditText) findViewById(R.id.editTextText7);
-        usernameInput = (EditText) findViewById(R.id.editTextText2);
-        passwordInput = (EditText) findViewById(R.id.editTextTextPassword2);
-        passwordConfirm = (EditText) findViewById(R.id.editTextTextPassword);
+        emailInput = (EditText) findViewById(R.id.emailInp);
+        usernameInput = (EditText) findViewById(R.id.usernameInp);
+        passwordInput = (EditText) findViewById(R.id.passInp);
+        passwordConfirm = (EditText) findViewById(R.id.passConfirmInp);
 
 
 
