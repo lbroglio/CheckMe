@@ -19,7 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SignupActivity extends AppCompatActivity {
-    private static final String API_URL = "http://10.0.2.2:8080/user";
+    private static final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/user";
 
     private Button signUpButton;
     private EditText emailInput;

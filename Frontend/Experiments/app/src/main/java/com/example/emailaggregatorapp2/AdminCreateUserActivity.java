@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class AdminCreateUserActivity extends AppCompatActivity {
 
-    private final String API_URL = "http://10.0.2.2:8080/";
+    private final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/";
 
 
     private EditText editTextUsername, editTextEmail, editTextPassword;

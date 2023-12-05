@@ -28,9 +28,9 @@ import android.widget.TextView;
 
 public class GroupActivity extends AppCompatActivity {
 
-    private final String USER_API_ENDPOINT ="http://10.0.2.2:8080/user/"+UserLoginInfo.username+"/groups";
+    private final String USER_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/user/"+UserLoginInfo.username+"/groups";
 
-    private final String GROUP_API_ENDPOINT ="http://10.0.2.2:8080/group/name/";
+    private final String GROUP_API_ENDPOINT ="http://coms-309-047.class.las.iastate.edu:8080/group/name/";
 
     private String selectedGroup = null;
 
