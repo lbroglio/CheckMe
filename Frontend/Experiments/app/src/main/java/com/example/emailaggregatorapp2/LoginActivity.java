@@ -62,7 +62,6 @@ public class LoginActivity extends AppCompatActivity {
                 username = usernameEditText.getText().toString();
                 password = passwordEditText.getText().toString();
                 makeJsonObjectRequest(username, password);
-                checkAdmin();
                 if(goToNext){
                     Intent intent = new Intent(LoginActivity.this, MessagesActivity.class);
                     startActivity(intent);
@@ -100,6 +99,7 @@ public class LoginActivity extends AppCompatActivity {
                         //  Set the flag to go to the next screen and save the login info
                         UserLoginInfo.username = username;
                         UserLoginInfo.password = password;
+                        checkAdmin();
                     }
                 },
                 new Response.ErrorListener() {

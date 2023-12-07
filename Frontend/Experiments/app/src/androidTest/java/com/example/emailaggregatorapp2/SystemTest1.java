@@ -22,6 +22,7 @@ import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
+import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
@@ -162,8 +163,7 @@ public class SystemTest1 {
 
     }
 
-    @Test
-    public void adminCreateUser(){
+    private void navToAdmin(){
         onView(withId(R.id.loginbut1)).perform(click());
         onView(withId(R.id.loginusernameedittext)).perform(typeText(adminUser), closeSoftKeyboard());
         onView(withId(R.id.loginpasswordedittext)).perform(typeText(adminPass), closeSoftKeyboard());
@@ -177,6 +177,11 @@ public class SystemTest1 {
 
         onView(withId(R.id.navBarToggle)).perform(click());
         onView(withText("Admin")).perform(click());
+    }
+
+    @Test
+    public void adminCreateUser(){
+        navToAdmin();
         onView(withText("Create User")).perform(click());
         onView(withId(R.id.editTextUsername)).perform(typeText("AdminMade"+testUser), closeSoftKeyboard());
         onView(withId(R.id.editTextEmail)).perform(typeText("AdminMade"+email), closeSoftKeyboard());
@@ -213,4 +218,54 @@ public class SystemTest1 {
 
     }
 
+    @Test
+    public void adminCreateUserEmptyUsername(){
+        navToAdmin();
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.editTextEmail)).perform(typeText("AdminMade"+email), closeSoftKeyboard());
+        onView(withId(R.id.editTextPassword)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        //Check if username input has error message
+        onView(withId(R.id.editTextUsername)).check(matches(hasErrorText("Username is required")));
+    }
+
+    @Test
+    public void adminCreateUserEmptyEmail(){
+        navToAdmin();
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.editTextUsername)).perform(typeText("AdminMade"+testUser), closeSoftKeyboard());
+        onView(withId(R.id.editTextPassword)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        //Check if email input has error message
+        onView(withId(R.id.editTextEmail)).check(matches(hasErrorText("Email is required")));
+    }
+
+    @Test
+    public void adminCreateUserEmptyPassword(){
+        navToAdmin();
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.editTextUsername)).perform(typeText("AdminMade"+testUser), closeSoftKeyboard());
+        onView(withId(R.id.editTextEmail)).perform(typeText("AdminMade"+email), closeSoftKeyboard());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        //Check if password input has error message
+        onView(withId(R.id.editTextPassword)).check(matches(hasErrorText("Password is required")));
+    }
 }
