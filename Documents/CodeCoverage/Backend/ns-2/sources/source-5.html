@@ -1,0 +1,648 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > UserController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">ms_312.CheckMeBackend.Controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: UserController (ms_312.CheckMeBackend.Controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76.1%
+  </span>
+  <span class="absValue">
+    (70/92)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Controllers;
+&nbsp;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.Parameter;
+&nbsp;import io.swagger.v3.oas.annotations.media.Schema;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponses;
+&nbsp;import io.swagger.v3.oas.annotations.responses.ApiResponse;
+&nbsp;import io.swagger.v3.oas.annotations.enums.ParameterIn;
+&nbsp;import io.swagger.v3.oas.annotations.media.Content;
+&nbsp;import io.swagger.v3.oas.annotations.media.ExampleObject;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import ms_312.CheckMeBackend.Users.Group;
+&nbsp;import ms_312.CheckMeBackend.Users.User;
+&nbsp;import ms_312.CheckMeBackend.Users.UserRepository;
+&nbsp;import org.apache.tomcat.util.json.JSONParser;
+&nbsp;import org.apache.tomcat.util.json.ParseException;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpHeaders;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.MediaType;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;import org.springframework.web.server.ResponseStatusException;
+&nbsp;
+&nbsp;import java.nio.charset.StandardCharsets;
+&nbsp;import java.security.MessageDigest;
+&nbsp;import java.security.NoSuchAlgorithmException;
+&nbsp;import java.security.SecureRandom;
+&nbsp;import java.util.Base64;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;// VIEW DOCS AT - http://localhost:8080/swagger-ui/index.html
+&nbsp;@Tag(name = &quot;UserAPI&quot;, description = &quot;Rest API used for Creating and managing User accounts within the CheckMe service.&quot;)
+&nbsp;@RestController
+<b class="fc">&nbsp;public class UserController {</b>
+&nbsp;
+&nbsp;    @Autowired
+&nbsp;    UserRepository userRepository;
+&nbsp;
+&nbsp;
+&nbsp;    /** THIS IS A DESIGNED FOR USE IN DEVELOPMENT AND WILL NOT / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO
+&nbsp;     * Get the information for a given username
+&nbsp;     *
+&nbsp;     * @param username The username of a user in the database
+&nbsp;     *
+&nbsp;     * @return The {@link User} object for the requested User
+&nbsp;     *
+&nbsp;     * @throws ResponseStatusException Will be thrown if no user exists with the passed username
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/dev/user/{username}&quot;)
+&nbsp;    @Operation(description  = &quot;Get a specific User&#39;s information without authorizing as that User -- THIS IS A DESIGNED FOR USE IN DEVELOPMENT AND WILL NOT / SHOULD NOT BE EXPOSED IN A PRODUCTION SCENARIO&quot;,  tags = &quot;seeUserDev&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No user with the given Username&quot;, content = @Content) })
+&nbsp;    public User seeUserDev(@PathVariable String username){
+<b class="fc">&nbsp;        User toReturn = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Throw an exception if the user doesn&#39;t exist
+<b class="fc">&nbsp;        if(toReturn == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;There is no user with the given username&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return toReturn;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Creates a new {@link User} in the database with the given username and password.
+&nbsp;     * Returns a 201 status code if the username is created.
+&nbsp;     * Returns a 400 status code if the JSON is malformed or missing required fields.
+&nbsp;     * Returns a 409 status code if the username is taken.
+&nbsp;     *
+&nbsp;     * @param userInfo JSON body included in the POST request with the username and password of the user to be created.
+&nbsp;     *
+&nbsp;     * @return A {@link ResponseEntity} with a 201 status code indicating the user was created, a
+&nbsp;     * 409 status code indicating the username was taken, or a 400 code if the request body&#39;s JSON is malformed or
+&nbsp;     * is missing a field.
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/user&quot;)
+&nbsp;    @Operation(description  = &quot;Create a new User.&quot;,  tags = &quot;createUser&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;201&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;Created new user: User101&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;JSON in request body could not be parsed or is missing required fields&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;JSON in request body could not be parsed. OR Could not find {missing field} in request body&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;409&quot; , description =  &quot;The given username is taken.&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 409&quot;, value = &quot;The given username is taken.&quot;)))})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+&nbsp;            description = &quot;Information to create an account with&quot;,
+&nbsp;            required = true,
+&nbsp;            content = @Content(
+&nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+&nbsp;                    examples = {
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;The unique username that will be used for the created user&quot;,
+&nbsp;                                                &quot;email_address&quot;: &quot;Email to be associated with the created user&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;THe new user&#39;s  password &quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to create a user&quot;),
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;User101&quot;,
+&nbsp;                                                &quot;email_address&quot;: &quot;example@gamil.com&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;Password123&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for creating a User&quot;)
+&nbsp;                    }))
+&nbsp;    // Unchecked casts are from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; createUser(@RequestBody String userInfo) throws NoSuchAlgorithmException {
+&nbsp;        // Parse the JSON body of the post request
+<b class="fc">&nbsp;        JSONParser parseBody = new JSONParser(userInfo);</b>
+&nbsp;
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; userJSON;
+&nbsp;
+&nbsp;        // Catch the exception if the JSON can not be parsed and return a bad request response
+&nbsp;        try{
+&nbsp;            // Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
+<b class="fc">&nbsp;            userJSON = (LinkedHashMap&lt;Object, Object&gt;) parseBody.parse();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;JSON in request body could not be parsed.&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+<b class="fc">&nbsp;        System.out.println(&quot;STRING JSON: &quot; + userJSON.toString());</b>
+&nbsp;
+&nbsp;        // Get the Username given in the request
+<b class="fc">&nbsp;        String username = (String) userJSON.get(&quot;username&quot;);</b>
+&nbsp;
+&nbsp;        //  Return 400 if the username wasn&#39;t included
+<b class="fc">&nbsp;        if(username == null || username.trim().equals(&quot;&quot;)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not find username in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Confirm that the username is unqiue
+<b class="fc">&nbsp;        User existingUser = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // If the search found a user
+<b class="fc">&nbsp;        if(existingUser != null){</b>
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;The given username is taken.&quot;, HttpStatus.CONFLICT);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // This will only be reached if the username is allowed
+&nbsp;
+&nbsp;        //Hash the given password
+&nbsp;        //Get the user&#39;s password in plaintext
+<b class="fc">&nbsp;        String password = (String) userJSON.get(&quot;password&quot;);</b>
+&nbsp;
+&nbsp;        // Return 400 if the password was not included
+<b class="fc">&nbsp;        if(password == null || password.trim().equals(&quot;&quot;)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not find password in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Generate an 8 byte salt
+<b class="fc">&nbsp;        SecureRandom secRan = new SecureRandom();</b>
+&nbsp;
+<b class="fc">&nbsp;        byte[] salt = new byte[8];</b>
+<b class="fc">&nbsp;        secRan.nextBytes(salt);</b>
+&nbsp;
+&nbsp;
+&nbsp;        // Get a MessageDigest object for SHA-512
+<b class="fc">&nbsp;        MessageDigest digest = MessageDigest.getInstance(&quot;SHA-512&quot;);</b>
+&nbsp;
+&nbsp;        // Use the salt in the password hashing
+<b class="fc">&nbsp;        digest.update(salt);</b>
+&nbsp;
+&nbsp;        // Hash the password
+<b class="fc">&nbsp;        byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));</b>
+&nbsp;
+&nbsp;        // Read the email from the HTTP Request
+<b class="fc">&nbsp;        String email = (String) userJSON.get(&quot;email_address&quot;);</b>
+&nbsp;
+&nbsp;        //Return 400 if the email address wasn&#39;t included
+<b class="fc">&nbsp;        if(email == null || email.trim().equals(&quot;&quot;)){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Could not find email_address in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        String userType = (String) userJSON.get(&quot;user_type&quot;);</b>
+<b class="fc">&nbsp;        System.out.println(&quot;USER TYPE: &quot; + userType);</b>
+&nbsp;
+&nbsp;        //Store the hash and the salt
+&nbsp;        // Create the new User
+&nbsp;        User createdUser;
+<b class="fc">&nbsp;        if(userType != null){</b>
+<b class="fc">&nbsp;            createdUser = new User(username, email, hashedPassword, salt, userType);</b>
+&nbsp;        }else{
+<b class="fc">&nbsp;            createdUser = new User(username, email, hashedPassword, salt);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        userRepository.save(createdUser);</b>
+&nbsp;
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Created new user: &quot; + username,HttpStatus.CREATED );</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/user/{username}&quot;)
+&nbsp;    @Operation(description  = &quot;Get the information for a specific User object&quot;,  tags = &quot;seeUser&quot;)
+&nbsp;    @Parameter(name = &quot;username&quot;, in = ParameterIn.PATH, description = &quot;The username of the User to retrieve&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;User101&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;The password to the User account being requested&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Password123&quot;)})
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;Missing authorization header&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Incorrect Password&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;There is no user with the given username&quot;, content = @Content),})
+&nbsp;    public User seeUser(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+&nbsp;        // Get the user object for the given username
+<b class="fc">&nbsp;        User requested = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Return 404 if the requested user doesn&#39;t exist
+<b class="fc">&nbsp;        if(requested == null){</b>
+<b class="fc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;There is no user with the given username&quot;);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Return 400 if a password wasn&#39;t given
+<b class="fc">&nbsp;        if(password == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,&quot;Missing authorization header&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Check if the given password was correct
+<b class="fc">&nbsp;        Boolean passwordMatch = ControllerUtils.checkPassword(requested, password);</b>
+&nbsp;
+&nbsp;        // If the wrong password was given return
+<b class="fc">&nbsp;        if(!passwordMatch){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,&quot;Incorrect Password&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Return the  user
+<b class="fc">&nbsp;        return requested;</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * API endpoint to update the profile settings of a user. Allows for the caching of whatever information needed to
+&nbsp;     * by the frontend application.
+&nbsp;     *
+&nbsp;     * @param username The username of the user to update the account settings for -- passed as a path variable
+&nbsp;     * in the HTTP request.
+&nbsp;     * @param password The password used to authenticate as the User
+&nbsp;     * @param profileSettings A string containing  whatever information should be saved for this user&#39;s profile
+&nbsp;     *
+&nbsp;     * @return
+&nbsp;     * 200 If the update was successful
+&nbsp;     * 404 If no user exists with the given username
+&nbsp;     * 400 If no password was sent in the header
+&nbsp;     * 401 If the password was incorrect
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @PutMapping(&quot;/user/{username}/account_settings&quot;)
+&nbsp;    @Operation(description  = &quot;Set  the profile settings of a user. Allows for the caching of whatever information needed to by the frontend application.&quot;,  tags = &quot;updateUserSettings&quot;)
+&nbsp;    @Parameter(name = &quot;username&quot;, in = ParameterIn.PATH, description = &quot;The username of the User to update the settings of&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;User101&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;The password to the User account to be updated&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Password123&quot;)})
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;Updated User:  User101&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;Missing authorization header&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code - 400&quot;, value = &quot;Missing Authentication Header&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Incorrect Password&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code - 401&quot;, value = &quot;Incorrect Password&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No user exists with the given username&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code - 404&quot;, value = &quot;No user exists with the given username&quot;)))})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+&nbsp;            description = &quot;JSON String to store whatever values the frontend needs persisted&quot;,
+&nbsp;            required = true,
+&nbsp;            content = @Content(
+&nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+&nbsp;                    examples = {
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                            &quot;ExampleSetting&quot;: &quot;on&quot;
+&nbsp;                                            }
+&nbsp;                                            &quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request to create a user&quot;)
+&nbsp;                    }))
+&nbsp;    public ResponseEntity&lt;String&gt; updateUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password, @RequestBody String profileSettings) throws NoSuchAlgorithmException {
+&nbsp;        // Get the User to update the account settings for
+<b class="fc">&nbsp;        User toUpdate = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Return 404 if the no User exists with the given Username
+<b class="fc">&nbsp;        if(toUpdate == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;No user  with the username &quot; + username +&quot; exists.&quot;,HttpStatus.NOT_FOUND);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Return 400 if a password wasn&#39;t given
+<b class="fc">&nbsp;        if(password == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Missing Authentication Header&quot;,HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Check if the given password was correct
+<b class="fc">&nbsp;        Boolean passwordMatch = ControllerUtils.checkPassword(toUpdate, password);</b>
+&nbsp;
+&nbsp;        // If the wrong password was given return 401
+<b class="fc">&nbsp;        if(!passwordMatch){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;Incorrect Password&quot;,HttpStatus.UNAUTHORIZED);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Update the User in the database
+<b class="fc">&nbsp;        toUpdate.setProfileSettings(profileSettings);</b>
+<b class="fc">&nbsp;        userRepository.save(toUpdate);</b>
+&nbsp;
+&nbsp;        //Return 200
+<b class="fc">&nbsp;        return new ResponseEntity&lt;&gt;(&quot;Updated User: &quot; + username,HttpStatus.OK);</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * API endpoint to retrieve the profile settings of a user.
+&nbsp;     *
+&nbsp;     * @param username The username of the user to update the account settings for -- passed as a path variable
+&nbsp;     * in the HTTP request.
+&nbsp;     * @param password The password used to authenticate as the User
+&nbsp;     *
+&nbsp;     * @return
+&nbsp;     * If the GET was successful (Existing user and correct password were given)
+&nbsp;     * 	Return the String of cached user profile data and status code 200
+&nbsp;     * If the GET was unsuccessful throw an exception and return the following status codes
+&nbsp;     * 	404 If no user exists with the given username
+&nbsp;     * 	400 If no password was sent in the header
+&nbsp;     * 	401 If the password was incorrect
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/user/{username}/account_settings&quot;)
+&nbsp;    @Operation(description  = &quot;Get the profile settings of a user. Used for caching of whatever information needed by the frontend application.&quot;,  tags = &quot;getUserSettings&quot;)
+&nbsp;    @Parameter(name = &quot;username&quot;, in = ParameterIn.PATH, description = &quot;The username of the User to update the settings of&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;User101&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;The password to the User account to be updated&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Password123&quot;)})
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;{\n\&quot;ExampleSettings\&quot;: \&quot;on\&quot;\n}&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;Missing authorization header&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;Missing Authentication Header&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Incorrect Password&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;Incorrect Password&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No user exists with the given username&quot;, content = @Content(schema = @Schema(implementation = String.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 404&quot;, value = &quot;No user exists with the given username&quot;)))})
+&nbsp;    public String getUserSettings(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+&nbsp;        // Get the User to update the account settings for
+<b class="fc">&nbsp;        User toReturn = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Return 404 if the no User exists with the given Username
+<b class="fc">&nbsp;        if(toReturn == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;No user  with the username &quot;  + username + &quot;  exists.&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Return 400 if a password wasn&#39;t given
+<b class="fc">&nbsp;        if(password == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,&quot;Missing Authentication Header&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Check if the given password was correct
+<b class="fc">&nbsp;        Boolean passwordMatch = ControllerUtils.checkPassword(toReturn, password);</b>
+&nbsp;
+&nbsp;        // If the wrong password was given return 401
+<b class="fc">&nbsp;        if(!passwordMatch){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,&quot;Incorrect Password&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        //Return the requested settings
+<b class="fc">&nbsp;        return toReturn.getProfileSettings();</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * API endpoint to retrieve the groups a User is a member of
+&nbsp;     *
+&nbsp;     * @param username The username of the user to update the account settings for -- passed as a path variable
+&nbsp;     * in the HTTP request.
+&nbsp;     * @param password The password used to authenticate as the User
+&nbsp;     *
+&nbsp;     * @return
+&nbsp;     * If the GET was successful (Existing user and correct password were given)
+&nbsp;     * 	Return the list of Groups the User is a member of and status code 200
+&nbsp;     * If the GET was unsuccessful throw an exception and return the following status codes
+&nbsp;     * 	404 If no user exists with the given username
+&nbsp;     * 	400 If no password was sent in the header
+&nbsp;     * 	401 If the password was incorrect
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @GetMapping(&quot;/user/{username}/groups&quot;)
+&nbsp;    @Operation(description  = &quot;Get the list of Groups a User is in.&quot;,  tags = &quot;getUserGroups&quot;)
+&nbsp;    @Parameter(name = &quot;username&quot;, in = ParameterIn.PATH, description = &quot;The username of the User to update the settings of&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;User101&quot;)})
+&nbsp;    @Parameter(name = &quot;Authorization&quot;, in = ParameterIn.HEADER, description = &quot;The password to the User account to be updated&quot;, required = true, examples = {
+&nbsp;            @ExampleObject(name = &quot;example&quot;, value = &quot;Password123&quot;)})
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;Missing authorization header&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Incorrect Password&quot;, content = @Content),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No user exists with the given username&quot;, content = @Content),})
+&nbsp;    public List&lt;Group&gt; getUserGroups(@PathVariable String username, @RequestHeader(HttpHeaders.AUTHORIZATION) String password) throws NoSuchAlgorithmException {
+&nbsp;        // Get the User to update the account settings for
+<b class="fc">&nbsp;        User toReturn = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Return 404 if the no User exists with the given Username
+<b class="fc">&nbsp;        if(toReturn == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.NOT_FOUND,&quot;No user  with the username &quot;  + username + &quot;  exists.&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Return 400 if a password wasn&#39;t given
+<b class="fc">&nbsp;        if(password == null){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,&quot;Missing Authentication Header&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Check if the given password was correct
+<b class="fc">&nbsp;        Boolean passwordMatch = ControllerUtils.checkPassword(toReturn, password);</b>
+&nbsp;
+&nbsp;        // If the wrong password was given return 401
+<b class="fc">&nbsp;        if(!passwordMatch){</b>
+<b class="nc">&nbsp;            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,&quot;Incorrect Password&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;
+&nbsp;        //Return the requested settings
+<b class="fc">&nbsp;        return toReturn.getGroups();</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Takes in login information in the request body and returns true if a user login was successful
+&nbsp;     * and false if it was not.
+&nbsp;     *
+&nbsp;     * @param body JSON Request Body with a username and password field.
+&nbsp;     *
+&nbsp;     * @return
+&nbsp;     * If the login was successful returns true with status code 200
+&nbsp;     * If the username or password is missing returns false with code 400
+&nbsp;     * If no user with the given username exists return false with code 404
+&nbsp;     * If the password is incorrect return false with code 401
+&nbsp;     *
+&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
+&nbsp;     *{@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
+&nbsp;     */
+&nbsp;    @PostMapping(&quot;/user/login&quot;)
+&nbsp;    // Unchecked casts are from interacting with the JSON API
+&nbsp;    @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;    @Operation(description  = &quot;Verify if the login information for a User is correct. Returns true if the login was successful; false if it was not&quot;,  tags = &quot;getUserGroups&quot;)
+&nbsp;    @ApiResponses(value = {
+&nbsp;            @ApiResponse(responseCode = &quot;200&quot; , description =  &quot;Success|OK&quot;, content = @Content(schema = @Schema(implementation = Boolean.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Success&quot;, value = &quot;true&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;400&quot; , description =  &quot;JSON in request body could not be parsed or is missing required fields&quot;, content = @Content(schema = @Schema(implementation = Boolean.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 400&quot;, value = &quot;false&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;401&quot; , description =  &quot;Incorrect Password - false&quot;, content = @Content(schema = @Schema(implementation = Boolean.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 401&quot;, value = &quot;false&quot;))),
+&nbsp;            @ApiResponse(responseCode = &quot;404&quot; , description =  &quot;No user exists with the given username - false&quot;, content = @Content(schema = @Schema(implementation = Boolean.class),
+&nbsp;                    examples = @ExampleObject(description = &quot;Code 404&quot;, value = &quot;false&quot;)))})
+&nbsp;    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+&nbsp;            description = &quot;Login  information for a CheckMe account&quot;,
+&nbsp;            required = true,
+&nbsp;            content = @Content(
+&nbsp;                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+&nbsp;                    examples = {
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint describing each field&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;The username of the account to authorize as&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;The password for the account to log into &quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Description of each field needed for a request for login&quot;),
+&nbsp;                            @ExampleObject(
+&nbsp;                                    name = &quot;An example request for this endpoint with sample data.&quot;,
+&nbsp;                                    value = &quot;&quot;&quot;
+&nbsp;                                            {
+&nbsp;                                                &quot;username&quot;: &quot;User101&quot;,
+&nbsp;                                                &quot;password&quot;: &quot;Password123&quot;
+&nbsp;                                            }&quot;&quot;&quot;,
+&nbsp;                                    summary = &quot;Example body of a Request made for login &quot;)
+&nbsp;                    }))
+&nbsp;    public ResponseEntity&lt;Boolean&gt; login(@RequestBody String body) throws NoSuchAlgorithmException {
+&nbsp;        // Parses the JSON body of the post request
+<b class="fc">&nbsp;        JSONParser parseBody = new JSONParser(body);</b>
+&nbsp;
+&nbsp;        LinkedHashMap&lt;Object, Object&gt; userJSON;
+&nbsp;
+&nbsp;        // Catch the exception if the JSON can not be parsed and return a bad request response
+&nbsp;        try{
+&nbsp;            // Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
+<b class="fc">&nbsp;            userJSON = (LinkedHashMap&lt;Object, Object&gt;) parseBody.parse();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        catch(ParseException e){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(false, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;
+&nbsp;        // Get the Username given in the request
+<b class="fc">&nbsp;        String username = (String) userJSON.get(&quot;username&quot;);</b>
+&nbsp;
+&nbsp;        //  Return 400 if the username wasn&#39;t included
+<b class="fc">&nbsp;        if(username == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(false, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get the User
+<b class="fc">&nbsp;        User user = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;        // Return 404 if the user doesn&#39;t exist
+<b class="fc">&nbsp;        if(user == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(false, HttpStatus.NOT_FOUND);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Get the given password
+<b class="fc">&nbsp;        String password = (String) userJSON.get(&quot;password&quot;);</b>
+&nbsp;
+&nbsp;        // Return 400 if the password was not included
+<b class="fc">&nbsp;        if(password == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(false, HttpStatus.BAD_REQUEST);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        //Confirm that the password is correct
+<b class="fc">&nbsp;        Boolean correctPass = ControllerUtils.checkPassword(user,password);</b>
+&nbsp;
+&nbsp;        //If the password is correct
+<b class="fc">&nbsp;        if(correctPass){</b>
+&nbsp;            //Return a successful login
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(true, HttpStatus.OK);</b>
+&nbsp;        }
+&nbsp;        // If the password  was incorrect
+&nbsp;        else {
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(false, HttpStatus.UNAUTHORIZED);</b>
+&nbsp;
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-12-05 14:47</div>
+</div>
+</body>
+</html>

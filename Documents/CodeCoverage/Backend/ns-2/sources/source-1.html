@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html id="htmlId">
 <head>
-  <title>Coverage Report > ControllerUtils</title>
+  <title>Coverage Report > AdminUserController</title>
   <style type="text/css">
     @import "../../css/coverage.css";
     @import "../../css/idea.min.css";
@@ -21,12 +21,15 @@ Current scope:     <a href="../../index.html">all classes</a>
     <a href="../index.html">ms_312.CheckMeBackend.Controllers</a>
 </div>
 
-<h1>Coverage Summary for Class: ControllerUtils (ms_312.CheckMeBackend.Controllers)</h1>
+<h1>Coverage Summary for Class: AdminUserController (ms_312.CheckMeBackend.Controllers)</h1>
 
 <table class="coverageStats">
-
 <tr>
   <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
 <th class="coverageStat 
 ">
   Method, %
@@ -37,32 +40,13 @@ Current scope:     <a href="../../index.html">all classes</a>
 </th>
 </tr>
 <tr>
-  <td class="name">ControllerUtils</td>
-<td class="coverageStat">
-  <span class="percent">
-    83.3%
-  </span>
-  <span class="absValue">
-    (5/6)
-  </span>
-</td>
-<td class="coverageStat">
-  <span class="percent">
-    88.6%
-  </span>
-  <span class="absValue">
-    (31/35)
-  </span>
-</td>
-</tr>
-  <tr>
-    <td class="name">ControllerUtils$MessageDateComp</td>
+  <td class="name">AdminUserController</td>
 <td class="coverageStat">
   <span class="percent">
     100%
   </span>
   <span class="absValue">
-    (2/2)
+    (1/1)
   </span>
 </td>
 <td class="coverageStat">
@@ -70,29 +54,19 @@ Current scope:     <a href="../../index.html">all classes</a>
     100%
   </span>
   <span class="absValue">
-    (2/2)
-  </span>
-</td>
-  </tr>
-<tr>
-  <td class="name"><strong>Total</strong></td>
-<td class="coverageStat">
-  <span class="percent">
-    87.5%
-  </span>
-  <span class="absValue">
-    (7/8)
+    (6/6)
   </span>
 </td>
 <td class="coverageStat">
   <span class="percent">
-    89.2%
+    78.8%
   </span>
   <span class="absValue">
-    (33/37)
+    (52/66)
   </span>
 </td>
 </tr>
+
 </table>
 
 <br/>
@@ -102,176 +76,186 @@ Current scope:     <a href="../../index.html">all classes</a>
 <pre>
 <code class="sourceCode" id="sourceCode">&nbsp;package ms_312.CheckMeBackend.Controllers;
 &nbsp;
-&nbsp;import ms_312.CheckMeBackend.Messages.Message;
+&nbsp;
 &nbsp;import ms_312.CheckMeBackend.Users.User;
 &nbsp;import ms_312.CheckMeBackend.Users.UserRepository;
+&nbsp;import org.apache.tomcat.util.json.JSONParser;
+&nbsp;import org.apache.tomcat.util.json.ParseException;
+&nbsp;import org.json.JSONObject;
+&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+&nbsp;import org.springframework.http.HttpHeaders;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
 &nbsp;
 &nbsp;import java.nio.charset.StandardCharsets;
 &nbsp;import java.security.MessageDigest;
 &nbsp;import java.security.NoSuchAlgorithmException;
-&nbsp;import java.util.Arrays;
+&nbsp;import java.security.SecureRandom;
 &nbsp;import java.util.Base64;
-&nbsp;import java.util.Comparator;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.LinkedHashMap;
 &nbsp;
-&nbsp;/**
-&nbsp; * Class which stores utility Methods used by the different Controllers
-&nbsp; */
-<b class="nc">&nbsp;public class ControllerUtils {</b>
+&nbsp;@RestController
+<b class="fc">&nbsp;public class AdminUserController {</b>
+&nbsp;    @Autowired
+&nbsp;    private UserRepository userRepository;
 &nbsp;
-&nbsp;    /**
-&nbsp;     * Object used for comparing two {@link Message}s based on the times there were sent
-&nbsp;     */
-<b class="fc">&nbsp;    public static class MessageDateComp implements Comparator&lt;Message&gt; {</b>
-&nbsp;        @Override
-&nbsp;        public int compare(Message o1, Message o2) {
-<b class="fc">&nbsp;            return o1.getSendTime().compareTo(o2.getSendTime());</b>
+&nbsp;
+&nbsp;    @GetMapping(&quot;/user/login/isAdmin&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; isAdmin(@RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+&nbsp;
+<b class="fc">&nbsp;        System.out.println(&quot;Checking if user is admin&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();</b>
+&nbsp;
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;        System.out.println(&quot;Username: &quot; + username);</b>
+<b class="fc">&nbsp;        System.out.println(&quot;UserType: &quot; + userRepository.findByName(username).getUserType());</b>
+<b class="fc">&nbsp;        System.out.println(&quot;Is admin: &quot; + checkAdmin(username));</b>
+<b class="fc">&nbsp;        if (checkAdmin(username)) {</b>
+<b class="fc">&nbsp;            System.out.println(&quot;Returning true&quot;);</b>
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;true&quot;, HttpStatus.OK);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            System.out.println(&quot;Returning false&quot;);</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;false&quot;, HttpStatus.OK);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private boolean checkAdmin(String username) {
+<b class="fc">&nbsp;        User user = userRepository.findByName(username);</b>
+<b class="fc">&nbsp;        return user.getUserType() == User.UserType.ADMIN;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/user/delete/{userToDelete}&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; deleteUser(@PathVariable String userToDelete, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+<b class="fc">&nbsp;        if(userRepository.findByName(userToDelete) == null){</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User not found&quot;, HttpStatus.NOT_FOUND);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        System.out.println(&quot;Auth Header: &quot; + authHeader);</b>
+<b class="fc">&nbsp;        String username = ControllerUtils.getUsername(ControllerUtils.parseBasicAuthHeader(authHeader), userRepository).getName();</b>
+<b class="fc">&nbsp;        if (checkAdmin(username)) {</b>
+<b class="fc">&nbsp;            userRepository.deleteByName(userToDelete);</b>
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User deleted&quot;, HttpStatus.OK);</b>
+&nbsp;        }else{
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User is not an admin&quot;, HttpStatus.UNAUTHORIZED);</b>
 &nbsp;        }
 &nbsp;    }
 &nbsp;
 &nbsp;
-&nbsp;
-&nbsp;    /**
-&nbsp;     * Hashes a string and compares it to the saved hash belonging to a given {@link User}
-&nbsp;     *
-&nbsp;     * @param user The user to see if the given password is correct for.
-&nbsp;     * @param givenPassword The password to attempt to match with the user
-&nbsp;     * @return true if the password is correct false if it is not
-&nbsp;     *
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * 	 * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    public static Boolean checkPassword(User user, String givenPassword) throws NoSuchAlgorithmException {
-&nbsp;
-&nbsp;        //Get the salt for this hash
-<b class="fc">&nbsp;        byte[] salt = user.getSalt();</b>
-&nbsp;
-&nbsp;        //Convert the saved hash to bytes for comparison
-<b class="fc">&nbsp;        byte[] savedHash = user.getPasswordHash();</b>
-&nbsp;
-&nbsp;        // Get a MessageDigest object for SHA-512
-<b class="fc">&nbsp;        MessageDigest digest = MessageDigest.getInstance(&quot;SHA-512&quot;);</b>
-&nbsp;
-&nbsp;        // Use the salt in the password hashing
-<b class="fc">&nbsp;        digest.update(salt);</b>
-&nbsp;
-&nbsp;        // Hash the given password
-<b class="fc">&nbsp;        byte[] givenPassHash = digest.digest(givenPassword.getBytes(StandardCharsets.UTF_8));</b>
-&nbsp;
-&nbsp;        //Compare the two hashes and return the result
-<b class="fc">&nbsp;        return Arrays.equals(savedHash, givenPassHash);</b>
-&nbsp;
-&nbsp;    }
-&nbsp;
-&nbsp;    /**
-&nbsp;     * Take in a string passed in the header of a request using &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;HTTP Basic Authentification&lt;/a&gt;
-&nbsp;     * and separate the base64 encoding from the Basic keyword
-&nbsp;     * @param authHeader The string passed in an HTTP request&#39;s authorization header containing Basic Auth to be parsed
-&nbsp;     *
-&nbsp;     * @return A string containing only the Base64 from the header not the Basic Keyword
-&nbsp;     */
-&nbsp;    public static String parseBasicAuthHeader(String authHeader){
-<b class="fc">&nbsp;        String[] splitHeader = authHeader.split(&quot; &quot;);</b>
-<b class="fc">&nbsp;        return splitHeader[1];</b>
-&nbsp;    }
-&nbsp;
-&nbsp;    /**
-&nbsp;     * Verifies if a login passed via a Base64 String (HTTP Basic Authentication) is correct.
-&nbsp;     * Handles decoding the given String verifying if the USer exists and if the password is correct.
-&nbsp;     *
-&nbsp;     * @param encodedAuth A Base64 encoded string in the form of &lt;br/&gt;{username}:{password} --
-&nbsp;     * &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;For more Information&lt;/a&gt;
-&nbsp;     *
-&nbsp;     * @return
-&nbsp;     * true if the User was correctly logged in  -- User exists and  the correct password was given
-&nbsp;     * false if the login  failed for any reason
-&nbsp;     *
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    public static boolean checkBasicAuth(String encodedAuth, UserRepository userRepository) throws NoSuchAlgorithmException{
-&nbsp;        //Decode the authorization header
-<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(encodedAuth);</b>
-<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
-&nbsp;
-&nbsp;        //Separate the Username and password
-<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
-<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
-<b class="fc">&nbsp;        String password = auth.substring(authSplit +1);</b>
-&nbsp;
-&nbsp;        //Find the User with the given Username
-<b class="fc">&nbsp;        User authUser = userRepository.findByName(username);</b>
-&nbsp;
-&nbsp;        //Return false if no such User exists
-<b class="fc">&nbsp;        if(authUser == null){</b>
-<b class="nc">&nbsp;            return false;</b>
+&nbsp;    @PutMapping(&quot;/promote/{userToPromote}&quot;)
+&nbsp;    public ResponseEntity&lt;String&gt; promoteUser(@PathVariable String userToPromote, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) {
+<b class="fc">&nbsp;        User promoteUser = userRepository.findByName(userToPromote);</b>
+<b class="fc">&nbsp;        if (promoteUser == null) {</b>
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User not found&quot;, HttpStatus.NOT_FOUND);</b>
 &nbsp;        }
 &nbsp;
-&nbsp;        // Return true if the given password is correct and false if it isn&#39;t
-<b class="fc">&nbsp;        return checkPassword(authUser, password);</b>
+<b class="fc">&nbsp;        String decodedAuth = new String(Base64.getDecoder().decode(authHeader));</b>
+<b class="fc">&nbsp;        int authSplit = decodedAuth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;        String username = decodedAuth.substring(0, authSplit);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (checkAdmin(username)) {</b>
+<b class="fc">&nbsp;            if (promoteUser.getUserType() == User.UserType.ADMIN) {</b>
+<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;User is already an admin&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;            }
+<b class="fc">&nbsp;            promoteUser.setUserType(User.UserType.ADMIN);</b>
+<b class="fc">&nbsp;            userRepository.save(promoteUser);</b>
+<b class="fc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User promoted&quot;, HttpStatus.OK);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            return new ResponseEntity&lt;&gt;(&quot;User is not an admin&quot;, HttpStatus.UNAUTHORIZED);</b>
+&nbsp;        }
 &nbsp;    }
 &nbsp;
-&nbsp;    /**
-&nbsp;     * Verifies if a login passed via a Base64 String (HTTP Basic Authentication) is correct.
-&nbsp;     * Handles decoding the given String verifying if the USer exists and if the password is correct.
-&nbsp;     *
-&nbsp;     * @param encodedAuth A Base64 encoded string in the form of &lt;br/&gt;{username}:{password} --
-&nbsp;     * &lt;a href=&quot;https://en.wikipedia.org/wiki/Basic_access_authentication&quot;&gt;For more Information&lt;/a&gt;
-&nbsp;     * @param authAs The user that the Basic Auth string is being used to authorize as. The encoded username and password
-&nbsp;     * must match those saved for this User.
-&nbsp;     *
-&nbsp;     * @return
-&nbsp;     * true if the User was correctly logged in  -- User exists, the correct password was given and they both matched
-&nbsp;     * the user to authorize as
-&nbsp;     * false if the login  failed for any reason
-&nbsp;     *
-&nbsp;     * @throws NoSuchAlgorithmException This exception indicates an invalid algorithm name was given to a
-&nbsp;     * {@link MessageDigest} object. The algorithm in this function is hard coded and this should NEVER occur.
-&nbsp;     */
-&nbsp;    public static boolean checkBasicAuth(String encodedAuth, User authAs, UserRepository userRepository) throws NoSuchAlgorithmException{
-&nbsp;        //Decode the authorization header
-<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(encodedAuth);</b>
-<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
+&nbsp;        @PostMapping(&quot;/create&quot;)
+&nbsp;        @SuppressWarnings(&quot;unchecked&quot;)
+&nbsp;        public ResponseEntity&lt;String&gt; createUser(@RequestBody String userInfo, @RequestHeader(HttpHeaders.AUTHORIZATION) String authHeader) throws NoSuchAlgorithmException {
+<b class="fc">&nbsp;            String decodedAuth = new String(Base64.getDecoder().decode(authHeader));</b>
+<b class="fc">&nbsp;            int authSplit = decodedAuth.lastIndexOf(&#39;:&#39;);</b>
+<b class="fc">&nbsp;            String adminUser = decodedAuth.substring(0, authSplit);</b>
 &nbsp;
-&nbsp;        //Separate the Username and password
-<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
-<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
-<b class="fc">&nbsp;        String password = auth.substring(authSplit +1);</b>
+<b class="fc">&nbsp;            if (checkAdmin(adminUser)) {</b>
+&nbsp;                // Parse the JSON body of the post request
+<b class="fc">&nbsp;                JSONParser parseBody = new JSONParser(userInfo);</b>
 &nbsp;
-&nbsp;        //Find the User with the given Username
-<b class="fc">&nbsp;        User authUser = userRepository.findByName(username);</b>
+&nbsp;                LinkedHashMap&lt;Object, Object&gt; userJSON;
 &nbsp;
-&nbsp;        //Return false if no such User exists
-<b class="fc">&nbsp;        if(authUser == null){</b>
-<b class="nc">&nbsp;            return false;</b>
+&nbsp;                // Catch the exception if the JSON can not be parsed and return a bad request response
+&nbsp;                try {
+&nbsp;                    // Parse the JSON to a LinkedHashMap -- this is an unchecked cast but is necessary because of the JSON API
+<b class="fc">&nbsp;                    userJSON = (LinkedHashMap&lt;Object, Object&gt;) parseBody.parse();</b>
+<b class="nc">&nbsp;                } catch (ParseException e) {</b>
+<b class="nc">&nbsp;                    return new ResponseEntity&lt;&gt;(&quot;JSON in request body could not be parsed.&quot;, HttpStatus.BAD_REQUEST);</b>
+<b class="fc">&nbsp;                }</b>
+&nbsp;
+&nbsp;                // Get the Username given in the request
+<b class="fc">&nbsp;                String username = (String) userJSON.get(&quot;username&quot;);</b>
+&nbsp;
+&nbsp;                //  Return 400 if the username wasn&#39;t included
+<b class="fc">&nbsp;                if (username == null) {</b>
+<b class="nc">&nbsp;                    return new ResponseEntity&lt;&gt;(&quot;Could not find username in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                //Confirm that the username is unqiue
+<b class="fc">&nbsp;                User existingUser = userRepository.findByName(username);</b>
+&nbsp;
+&nbsp;                // If the search found a user
+<b class="fc">&nbsp;                if (existingUser != null) {</b>
+<b class="nc">&nbsp;                    return new ResponseEntity&lt;&gt;(&quot;The given username is taken.&quot;, HttpStatus.CONFLICT);</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                // This will only be reached if the username is allowed
+&nbsp;
+&nbsp;                //Hash the given password
+&nbsp;                //Get the user&#39;s password in plaintext
+<b class="fc">&nbsp;                String password = (String) userJSON.get(&quot;password&quot;);</b>
+&nbsp;
+&nbsp;                // Return 400 if the password was not included
+<b class="fc">&nbsp;                if (password == null) {</b>
+<b class="nc">&nbsp;                    return new ResponseEntity&lt;&gt;(&quot;Could not find password in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;                }
+&nbsp;
+&nbsp;                // Generate an 8 byte salt
+<b class="fc">&nbsp;                SecureRandom secRan = new SecureRandom();</b>
+&nbsp;
+<b class="fc">&nbsp;                byte[] salt = new byte[8];</b>
+<b class="fc">&nbsp;                secRan.nextBytes(salt);</b>
+&nbsp;
+&nbsp;
+&nbsp;                // Get a MessageDigest object for SHA-512
+<b class="fc">&nbsp;                MessageDigest digest = MessageDigest.getInstance(&quot;SHA-512&quot;);</b>
+&nbsp;
+&nbsp;                // Use the salt in the password hashing
+<b class="fc">&nbsp;                digest.update(salt);</b>
+&nbsp;
+&nbsp;                // Hash the password
+<b class="fc">&nbsp;                byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));</b>
+&nbsp;
+&nbsp;                // Read the email from the HTTP Request
+<b class="fc">&nbsp;                String email = (String) userJSON.get(&quot;email_address&quot;);</b>
+&nbsp;
+&nbsp;                //Return 400 if the email address wasn&#39;t included
+<b class="fc">&nbsp;                if (email == null) {</b>
+<b class="nc">&nbsp;                    return new ResponseEntity&lt;&gt;(&quot;Could not find email_address in request body&quot;, HttpStatus.BAD_REQUEST);</b>
+&nbsp;                }
+&nbsp;
+<b class="fc">&nbsp;                User.UserType userType = User.UserType.valueOf((String) userJSON.get(&quot;user_type&quot;));</b>
+&nbsp;
+&nbsp;                //Store the hash and the salt
+&nbsp;                // Create the new User
+<b class="fc">&nbsp;                User createdUser = new User(username, email, hashedPassword, salt);</b>
+&nbsp;
+<b class="fc">&nbsp;                userRepository.save(createdUser);</b>
+&nbsp;
+<b class="fc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;Created new user: &quot; + username, HttpStatus.CREATED);</b>
+&nbsp;            }else{
+<b class="nc">&nbsp;                return new ResponseEntity&lt;&gt;(&quot;User is not an admin&quot;, HttpStatus.UNAUTHORIZED);</b>
+&nbsp;            }
 &nbsp;        }
 &nbsp;
-&nbsp;        // Confirm that the User is the same as the that is being authorized as
-<b class="fc">&nbsp;        if(!authUser.equals(authAs)){</b>
-<b class="nc">&nbsp;            return false;</b>
-&nbsp;        }
 &nbsp;
-&nbsp;        // Return true if the given password is correct and false if it isn&#39;t
-<b class="fc">&nbsp;        return checkPassword(authUser, password);</b>
-&nbsp;    }
+&nbsp;        //TODO CREATE/DELETE GROUPS, EDIT USER GROUPS
 &nbsp;
-&nbsp;    /**
-&nbsp;     * Get the {@link User} with the given username from a Base64 encoded HTTP Basic Authentication String
-&nbsp;     * @param encodedAuth
-&nbsp;     * @param userRepository
-&nbsp;     * @return The {@link User} with the given username
-&nbsp;     */
-&nbsp;    public static User getUsername(String encodedAuth, UserRepository userRepository){
-<b class="fc">&nbsp;        byte[] authBytes = Base64.getDecoder().decode(encodedAuth);</b>
-<b class="fc">&nbsp;        String auth = new String(authBytes);</b>
-&nbsp;
-&nbsp;        //Separate the Username and password
-<b class="fc">&nbsp;        int authSplit = auth.lastIndexOf(&#39;:&#39;);</b>
-<b class="fc">&nbsp;        String username = auth.substring(0, authSplit);</b>
-&nbsp;
-&nbsp;        //Find the User with the given Username
-<b class="fc">&nbsp;        User authUser = userRepository.findByName(username);</b>
-<b class="fc">&nbsp;        return authUser;</b>
-&nbsp;    }
 &nbsp;
 &nbsp;}
 </code>
@@ -297,7 +281,7 @@ Current scope:     <a href="../../index.html">all classes</a>
 
 <div class="footer">
     
-    <div style="float:right;">generated on 2023-12-05 13:23</div>
+    <div style="float:right;">generated on 2023-12-05 14:47</div>
 </div>
 </body>
 </html>
