@@ -10,7 +10,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -76,20 +75,12 @@ public class AdminCreateUserActivity extends AppCompatActivity {
 
     private void onSuccess() {
         // Show success message
-        AlertDialog.Builder builder = new AlertDialog.Builder(AdminCreateUserActivity.this);
-        builder.setMessage("User successfully created")
-                .setPositiveButton("OK", null); // You can add additional buttons if needed
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        AlertDisplayer.dialog("User successfully created", AdminCreateUserActivity.this);
     }
 
     private void onError(String message) {
         // Show error message
-        AlertDialog.Builder builder = new AlertDialog.Builder(AdminCreateUserActivity.this);
-        builder.setMessage(message)
-                .setPositiveButton("OK", null); // You can add additional buttons if needed
-        AlertDialog alertDialog = builder.create();
-        alertDialog.show();
+        AlertDisplayer.dialog(message, AdminCreateUserActivity.this);
     }
 
     private void createUser() {

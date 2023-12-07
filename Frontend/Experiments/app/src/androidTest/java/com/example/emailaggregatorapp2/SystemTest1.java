@@ -37,6 +37,9 @@ public class SystemTest1 {
     String email = testUser + "@gmail.com";
     String password = "password";
 
+    String adminUser = "Admin1";
+    String adminPass = "AdminPassword123";
+
     @Rule
     public ActivityTestRule<MainActivity> activityRule = new ActivityTestRule<>(MainActivity.class);
 
@@ -138,6 +141,74 @@ public class SystemTest1 {
         }
 
         onView(withText("Username or email already exists")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+
+    }
+
+    @Test
+    public void loginFailWrongPassword() {
+        onView(withId(R.id.loginbut1)).perform(click());
+        onView(withId(R.id.loginusernameedittext)).perform(typeText(testUser), closeSoftKeyboard());
+        onView(withId(R.id.loginpasswordedittext)).perform(typeText(password+"ABC"), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withText("Incorrect username or password")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+
+    }
+
+    @Test
+    public void adminCreateUser(){
+        onView(withId(R.id.loginbut1)).perform(click());
+        onView(withId(R.id.loginusernameedittext)).perform(typeText(adminUser), closeSoftKeyboard());
+        onView(withId(R.id.loginpasswordedittext)).perform(typeText(adminPass), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Admin")).perform(click());
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.editTextUsername)).perform(typeText("AdminMade"+testUser), closeSoftKeyboard());
+        onView(withId(R.id.editTextEmail)).perform(typeText("AdminMade"+email), closeSoftKeyboard());
+        onView(withId(R.id.editTextPassword)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withText("User successfully created")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+    }
+
+    @Test
+    public void adminCreateUserAlreadyExists(){
+        adminCreateUser();
+        onView(withId(R.id.btnBack)).perform(click());
+
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.editTextUsername)).perform(typeText("AdminMade"+testUser), closeSoftKeyboard());
+        onView(withId(R.id.editTextEmail)).perform(typeText("AdminMade"+email), closeSoftKeyboard());
+        onView(withId(R.id.editTextPassword)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withText("User already exists")).check(matches(isDisplayed()));
         onView(withId(android.R.id.button1)).perform(click());
 
     }

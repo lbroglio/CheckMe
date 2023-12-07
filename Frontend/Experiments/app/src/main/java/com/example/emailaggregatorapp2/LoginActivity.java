@@ -34,7 +34,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String API_URL = "http://coms-309-047.class.las.iastate.edu:8080/user/login";
     private TextView responseTextView;
-    private TextView failureMsg;
+//    private TextView failureMsg;
     private Button loginbutton;
     private Button backbutton;
     private EditText usernameEditText;
@@ -56,8 +56,6 @@ public class LoginActivity extends AppCompatActivity {
         usernameEditText = (EditText) findViewById(R.id.loginusernameedittext);
         passwordEditText = (EditText) findViewById(R.id.loginpasswordedittext);
 
-        failureMsg = (TextView) findViewById(R.id.failureMsg);
-        Log.d("HERE", failureMsg.toString());
         loginbutton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
                     public void onErrorResponse(VolleyError error) {
                         // Handle any errors that occur
                         Log.i("Volley error", error.toString());
-                        failureMsg.setVisibility(View.VISIBLE);
+                        AlertDisplayer.dialog("Incorrect username or password", LoginActivity.this);
                     }
                 }
         ) {

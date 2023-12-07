@@ -1,6 +1,5 @@
 package com.example.emailaggregatorapp2;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -53,11 +52,7 @@ public class SignupActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(!passwordInput.getText().toString().equals(passwordConfirm.getText().toString())){
                     Log.e("Password Mismatch", "Passwords do not match");
-                    AlertDialog.Builder builder = new AlertDialog.Builder(SignupActivity.this);
-                    builder.setMessage("Passwords do not match")
-                            .setPositiveButton("OK", null); // You can add additional buttons if needed
-                    AlertDialog alertDialog = builder.create();
-                    alertDialog.show();
+                    AlertDisplayer.dialog("Passwords do not match", SignupActivity.this);
                     return;
                 }
 
@@ -108,18 +103,10 @@ public class SignupActivity extends AppCompatActivity {
                         // Handle any errors that occur
                         Log.e("ErrorLine106", error.toString());
                         if(error.networkResponse.statusCode == 409){
-                            AlertDialog.Builder builder = new AlertDialog.Builder(SignupActivity.this);
-                            builder.setMessage("Username or email already exists")
-                                    .setPositiveButton("OK", null); // You can add additional buttons if needed
-                            AlertDialog alertDialog = builder.create();
-                            alertDialog.show();
+                           AlertDisplayer.dialog("Username or email already exists", SignupActivity.this);
                         }
                         else{
-                            AlertDialog.Builder builder = new AlertDialog.Builder(SignupActivity.this);
-                            builder.setMessage("An error occurred")
-                                    .setPositiveButton("OK", null); // You can add additional buttons if needed
-                            AlertDialog alertDialog = builder.create();
-                            alertDialog.show();
+                            AlertDisplayer.dialog("An error occurred", SignupActivity.this);
                         }
                     }
                 }
