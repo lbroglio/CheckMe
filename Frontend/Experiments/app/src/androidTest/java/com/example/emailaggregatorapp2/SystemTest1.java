@@ -19,14 +19,23 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.replaceText;
+import static androidx.test.espresso.action.ViewActions.scrollTo;
+import static androidx.test.espresso.action.ViewActions.slowSwipeLeft;
+import static androidx.test.espresso.action.ViewActions.swipeDown;
+import static androidx.test.espresso.action.ViewActions.swipeUp;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intended;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasComponent;
 import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+
+import static org.hamcrest.Matchers.contains;
+
+import android.util.Log;
 
 import androidx.test.rule.ActivityTestRule;
 
@@ -41,6 +50,9 @@ public class SystemTest1 {
 
     String adminUser = "Admin1";
     String adminPass = "AdminPassword123";
+
+    String groupName = "TestGroup" + (int)(Math.random() * 100000);
+
 
     @Rule
     public ActivityTestRule<MainActivity> activityRule = new ActivityTestRule<>(MainActivity.class);
@@ -253,7 +265,6 @@ public class SystemTest1 {
 
     @Test
     public void createGroup(){
-        String groupName = "TestGroup" + (int)(Math.random() * 100000);
         signupAndLogin();
         onView(withId(R.id.navBarToggle)).perform(click());
         onView(withText("Groups")).perform(click());
@@ -267,6 +278,34 @@ public class SystemTest1 {
         onView(withText("Back")).perform(click());
         //check if a new button with the name of the group exists
         onView(withText(groupName)).check(matches(isDisplayed()));
+    }
+
+
+    @Test
+    public void liveChatSendMessage(){
+        createGroup();
+        onView(withText(groupName)).perform(click());
+        onView(withId(R.id.groupChatButton)).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withId(R.id.messageInput)).perform(typeText("Test Message"), closeSoftKeyboard());
+        onView(withId(R.id.sendButton)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+//        onView(isRoot()).perform(swipeUp());
+//        onView(withId(R.id.chatMessageListView)).perform(swipeDown());
+        onView(withId(R.id.messageInput)).perform(typeText("Test Message"), closeSoftKeyboard());
+        onView(withId(R.id.sendButton)).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withId(R.id.chatMessageListView)).check(matches(withText(testUser+": Test Message")));
     }
 
 
@@ -309,5 +348,6 @@ public class SystemTest1 {
         onView(withId(R.id.navBarToggle)).perform(click());
         onView(withText("Admin")).perform(click());
     }
+
 
 }
