@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 
 
 import androidx.test.core.app.ActivityScenario;
+import androidx.test.espresso.ViewInteraction;
 import androidx.test.espresso.intent.Intents;
 import androidx.test.espresso.matcher.ViewMatchers;
 
@@ -303,9 +304,65 @@ public class SystemTest1 {
         onView(withId(android.R.id.button1)).perform(click());
     }
 
-
+    @Test
+    public void addProxyCrews(){
+        signupAndLogin();
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Add Account")).perform(click());
+        onView(withText("Crews")).perform(click());
+        onView(withText("Target URL")).perform(replaceText("http://coms-309-047.class.las.iastate.edu:8443/crews/messages"), closeSoftKeyboard());
+        onView(withText("Username")).perform(replaceText("DEMO3-USER"), closeSoftKeyboard());
+        onView(withText("Password")).perform(replaceText("DEMO3"), closeSoftKeyboard());
+        onView(withText("Add Account")).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Account added")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+    }
 
     @Test
+    public void addProxyChaos(){
+        signupAndLogin();
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Add Account")).perform(click());
+        onView(withText("Chaos")).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Target URL")).perform(replaceText("http://coms-309-047.class.las.iastate.edu:8443/crews/messages/BaseballBob"), closeSoftKeyboard());
+        onView(withText("API Token")).perform(replaceText("6583000229007365"), closeSoftKeyboard());
+        onView(withText("Add Account")).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Account added")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+    }
+
+    @Test
+    public void addProxyCmail(){
+        signupAndLogin();
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Add Account")).perform(click());
+        onView(withText("Cmail")).perform(click());
+        onView(withText("Target URL")).perform(replaceText("http://coms-309-047.class.las.iastate.edu:8443/cmail/messages"), closeSoftKeyboard());
+        onView(withText("Username")).perform(replaceText("BaseballBob"), closeSoftKeyboard());
+        onView(withText("Password")).perform(replaceText("CubsGo123"), closeSoftKeyboard());
+        onView(withText("Add Account")).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Account added")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+    }
+
+
+//    @Test
     public void liveChatSendMessage(){
         createGroup();
         onView(withText(groupName)).perform(click());
