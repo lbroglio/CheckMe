@@ -18,6 +18,7 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.intent.Intents.intended;
@@ -58,33 +59,8 @@ public class SystemTest1 {
     }
     @Test
     public void signUpSuccessandLogin(){
-        //generate random username
 
-
-        //input info into sign up page, then see if activity changes to login page or if an error message pops up
-        onView(withId(R.id.signupbut1)).perform(click());
-        onView(withId(R.id.usernameInp)).perform(typeText(testUser), closeSoftKeyboard());
-        onView(withId(R.id.emailInp)).perform(typeText(email), closeSoftKeyboard());
-        onView(withId(R.id.passInp)).perform(typeText(password), closeSoftKeyboard());
-        onView(withId(R.id.passConfirmInp)).perform(typeText(password), closeSoftKeyboard());
-        onView(withId(R.id.loginbut2)).perform(click());
-
-        try {
-            Thread.sleep(SIMULATED_DELAY_MS);
-        } catch (InterruptedException e) {
-        }
-
-//        intended(hasComponent(LoginActivity.class.getName()));
-
-
-        onView(withId(R.id.loginusernameedittext)).perform(typeText(testUser), closeSoftKeyboard());
-        onView(withId(R.id.loginpasswordedittext)).perform(typeText(password), closeSoftKeyboard());
-        onView(withId(R.id.loginbut2)).perform(click());
-
-        try {
-            Thread.sleep(SIMULATED_DELAY_MS);
-        } catch (InterruptedException e) {
-        }
+        signupAndLogin();
 
         intended(hasComponent(MessagesActivity.class.getName()));
 
@@ -163,21 +139,6 @@ public class SystemTest1 {
 
     }
 
-    private void navToAdmin(){
-        onView(withId(R.id.loginbut1)).perform(click());
-        onView(withId(R.id.loginusernameedittext)).perform(typeText(adminUser), closeSoftKeyboard());
-        onView(withId(R.id.loginpasswordedittext)).perform(typeText(adminPass), closeSoftKeyboard());
-        onView(withId(R.id.loginbut2)).perform(click());
-
-        try {
-            Thread.sleep(SIMULATED_DELAY_MS);
-            Thread.sleep(SIMULATED_DELAY_MS);
-        } catch (InterruptedException e) {
-        }
-
-        onView(withId(R.id.navBarToggle)).perform(click());
-        onView(withText("Admin")).perform(click());
-    }
 
     @Test
     public void adminCreateUser(){
@@ -268,4 +229,85 @@ public class SystemTest1 {
         //Check if password input has error message
         onView(withId(R.id.editTextPassword)).check(matches(hasErrorText("Password is required")));
     }
+
+    @Test
+    public void adminCreateUserEmptyAll(){
+        navToAdmin();
+        onView(withText("Create User")).perform(click());
+        onView(withId(R.id.btnSubmit)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        //Check if username input has error message
+        onView(withId(R.id.editTextUsername)).check(matches(hasErrorText("Username is required")));
+
+        //Check if email input has error message
+        onView(withId(R.id.editTextEmail)).check(matches(hasErrorText("Email is required")));
+
+        //Check if password input has error message
+        onView(withId(R.id.editTextPassword)).check(matches(hasErrorText("Password is required")));
+    }
+
+    @Test
+    public void createGroup(){
+        String groupName = "TestGroup" + (int)(Math.random() * 100000);
+        signupAndLogin();
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Groups")).perform(click());
+        onView(withText("New Group")).perform(click());
+        onView(withId(R.id.createGroupTB)).perform(replaceText(groupName), closeSoftKeyboard());
+        onView(withId(R.id.createGroupButton)).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Back")).perform(click());
+        //check if a new button with the name of the group exists
+        onView(withText(groupName)).check(matches(isDisplayed()));
+    }
+
+
+    private void signupAndLogin(){
+        onView(withId(R.id.signupbut1)).perform(click());
+        onView(withId(R.id.emailInp)).perform(typeText(email), closeSoftKeyboard());
+        onView(withId(R.id.usernameInp)).perform(typeText(testUser), closeSoftKeyboard());
+        onView(withId(R.id.passInp)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.passConfirmInp)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withId(R.id.loginusernameedittext)).perform(typeText(testUser), closeSoftKeyboard());
+        onView(withId(R.id.loginpasswordedittext)).perform(typeText(password), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+
+    }
+    private void navToAdmin(){
+        onView(withId(R.id.loginbut1)).perform(click());
+        onView(withId(R.id.loginusernameedittext)).perform(typeText(adminUser), closeSoftKeyboard());
+        onView(withId(R.id.loginpasswordedittext)).perform(typeText(adminPass), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+        onView(withId(R.id.navBarToggle)).perform(click());
+        onView(withText("Admin")).perform(click());
+    }
+
 }
