@@ -53,8 +53,7 @@ public class MessagesActivity extends AppCompatActivity{
             TextView newMessage = new TextView(this);
             newMessage.setId(numMessages);
 
-            // Increment the next id to set
-            numMessages++;
+
 
             // Set the text for the new button to be the name of its corresponding group
             String messageContent = messages.get(i);
@@ -67,7 +66,10 @@ public class MessagesActivity extends AppCompatActivity{
 
             // Add reply button to layout
             Button replyButton = new Button(this);
+            replyButton.setTag("ReplyButton"+numMessages);
             replyButton.setText("Reply");
+            // Increment the next id to set
+            numMessages++;
 
             replyButton.setOnClickListener(new View.OnClickListener() {
                 @Override

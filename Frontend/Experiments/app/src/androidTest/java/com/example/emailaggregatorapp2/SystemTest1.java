@@ -1,6 +1,9 @@
 package com.example.emailaggregatorapp2;
 
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -31,9 +34,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static androidx.test.espresso.matcher.ViewMatchers.isRoot;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withTagValue;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.is;
 
 import android.util.Log;
 
@@ -53,6 +59,8 @@ public class SystemTest1 {
 
     String groupName = "TestGroup" + (int)(Math.random() * 100000);
 
+    String proxyUser = "BaseballBob";
+    String proxyPass = "CubsGo123";
 
     @Rule
     public ActivityTestRule<MainActivity> activityRule = new ActivityTestRule<>(MainActivity.class);
@@ -280,6 +288,22 @@ public class SystemTest1 {
         onView(withText(groupName)).check(matches(isDisplayed()));
     }
 
+    @Test
+    public void replyMessage(){
+        proxyLogin();
+//        onView(allOf(withTagValue(is((Object) "Reply0")), isDisplayed())).perform(click());
+        onView(first(withText("REPLY"))).perform(click());
+        onView(withId(R.id.replyContent)).perform(typeText("Test Reply"), closeSoftKeyboard());
+        onView(withId(R.id.replySend)).perform(click());
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+        onView(withText("Reply Sent")).check(matches(isDisplayed()));
+        onView(withId(android.R.id.button1)).perform(click());
+    }
+
+
 
     @Test
     public void liveChatSendMessage(){
@@ -306,6 +330,20 @@ public class SystemTest1 {
         } catch (InterruptedException e) {
         }
         onView(withId(R.id.chatMessageListView)).check(matches(withText(testUser+": Test Message")));
+    }
+
+    public void proxyLogin(){
+        onView(withId(R.id.loginbut1)).perform(click());
+        onView(withId(R.id.loginusernameedittext)).perform(typeText(proxyUser), closeSoftKeyboard());
+        onView(withId(R.id.loginpasswordedittext)).perform(typeText(proxyPass), closeSoftKeyboard());
+        onView(withId(R.id.loginbut2)).perform(click());
+
+        try {
+            Thread.sleep(SIMULATED_DELAY_MS);
+        } catch (InterruptedException e) {
+        }
+
+
     }
 
 
@@ -349,5 +387,25 @@ public class SystemTest1 {
         onView(withText("Admin")).perform(click());
     }
 
+    private <T> Matcher<T> first(final Matcher<T> matcher) {
+        return new BaseMatcher<T>() {
+            boolean isFirst = true;
+
+            @Override
+            public boolean matches(final Object item) {
+                if (isFirst && matcher.matches(item)) {
+                    isFirst = false;
+                    return true;
+                }
+
+                return false;
+            }
+
+            @Override
+            public void describeTo(final Description description) {
+                description.appendText("should return first matching item");
+            }
+        };
+    }
 
 }

@@ -66,7 +66,7 @@ public class ReplyActivity extends AppCompatActivity {
                     public void onResponse(String response) {
                         // Handle the successful response here
                         Intent intent = new Intent(ReplyActivity.this, MessagesActivity.class);
-                        startActivity(intent);
+                        AlertDisplayer.dialogIntent("Reply Sent", ReplyActivity.this, intent);
                     }
                 },
                 new Response.ErrorListener() {
