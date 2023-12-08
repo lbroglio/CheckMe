@@ -12,18 +12,8 @@
     <string name="logintitle">User Log In</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
-    <string name="profiletitle">Profile Settings</string>
-    <string name="usernamecolon">Username:</string>
-    <string name="emailcolon">Email:</string>
     <string name="Back">Back</string>
     <string name="message">Messages</string>
-    <string name="MessageSender">From:</string>
-    <string name="MessageRecipient">To:</string>
-    <string name="MessageSubject">Subject:</string>
-    <string name="MessageContents">Contents:</string>
-    <string name="IdPrompt">Message ID:</string>
-    <string name="SendButton">Send</string>
-    <string name="RecipientPrompt">Message Recipient</string>
     <string name="LoginFailure">Incorrect Username or Password</string>
     <string name="TPAccountsGoToStr">Add Account</string>
     <string name="Admin">Admin</string>
@@ -51,7 +41,6 @@
     <string name="EnterUsernameLabel">Enter the username of the account to connect.</string>
     <string name="EnterAccountPasswordLabel">Enter the password for the account to connect</string>
     <string name="AddAccountButtonText">Add Account</string>
-    <string name="AddAccountGroup">Add Service Account for this Group\n</string>
     <string name="type_your_message">Type your message</string>
     <string name="send">Send</string>
     <string name="LiveChatButtonLabel">Live Chat</string>
