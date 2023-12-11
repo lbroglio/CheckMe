@@ -28,6 +28,7 @@ public class User extends RetrieverOwner{
     /**
      * The email address associated with the user's account
      */
+    @Id
     @Schema(type = "string", example = "example@gmail.com")
     private String email;
 
