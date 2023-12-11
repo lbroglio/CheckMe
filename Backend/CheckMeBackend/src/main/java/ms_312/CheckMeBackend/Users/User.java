@@ -25,13 +25,12 @@ public class User extends RetrieverOwner{
 
     @Schema(type = "string", example = "User101")
     private String name = super.getName();
-
     /**
      * The email address associated with the user's account
      */
     @Schema(type = "string", example = "example@gmail.com")
-    @Id
     private String email;
+
     /**
      * A cryptographic hash of this account's password.
      */

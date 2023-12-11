@@ -132,7 +132,6 @@ public class UserController {
 
         System.out.println("STRING JSON: " + userJSON.toString());
 
-
         // Get the Username given in the request
         String username = (String) userJSON.get("username");
 
@@ -141,18 +140,12 @@ public class UserController {
             return new ResponseEntity<>("Could not find username in request body", HttpStatus.BAD_REQUEST);
         }
 
-        // Read the email from the HTTP Request
-        String email = (String) userJSON.get("email_address");
-
         //Confirm that the username is unqiue
         User existingUser = userRepository.findByName(username);
-        if(existingUser == null){
-            existingUser = userRepository.findByEmail(email);
-        }
 
         // If the search found a user
         if(existingUser != null){
-            return new ResponseEntity<>("The given username or email is taken.", HttpStatus.CONFLICT);
+            return new ResponseEntity<>("The given username is taken.", HttpStatus.CONFLICT);
         }
 
         // This will only be reached if the username is allowed
@@ -182,7 +175,8 @@ public class UserController {
         // Hash the password
         byte[] hashedPassword = digest.digest(password.getBytes(StandardCharsets.UTF_8));
 
-
+        // Read the email from the HTTP Request
+        String email = (String) userJSON.get("email_address");
 
         //Return 400 if the email address wasn't included
         if(email == null || email.trim().equals("")){
