@@ -229,8 +229,7 @@ public class AddAccountActivity extends AppCompatActivity{
                     @Override
                     public void onResponse(String response) {
                         // Handle the successful response here
-                        Intent intent = new Intent(AddAccountActivity.this, MessagesActivity.class);
-                        startActivity(intent);
+                        AlertDisplayer.dialogIntent("Account Added", AddAccountActivity.this, new Intent(AddAccountActivity.this, MessagesActivity.class));
                     }
                 },
                 new Response.ErrorListener() {
@@ -304,8 +303,8 @@ public class AddAccountActivity extends AppCompatActivity{
                     @Override
                     public void onResponse(String response) {
                         // Handle the successful response here
-                        Intent intent = new Intent(AddAccountActivity.this, GroupActivity.class);
-                        startActivity(intent);
+                        AlertDisplayer.dialogIntent("Account Added", AddAccountActivity.this, new Intent(AddAccountActivity.this, MessagesActivity.class));
+
                     }
                 },
                 new Response.ErrorListener() {

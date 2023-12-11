@@ -75,22 +75,34 @@ public class AdminCreateUserActivity extends AppCompatActivity {
 
     private void onSuccess() {
         // Show success message
-        txtStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
-        txtStatus.setText("User successfully created");
-        txtStatus.setVisibility(View.VISIBLE);
+        AlertDisplayer.dialog("User successfully created", AdminCreateUserActivity.this);
     }
 
     private void onError(String message) {
         // Show error message
-        txtStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
-        txtStatus.setText(message);
-        txtStatus.setVisibility(View.VISIBLE);
+        AlertDisplayer.dialog(message, AdminCreateUserActivity.this);
     }
 
     private void createUser() {
         String username = editTextUsername.getText().toString().trim();
         String email = editTextEmail.getText().toString().trim();
         String password = editTextPassword.getText().toString().trim();
+
+        if(username.isEmpty() || email.isEmpty() || password.isEmpty()){
+        if (username.isEmpty()) {
+            editTextUsername.setError("Username is required");
+            editTextUsername.requestFocus();
+        }
+        if(email.isEmpty()){
+            editTextEmail.setError("Email is required");
+            editTextEmail.requestFocus();
+        }
+        if(password.isEmpty()){
+            editTextPassword.setError("Password is required");
+            editTextPassword.requestFocus();
+        }
+            return;
+        }
 
         JSONObject body = new JSONObject();
         try {
